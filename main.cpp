@@ -8,6 +8,9 @@
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
 #include <string>
+#include <dbghelp.h>
+#pragma comment(lib,"Dbghelp.lib")
+#include <strsafe.h>
 
 // クライアント領域のサイズ
 const int32_t kClientWindth = 1280;
@@ -63,8 +66,36 @@ std::string ConvertString(const std::wstring& str) {
 	return result;
 }
 
+static LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception) {
+
+	// 時間を取得して、時刻を名前の入れたファイルを作成
+	SYSTEMTIME time;
+	GetLocalTime(&time);
+	wchar_t filePath[MAX_PATH] = { 0 };
+	CreateDirectory(L"./Dump", NULL);
+	StringCchPrintfW(filePath, MAX_PATH, L"./Dump/%04d-%02d%02d-%02d%02d.dmp", time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute);
+	HANDLE dumpFileHandle = CreateFile(filePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ, 0, CREATE_ALWAYS, 0, 0);
+	
+	// processIdとクラッシュの発生したthreadIdを取得
+	DWORD processId = GetCurrentProcessId();
+	DWORD threadId = GetCurrentThreadId();
+	
+	// 設定情報を入力
+	MINIDUMP_EXCEPTION_INFORMATION minidumpInformation{ 0 };
+	minidumpInformation.ThreadId = threadId;
+	minidumpInformation.ExceptionPointers = exception;
+	minidumpInformation.ClientPointers = TRUE;
+	
+	// Dumpを出力
+	MiniDumpWriteDump(GetCurrentProcess(), processId, dumpFileHandle, MiniDumpNormal, &minidumpInformation, nullptr, nullptr);
+	
+	return EXCEPTION_EXECUTE_HANDLER;
+}
+
 // Windowsアプリでのエントリーポイント
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
+
+	SetUnhandledExceptionFilter(ExportDump);
 
 	// ウィンドウクラス
 	WNDCLASS wc = {};
@@ -104,7 +135,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// ウィンドウの表示
 	ShowWindow(hwnd, SW_SHOW);
-
 
 	// ログのディレクトリを表示
 	std::filesystem::create_directory("logs");
@@ -151,7 +181,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		if (!(adapterDesc.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE)) {
 
 			// アダプタの情報をログに出力
-			Log(logStream,ConvertString(std::format(L"Use Adapter {}: \n", adapterDesc.Description)));
+			Log(logStream, ConvertString(std::format(L"Use Adapter {}: \n", adapterDesc.Description)));
 			break;
 		}
 		useAdapter = nullptr;
@@ -176,13 +206,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		hr = D3D12CreateDevice(useAdapter, featureLevels[i], IID_PPV_ARGS(&device));
 		if (SUCCEEDED(hr)) {
 
-			Log(logStream,std::format("Feature Level: {}\n", featureLevelStrings[i]));
+			Log(logStream, std::format("Feature Level: {}\n", featureLevelStrings[i]));
 			break;
 		}
 	}
 	assert(device != nullptr);
+
 	// 初期化完了のログ
-	Log(logStream,"Complete create D3D12Device!!!\n");
+	Log(logStream, "Complete create D3D12Device!!!\n");
 
 	MSG msg = {};
 
