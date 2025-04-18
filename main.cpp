@@ -339,11 +339,32 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// バックバッファのインデックスを取得
 	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+
+	// TransitionBarrierの設定
+	D3D12_RESOURCE_BARRIER barrier = {};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+
+	//バリアを張るリソース
+	barrier.Transition.pResource = swapChainResources[backBufferIndex];
+	// 遷移前
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+	// 遷移後
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	// バリア
+	commandList->ResourceBarrier(1, &barrier);
+
 	// 描画先のRTVを設定
 	commandList->OMSetRenderTargets(1, &rtvHandle[backBufferIndex], false, nullptr);
 	// 指定した色で画面全体をクリア
 	float clearColor[] = { 0.1f,0.25f,0.5f,1.0f };
 	commandList->ClearRenderTargetView(rtvHandle[backBufferIndex], clearColor, 0, nullptr);
+	
+	// 状態を遷移
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+	// バリア
+	commandList->ResourceBarrier(1, &barrier);
 	hr = commandList->Close();
 	assert(SUCCEEDED(hr));
 
@@ -352,11 +373,34 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	commandQueue->ExecuteCommandLists(1, commandLists);
 	// GPUとOSに画面の変換を行うように指示
 	swapChain->Present(1, 0);
+
+	// 初期化でフェンスを作る
+	ID3D12Fence* fence = nullptr;
+	uint64_t fenceValue = 0;
+	hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
+	assert(SUCCEEDED(hr));
+
+	// フェンスのイベントを作成
+	HANDLE fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	assert(fenceEvent != nullptr);
+
+	// フェンスの値の更新
+	fenceValue++;
+	commandQueue->Signal(fence, fenceValue);
+
+	if (fence->GetCompletedValue() < fenceValue) {
+
+		fence->SetEventOnCompletion(fenceValue, fenceEvent);
+
+		// イベントが発生するまで待機
+		WaitForSingleObject(fenceEvent, INFINITE);
+	}
 	// 次フレームのコマンドリストを準備
 	hr = commandAllocator->Reset();
 	assert(SUCCEEDED(hr));
 	hr = commandList->Reset(commandAllocator, nullptr);
 	assert(SUCCEEDED(hr));
+
 
 	MSG msg = {};
 
