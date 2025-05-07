@@ -15,11 +15,26 @@
 #pragma comment(lib,"dxguid.lib")
 #include <dxcapi.h>
 #pragma comment(lib,"dxcompiler.lib")
+#include "Matrix4x4.h"
 
 // クライアント領域のサイズ
 const int32_t kClientWindth = 1280;
 const int32_t kClientHeight = 720;
 using float32_t = float;
+
+// 
+struct Vector4 {
+	float32_t x;
+	float32_t y;
+	float32_t z;
+	float32_t w;
+};
+
+struct Transform {
+	Vector3 scale;
+	Vector3 rotate;
+	Vector3 translate;
+};
 
 // ウィンドウプロシージャ
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
@@ -166,14 +181,6 @@ IDxcBlob* CompileShader(
 	return shaderBlob;
 }
 
-// 
-struct Vector4 {
-	float32_t x;
-	float32_t y;
-	float32_t z;
-	float32_t w;
-};
-
 ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInBytes) {
 
 	ID3D12Resource* vertexResource = nullptr;
@@ -185,7 +192,7 @@ ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInBytes) {
 	// 頂点リソースの設定
 	D3D12_RESOURCE_DESC vertexResourceDesc{};
 	vertexResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	vertexResourceDesc.Width = sizeof(Vector4) * 3;
+	vertexResourceDesc.Width = sizeInBytes;
 	vertexResourceDesc.Height = 1;
 	vertexResourceDesc.DepthOrArraySize = 1;
 	vertexResourceDesc.MipLevels = 1;
@@ -468,12 +475,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
 	// RootParameterの設定
-	D3D12_ROOT_PARAMETER rootParameters[1] = {};
-	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;    // CBV
-	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // ピクセルシェーダー
-	rootParameters[0].Descriptor.ShaderRegister = 0;                    // シェーダーのレジスタ番号
-	descriptionRootSignature.pParameters = rootParameters;              // RootParameterのポインタ
-	descriptionRootSignature.NumParameters = _countof(rootParameters);  // 配列の長さ
+	D3D12_ROOT_PARAMETER rootParameters[2] = {};
+	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;     // CBV
+	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;  // ピクセルシェーダー
+	rootParameters[0].Descriptor.ShaderRegister = 0;                     // シェーダーのレジスタ番号
+	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;	 // CBV
+	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX; // ピクセルシェーダー
+	rootParameters[1].Descriptor.ShaderRegister = 0;                     // シェーダーのレジスタ番号
+	descriptionRootSignature.pParameters = rootParameters;               // RootParameterのポインタ
+	descriptionRootSignature.NumParameters = _countof(rootParameters);   // 配列の長さ
 
 	ID3DBlob* signatureBlob = nullptr;
 	ID3DBlob* errorBlob = nullptr;
@@ -558,6 +568,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 色を設定
 	*materialData = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
 
+	// WVP行列の設定
+	ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(Matrix4x4));
+	// データを書き込む
+	Matrix4x4* wvpData = nullptr;
+	// 書き込むためのアドレスを取得
+	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
+	// 行列を設定
+	*wvpData = MakeIdentity4x4();
+
 	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(Vector4) * 3);
 
 	//頂点バッファビューの作成
@@ -598,6 +617,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	MSG msg = {};
 
+	// Transformの設定
+	Transform transform{ {1.0f, 1.0f, 1.0f},{0.0f, 0.0f, 0.0f},{0.0f, 0.0f, 0.0f} };
+
 	// ウィンドウのボタンが押されるまでループ
 	while (msg.message != WM_QUIT) {
 
@@ -609,6 +631,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		} else {
 
 			//ゲーム処理
+			
+			// Transformの更新
+			transform.rotate.y += 0.03f;
+			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+			*wvpData = worldMatrix;
+
 			// バックバッファのインデックスを取得
 			UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
@@ -640,6 +668,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 
 			// 描画
 			commandList->DrawInstanced(3, 1, 0, 0);
@@ -711,6 +740,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	useAdapter->Release();
 	dxgiFactory->Release();
 	materialResource->Release();
+	wvpResource->Release();
 
 #ifdef _DEBUG
 
