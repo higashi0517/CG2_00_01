@@ -32,7 +32,9 @@ inline ResourceObject CreateDepthStencilTextureResource(ID3D12Device* device, UI
 		&clearValue,
 		IID_PPV_ARGS(&depthResource)
 	);
-	assert(SUCCEEDED(hr));
-
+	if (FAILED(hr) || depthResource == nullptr) {
+		OutputDebugStringA("ERROR: CreateCommittedResource for DepthStencil failed.\n");
+		assert(false);  // ←失敗時に即停止（デバッグ時限定）
+	}
 	return ResourceObject(depthResource);
 }
