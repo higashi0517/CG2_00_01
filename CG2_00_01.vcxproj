@@ -84,6 +84,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ResourceObject.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DepthStencilResource.h" />
+    <ClInclude Include="ResourceObject.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
