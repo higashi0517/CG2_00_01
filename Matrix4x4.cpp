@@ -103,3 +103,91 @@ Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Ve
 	result = Multiply(result, translateMatrix);
 	return result;
 }
+
+// 透視投影行列
+Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspecRatio, float nearClip, float farClip) {
+	Matrix4x4 result = MakeIdentity4x4();
+
+	float f = 1.0f / std::tan(fovY * 0.5f);
+
+	result.m[0][0] = f / aspecRatio;
+	result.m[1][1] = f;
+	result.m[2][2] = farClip / (farClip - nearClip);
+	result.m[2][3] = 1.0f;
+	result.m[3][2] = (-nearClip * farClip) / (farClip - nearClip);
+	result.m[3][3] = 0.0f;
+
+	return result;
+}
+
+// 逆行列を求める関数
+Matrix4x4 Inverse(const Matrix4x4& m) {
+	Matrix4x4 result{}; // 最後に返す逆行列
+	float det = 0.0f;   // 行列式
+
+	// --- 行列式を計算 ---
+	{
+		float sign = 1.0f;
+		for (int i = 0; i < 4; i++) {
+			// 小行列を作る
+			float subm[3][3];
+			int subi = 0;
+			for (int row = 1; row < 4; row++) { // 1行目以外
+				int subj = 0;
+				for (int col = 0; col < 4; col++) {
+					if (col == i) continue;
+					subm[subi][subj] = m.m[row][col];
+					subj++;
+				}
+				subi++;
+			}
+			// 小行列の行列式を求める
+			float subdet =
+				subm[0][0] * (subm[1][1] * subm[2][2] - subm[1][2] * subm[2][1]) -
+				subm[0][1] * (subm[1][0] * subm[2][2] - subm[1][2] * subm[2][0]) +
+				subm[0][2] * (subm[1][0] * subm[2][1] - subm[1][1] * subm[2][0]);
+
+			// 交互に符号をつけて合計
+			det += sign * m.m[0][i] * subdet;
+			sign = -sign;
+		}
+	}
+
+	// --- 行列式が0なら逆行列は存在しない ---
+	if (det == 0.0f) {
+		return result; // 全部0の行列を返す
+	}
+
+	// --- 余因子行列を作って、転置して、行列式で割る ---
+	for (int row = 0; row < 4; row++) {
+		for (int col = 0; col < 4; col++) {
+
+			// 小行列を作る
+			float subm[3][3];
+			int subi = 0;
+			for (int i = 0; i < 4; i++) {
+				if (i == row) continue; // row行目はスキップ
+				int subj = 0;
+				for (int j = 0; j < 4; j++) {
+					if (j == col) continue; // col列目はスキップ
+					subm[subi][subj] = m.m[i][j];
+					subj++;
+				}
+				subi++;
+			}
+
+			// 小行列の行列式を求める
+			float subdet =
+				subm[0][0] * (subm[1][1] * subm[2][2] - subm[1][2] * subm[2][1]) -
+				subm[0][1] * (subm[1][0] * subm[2][2] - subm[1][2] * subm[2][0]) +
+				subm[0][2] * (subm[1][0] * subm[2][1] - subm[1][1] * subm[2][0]);
+
+			// 符号を決める（チェス盤パターン）
+			float sign = ((row + col) % 2 == 0) ? 1.0f : -1.0f;
+
+			// 転置して代入（colとrowを逆にする）
+			result.m[col][row] = (sign * subdet) / det;
+		}
+	}
+	return result;
+}
