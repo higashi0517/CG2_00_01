@@ -23,11 +23,26 @@
 #include "externals/imgui/imgui_impl_win32.h"
 #include "externals/imgui/imgui_impl_dx12.h"
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+#include "externals/DirectXTex/DirectXTex.h"
 
 // クライアント領域のサイズ
 const int32_t kClientWidth = 1280;
 const int32_t kClientHeight = 720;
 using float32_t = float;
+
+// 
+struct Vector4 {
+	float32_t x;
+	float32_t y;
+	float32_t z;
+	float32_t w;
+};
+
+struct Transform {
+	Vector3 scale;
+	Vector3 rotate;
+	Vector3 translate;
+};
 
 // ウィンドウプロシージャ
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
@@ -193,14 +208,6 @@ IDxcBlob* CompileShader(
 	return shaderBlob;
 }
 
-// 
-struct Vector4 {
-	float32_t x;
-	float32_t y;
-	float32_t z;
-	float32_t w;
-};
-
 Microsoft::WRL::ComPtr <ID3D12Resource> CreateBufferResource(ID3D12Device* device, size_t sizeInBytes) {
 
 	Microsoft::WRL::ComPtr <ID3D12Resource> vertexResource = nullptr;
@@ -246,15 +253,78 @@ Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(ID3D12Device* 
 	return descriptorHeap;
 }
 
+DirectX::ScratchImage LoadTexture(const std::string& filePath) {
 
-struct Transform {
-	Vector3 scale;
-	Vector3 rotate;
-	Vector3 translate;
-};
+	DirectX::ScratchImage image{};
+	std::wstring filePathW = ConvertString(filePath);
+	HRESULT hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_NONE, nullptr, image);
+	assert(SUCCEEDED(hr));
+
+	// ミニマップの作成
+	DirectX::ScratchImage mipImages{};
+	hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_DEFAULT, 0, mipImages);
+	assert(SUCCEEDED(hr));
+
+	return mipImages;
+}
+
+Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(ID3D12Device* device, const DirectX::TexMetadata& metadata) {
+
+	// Metadataを基にResourceの設定
+	D3D12_RESOURCE_DESC resourceDesc{};
+	resourceDesc.Width = UINT(metadata.width);
+	resourceDesc.Height = UINT(metadata.height);
+	resourceDesc.MipLevels = UINT16(metadata.mipLevels);
+	resourceDesc.DepthOrArraySize = UINT16(metadata.arraySize);
+	resourceDesc.Format = metadata.format;
+	resourceDesc.SampleDesc.Count = 1;
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION(metadata.dimension);
+
+	// 利用するHeapの設定
+	D3D12_HEAP_PROPERTIES heapProperties{};
+	heapProperties.Type = D3D12_HEAP_TYPE_CUSTOM;
+	heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
+	heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
+
+	// Resourceの生成
+	Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
+	HRESULT hr = device->CreateCommittedResource(
+		&heapProperties,
+		D3D12_HEAP_FLAG_NONE,
+		&resourceDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&resource)
+	);
+	assert(SUCCEEDED(hr));
+
+	return resource;
+}
+
+void UploadTextureData(Microsoft::WRL::ComPtr<ID3D12Resource>texture, const DirectX::ScratchImage& mipImages) {
+
+	// Meta情報の取得
+	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
+
+	for (size_t mipLevel = 0; mipLevel < metadata.mipLevels; ++mipLevel) {
+		// mipLevelの画像を取得
+		const DirectX::Image* img = mipImages.GetImage(mipLevel, 0, 0);
+		
+		HRESULT hr = texture->WriteToSubresource(
+			UINT(mipLevel),
+			nullptr,
+			img->pixels,
+			UINT(img->rowPitch),
+			UINT(img->slicePitch)
+		);
+		assert(SUCCEEDED(hr));
+	}
+}
 
 // Windowsアプリでのエントリーポイント
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
+
+	CoInitializeEx(0, COINIT_MULTITHREADED);
 
 	// リソースリークチェック
 	D3DResourceLeakCheker leakChecker;
@@ -516,6 +586,32 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	hr = dxcUtils->CreateDefaultIncludeHandler(&includehandler);
 	assert(SUCCEEDED(hr));
 
+	DirectX::ScratchImage mipImages = LoadTexture("Resources/uvChecker.png");
+	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
+	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = CreateTextureResource(device.Get(), metadata);
+	UploadTextureData(textureResource, mipImages);
+
+	//// metaDataを基にSRVの設定
+	//D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	//srvDesc.Format = metadata.format;
+	//srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	//srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	//srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
+
+	//// SRVを作成するDescriptorHeapの場所
+	//D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	//D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+
+	//textureSrvHandleCPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	//textureSrvHandleGPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+	//// SRVを生成
+	//device->CreateShaderResourceView(
+	//	textureResource.Get(),
+	//	&srvDesc,
+	//	textureSrvHandleCPU
+	//);
+
 	// RootSignatureの設定
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
 	descriptionRootSignature.Flags =
@@ -529,6 +625,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;	 // CBV
 	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX; // ピクセルシェーダー
 	rootParameters[1].Descriptor.ShaderRegister = 0;                     // シェーダーのレジスタ番号
+	//rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;     // SRV
+	//rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // ピクセルシェーダー
+	//rootParameters[2].Descriptor.ShaderRegister = 0;                   // シェーダーのレジスタ番号
 	descriptionRootSignature.pParameters = rootParameters;               // RootParameterのポインタ
 	descriptionRootSignature.NumParameters = _countof(rootParameters);   // 配列の長さ
 
@@ -813,6 +912,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
+	CoUninitialize();
 
 	return 0;
 }
