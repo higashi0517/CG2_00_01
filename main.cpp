@@ -1,5 +1,5 @@
 #include "ResourceObject.h"
-#include "DepthStencilResource.h"
+//#include "DepthStencilResource.h"
 #include <Windows.h>
 #include <wrl.h>
 #include <filesystem>
@@ -193,7 +193,7 @@ struct Vector4 {
 	float32_t w;
 };
 
-Microsoft::WRL::ComPtr <ID3D12Resource> CreateBufferResource(ID3D12Device* device, size_t sizeInBytes) {
+Microsoft::WRL::ComPtr <ID3D12Resource> CreateBufferResource(Microsoft::WRL::ComPtr<ID3D12Device> device, size_t sizeInBytes) {
 
 	Microsoft::WRL::ComPtr <ID3D12Resource> vertexResource = nullptr;
 
@@ -386,9 +386,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// 警告で停止
 		//infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
 
-		// 解放
-		infoQueue->Release();
-
 		// 抑制するメッセージのID
 		D3D12_MESSAGE_ID denyIds[] = {
 
@@ -479,7 +476,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	rtvHandle[1].ptr = rtvHandle[0].ptr + device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	device->CreateRenderTargetView(swapChainResources[1].Get(), &rtvDesc, rtvHandle[1]);
 
-	ResourceObject depthStencilResource = CreateDepthStencilTextureResource(device.Get(), kClientWidth, kClientHeight);
+	//ResourceObject depthStencilResource = CreateDepthStencilTextureResource(device.Get(), kClientWidth, kClientHeight);
 
 	// バックバッファのインデックスを取得
 	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
@@ -732,15 +729,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// GPUとOSに画面の変換を行うように指示
 			swapChain->Present(1, 0);
-
-			//// 初期化でフェンスを作る
-			//uint64_t fenceValue = 0;
-			//hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
-			//assert(SUCCEEDED(hr));
-
-			//// フェンスのイベントを作成
-			//fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-			//assert(fenceEvent != nullptr);
 
 			// フェンスの値の更新
 			fenceValue++;
