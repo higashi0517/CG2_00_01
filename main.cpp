@@ -1,5 +1,5 @@
 #include "ResourceObject.h"
-#include "DepthStencilResource.h"
+//#include "DepthStencilResource.h"
 #include <Windows.h>
 #include <wrl.h>
 #include <filesystem>
@@ -38,10 +38,20 @@ struct Vector4 {
 	float32_t w;
 };
 
+struct Vector2 {
+	float x;
+	float y;
+};
+
 struct Transform {
 	Vector3 scale;
 	Vector3 rotate;
 	Vector3 translate;
+};
+
+struct VertexData {
+	Vector4 position;
+	Vector2 texcoord;
 };
 
 // ウィンドウプロシージャ
@@ -208,7 +218,7 @@ IDxcBlob* CompileShader(
 	return shaderBlob;
 }
 
-Microsoft::WRL::ComPtr <ID3D12Resource> CreateBufferResource(ID3D12Device* device, size_t sizeInBytes) {
+Microsoft::WRL::ComPtr <ID3D12Resource> CreateBufferResource(Microsoft::WRL::ComPtr < ID3D12Device> device, size_t sizeInBytes) {
 
 	Microsoft::WRL::ComPtr <ID3D12Resource> vertexResource = nullptr;
 
@@ -241,9 +251,9 @@ Microsoft::WRL::ComPtr <ID3D12Resource> CreateBufferResource(ID3D12Device* devic
 }
 
 // DescriptorHeap
-Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible) {
+Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(Microsoft::WRL::ComPtr < ID3D12Device> device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible) {
 
-	ID3D12DescriptorHeap* descriptorHeap = nullptr;
+	Microsoft::WRL::ComPtr <ID3D12DescriptorHeap> descriptorHeap = nullptr;
 	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc{};
 	descriptorHeapDesc.Type = heapType;
 	descriptorHeapDesc.NumDescriptors = numDescriptors;
@@ -268,7 +278,7 @@ DirectX::ScratchImage LoadTexture(const std::string& filePath) {
 	return mipImages;
 }
 
-Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(ID3D12Device* device, const DirectX::TexMetadata& metadata) {
+Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(Microsoft::WRL::ComPtr < ID3D12Device> device, const DirectX::TexMetadata& metadata) {
 
 	// Metadataを基にResourceの設定
 	D3D12_RESOURCE_DESC resourceDesc{};
@@ -478,9 +488,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// 警告で停止
 		//infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
 
-		// 解放
-		infoQueue->Release();
-
 		// 抑制するメッセージのID
 		D3D12_MESSAGE_ID denyIds[] = {
 
@@ -569,7 +576,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	rtvHandle[1].ptr = rtvHandle[0].ptr + device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	device->CreateRenderTargetView(swapChainResources[1].Get(), &rtvDesc, rtvHandle[1]);
 
-	ResourceObject depthStencilResource = CreateDepthStencilTextureResource(device.Get(), kClientWidth, kClientHeight);
+	//ResourceObject depthStencilResource = CreateDepthStencilTextureResource(device.Get(), kClientWidth, kClientHeight);
 
 	// バックバッファのインデックスを取得
 	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
@@ -591,45 +598,66 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = CreateTextureResource(device.Get(), metadata);
 	UploadTextureData(textureResource, mipImages);
 
-	//// metaDataを基にSRVの設定
-	//D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	//srvDesc.Format = metadata.format;
-	//srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	//srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	//srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
+	// metaDataを基にSRVの設定
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = metadata.format;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
 
-	//// SRVを作成するDescriptorHeapの場所
-	//D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	//D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+	// SRVを作成するDescriptorHeapの場所
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 
-	//textureSrvHandleCPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	//textureSrvHandleGPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	textureSrvHandleCPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	textureSrvHandleGPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-	//// SRVを生成
-	//device->CreateShaderResourceView(
-	//	textureResource.Get(),
-	//	&srvDesc,
-	//	textureSrvHandleCPU
-	//);
+	// SRVを生成
+	device->CreateShaderResourceView(
+		textureResource.Get(),
+		&srvDesc,
+		textureSrvHandleCPU
+	);
 
 	// RootSignatureの設定
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
 	descriptionRootSignature.Flags =
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
+	// DescriptorRangeの設定
+	D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+	descriptorRange[0].BaseShaderRegister = 0;            // シェーダーのレジスタ番号
+	descriptorRange[0].NumDescriptors = 1;               // SRVの数
+	descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV; // SRV
+	descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND; // SRVのオフセット
+
 	// RootParameterの設定
-	D3D12_ROOT_PARAMETER rootParameters[2] = {};
+	D3D12_ROOT_PARAMETER rootParameters[3] = {};
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;     // CBV
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;  // ピクセルシェーダー
 	rootParameters[0].Descriptor.ShaderRegister = 0;                     // シェーダーのレジスタ番号
 	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;	 // CBV
 	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX; // ピクセルシェーダー
 	rootParameters[1].Descriptor.ShaderRegister = 0;                     // シェーダーのレジスタ番号
-	//rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;     // SRV
-	//rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // ピクセルシェーダー
-	//rootParameters[2].Descriptor.ShaderRegister = 0;                   // シェーダーのレジスタ番号
+	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;     // SRV
+	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // ピクセルシェーダー
+	rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;
+	rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);         // SRVの数
 	descriptionRootSignature.pParameters = rootParameters;               // RootParameterのポインタ
 	descriptionRootSignature.NumParameters = _countof(rootParameters);   // 配列の長さ
+
+	// Samplerの設定
+	D3D12_STATIC_SAMPLER_DESC staticSamplers[1]={};
+	staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR; // 線形フィルタ
+	staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP; // U方向のアドレスモード
+	staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP; // V方向のアドレスモード
+	staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP; // W方向のアドレスモード
+	staticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER; // 比較関数
+	staticSamplers[0].MaxLOD = D3D12_FLOAT32_MAX; // 最大LOD
+	staticSamplers[0].ShaderRegister = 0; // シェーダーのレジスタ番号
+	staticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // ピクセルシェーダー
+	descriptionRootSignature.pStaticSamplers = staticSamplers;
+	descriptionRootSignature.NumStaticSamplers = _countof(staticSamplers); // StaticSamplerの数
 
 	ID3DBlob* signatureBlob = nullptr;
 	ID3DBlob* errorBlob = nullptr;
@@ -654,14 +682,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	assert(SUCCEEDED(hr));
 
 	// InputLayout
-	D3D12_INPUT_ELEMENT_DESC inputelementDescs[1] = {};
-	inputelementDescs[0].SemanticName = "POSITION";
-	inputelementDescs[0].SemanticIndex = 0;
-	inputelementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	inputelementDescs[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	D3D12_INPUT_ELEMENT_DESC inputElementDescs[2] = {};
+	inputElementDescs[0].SemanticName = "POSITION";
+	inputElementDescs[0].SemanticIndex = 0;
+	inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	inputElementDescs[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	inputElementDescs[1].SemanticName = "TEXCOORD";
+	inputElementDescs[1].SemanticIndex = 0;
+	inputElementDescs[1].Format = DXGI_FORMAT_R32G32_FLOAT;
+	inputElementDescs[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
-	inputLayoutDesc.pInputElementDescs = inputelementDescs;
-	inputLayoutDesc.NumElements = _countof(inputelementDescs);
+	inputLayoutDesc.pInputElementDescs = inputElementDescs;
+	inputLayoutDesc.NumElements = _countof(inputElementDescs);
 
 	// BlendStateの設定
 	D3D12_BLEND_DESC blendDesc{};
@@ -712,7 +744,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 書き込むためのアドレスを取得	
 	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 	// 色を設定
-	*materialData = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+	*materialData = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	// WVP行列の設定
 	Microsoft::WRL::ComPtr <ID3D12Resource> wvpResource = CreateBufferResource(device.Get(), sizeof(Matrix4x4));
@@ -723,24 +755,29 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 行列を設定
 	*transformationMatirxData = MakeIdentity4x4();
 
-	Microsoft::WRL::ComPtr <ID3D12Resource> vertexResource = CreateBufferResource(device.Get(), sizeof(Vector4) * 3);
+	Microsoft::WRL::ComPtr <ID3D12Resource> vertexResource = CreateBufferResource(device.Get(), sizeof(VertexData) * 3);
 
 	//頂点バッファビューの作成
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
-	vertexBufferView.StrideInBytes = sizeof(Vector4);
-	vertexBufferView.SizeInBytes = sizeof(Vector4) * 3;
+	vertexBufferView.StrideInBytes = sizeof(VertexData);
+	vertexBufferView.SizeInBytes = sizeof(VertexData) * 3;
+   
+    // 頂点データの設定
+    VertexData* vertexData = nullptr;
+    vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
 
-	// 頂点データの設定
-	Vector4* vertexData = nullptr;
-	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
+    // 左下
+    vertexData[0].position = { -0.5f, -0.5f, 0.0f, 1.0f };
+    vertexData[0].texcoord = { 0.0f, 1.0f };
 
-	// 左下
-	vertexData[0] = { -0.5f,-0.5f,0.0f,1.0f };
-	// 上
-	vertexData[1] = { 0.0f,0.5f,0.0f,1.0f };
-	// 右下
-	vertexData[2] = { 0.5f,-0.5f,0.0f,1.0f };
+    // 上
+    vertexData[1].position = { 0.0f, 0.5f, 0.0f, 1.0f };
+    vertexData[1].texcoord = { 0.5f, 0.0f };
+
+    // 右下
+    vertexData[2].position = { 0.5f, -0.5f, 0.0f, 1.0f };
+    vertexData[2].texcoord = { 1.0f, 1.0f };
 
 	// ビューポート
 	D3D12_VIEWPORT viewport{};
@@ -758,17 +795,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	scissorRect.top = 0;
 	scissorRect.bottom = kClientHeight;
 
+	// フェンスの設定
 	Microsoft::WRL::ComPtr<ID3D12Fence> fence = nullptr;
-	HANDLE fenceEvent = nullptr;
-
-	// 初期化でフェンスを作る
+	HANDLE fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 	uint64_t fenceValue = 0;
 	hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
 	assert(SUCCEEDED(hr));
-
-	// フェンスのイベントを作成
-	fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-	assert(fenceEvent != nullptr);
 
 	MSG msg = {};
 
@@ -858,6 +890,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ID3D12DescriptorHeap* descriptorHeaps[] = {srvDescriptorHeap.Get() };
 			commandList->SetDescriptorHeaps(1, descriptorHeaps);
 
+			// SRVのDescriptortableを設定
+			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+			
 			// 描画
 			commandList->DrawInstanced(3, 1, 0, 0);
 
@@ -878,15 +913,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// GPUとOSに画面の変換を行うように指示
 			swapChain->Present(1, 0);
-
-			//// 初期化でフェンスを作る
-			//uint64_t fenceValue = 0;
-			//hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
-			//assert(SUCCEEDED(hr));
-
-			//// フェンスのイベントを作成
-			//fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-			//assert(fenceEvent != nullptr);
 
 			// フェンスの値の更新
 			fenceValue++;
