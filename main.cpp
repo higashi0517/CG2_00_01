@@ -1,5 +1,5 @@
 #include "ResourceObject.h"
-#include "DepthStencilResource.h"
+//#include "DepthStencilResource.h"
 #include <Windows.h>
 #include <wrl.h>
 #include <filesystem>
@@ -192,7 +192,7 @@ struct Vector4 {
 	float32_t w;
 };
 
-Microsoft::WRL::ComPtr <ID3D12Resource> CreateBufferResource(ID3D12Device* device, size_t sizeInBytes) {
+Microsoft::WRL::ComPtr <ID3D12Resource> CreateBufferResource(Microsoft::WRL::ComPtr < ID3D12Device> device, size_t sizeInBytes) {
 
 	Microsoft::WRL::ComPtr <ID3D12Resource> vertexResource = nullptr;
 
@@ -203,7 +203,7 @@ Microsoft::WRL::ComPtr <ID3D12Resource> CreateBufferResource(ID3D12Device* devic
 	// 頂点リソースの設定
 	D3D12_RESOURCE_DESC vertexResourceDesc{};
 	vertexResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	vertexResourceDesc.Width = sizeof(Vector4) * 3;
+	vertexResourceDesc.Width = sizeInBytes;
 	vertexResourceDesc.Height = 1;
 	vertexResourceDesc.DepthOrArraySize = 1;
 	vertexResourceDesc.MipLevels = 1;
@@ -338,6 +338,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	assert(useAdapter != nullptr);
 
 	Microsoft::WRL::ComPtr<ID3D12Device> device = nullptr;
+
 	D3D_FEATURE_LEVEL featureLevels[] = {
 		D3D_FEATURE_LEVEL_12_2,
 		D3D_FEATURE_LEVEL_12_1,
@@ -368,6 +369,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #ifdef _DEBUG
 
 	Microsoft::WRL::ComPtr<ID3D12InfoQueue> infoQueue = nullptr;
+
 	if (SUCCEEDED(device->QueryInterface(IID_PPV_ARGS(&infoQueue)))) {
 
 		// 致命的なエラーで停止
@@ -378,9 +380,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		// 警告で停止
 		//infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
-
-		// 解放
-		infoQueue->Release();
 
 		// 抑制するメッセージのID
 		D3D12_MESSAGE_ID denyIds[] = {
@@ -472,7 +471,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	rtvHandle[1].ptr = rtvHandle[0].ptr + device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	device->CreateRenderTargetView(swapChainResources[1].Get(), &rtvDesc, rtvHandle[1]);
 
-	ResourceObject depthStencilResource = CreateDepthStencilTextureResource(device.Get(), kClientWidth, kClientHeight);
+	//ResourceObject depthStencilResource = CreateDepthStencilTextureResource(device.Get(), kClientWidth, kClientHeight);
 
 	// バックバッファのインデックスを取得
 	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
@@ -518,7 +517,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	}
 
 	// RootSignatureの生成
-	ID3D12RootSignature* rootSignature = nullptr;
+	Microsoft::WRL::ComPtr < ID3D12RootSignature >rootSignature = nullptr;
 	hr = device->CreateRootSignature(
 		0, signatureBlob->GetBufferPointer(),
 		signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
@@ -555,7 +554,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// PSOの設定
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
-	graphicsPipelineStateDesc.pRootSignature = rootSignature;
+	graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();
 	graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;
 	graphicsPipelineStateDesc.VS = { vertexShaderBlob->GetBufferPointer(),vertexShaderBlob->GetBufferSize() };
 	graphicsPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(),pixelShaderBlob->GetBufferSize() };
@@ -572,7 +571,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	graphicsPipelineStateDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
 
 	// 生成
-	ID3D12PipelineState* graphicsPipelineState = nullptr;
+	Microsoft::WRL::ComPtr < ID3D12PipelineState> graphicsPipelineState = nullptr;
 	hr = device->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&graphicsPipelineState));
 	assert(SUCCEEDED(hr));
 
@@ -620,71 +619,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	scissorRect.top = 0;
 	scissorRect.bottom = kClientHeight;
 
-
-
-	//// TransitionBarrierの設定
-	//D3D12_RESOURCE_BARRIER barrier = {};
-	//barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	//barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-
-	////バリアを張るリソース
-	//barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
-	//// 遷移前                                        
-	//barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-	//// 遷移後
-	//barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	//// バリア
-	//commandList->ResourceBarrier(1, &barrier);
-
-	//// 描画先のRTVを設定
-	//commandList->OMSetRenderTargets(1, &rtvHandle[backBufferIndex], false, nullptr);
-	//// 指定した色で画面全体をクリア
-	//float clearColor[] = { 0.1f,0.25f,0.5f,1.0f };
-	//commandList->ClearRenderTargetView(rtvHandle[backBufferIndex], clearColor, 0, nullptr);
-
-	//// 状態を遷移
-	//barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	//barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-	//// バリア
-	//commandList->ResourceBarrier(1, &barrier);
-	//hr = commandList->Close();
-	//assert(SUCCEEDED(hr));
-
-	//// コマンドリストを実行
-	//ID3D12CommandList* commandLists[] = { commandList.Get() };
-	//commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
-
-	//// GPUとOSに画面の変換を行うように指示
-	//swapChain->Present(1, 0);
-
-	//// 初期化でフェンスを作る
-	//Microsoft::WRL::ComPtr<ID3D12Fence> fence = nullptr;
-	//uint64_t fenceValue = 0;
-	//hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
-	//assert(SUCCEEDED(hr));
-
-	//// フェンスのイベントを作成
-	//assert(fenceEvent != nullptr);
-
-	//// フェンスの値の更新
-	//fenceValue++;
-	//commandQueue->Signal(fence.Get(), fenceValue);
-
-	//if (fence->GetCompletedValue() < fenceValue) {
-
-	//	fence->SetEventOnCompletion(fenceValue, fenceEvent);
-
-	//	// イベントが発生するまで待機
-	//	WaitForSingleObject(fenceEvent, INFINITE);
-	//}
-	//// 次フレームのコマンドリストを準備
-	//hr = commandAllocator->Reset();
-	//assert(SUCCEEDED(hr));
-	//hr = commandList->Reset(commandAllocator.Get(), nullptr);
-	//assert(SUCCEEDED(hr));
-
 	Microsoft::WRL::ComPtr<ID3D12Fence> fence = nullptr;
-	HANDLE fenceEvent = nullptr;
+	HANDLE fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	uint64_t fenceValue = 0;
+	hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
+	assert(SUCCEEDED(hr));
 
 	MSG msg = {};
 
@@ -726,8 +665,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// 描画先のRTVを設定
 			commandList->RSSetViewports(1, &viewport);
 			commandList->RSSetScissorRects(1, &scissorRect);
-			commandList->SetGraphicsRootSignature(rootSignature);
-			commandList->SetPipelineState(graphicsPipelineState);
+			commandList->SetGraphicsRootSignature(rootSignature.Get());
+			commandList->SetPipelineState(graphicsPipelineState.Get());
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
@@ -744,20 +683,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			assert(SUCCEEDED(hr));
 
 			// コマンドリストを実行
-			ID3D12CommandList* commandLists[] = { commandList.Get() };
+		    ID3D12CommandList*commandLists[] = { commandList.Get() };
 			commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
 
 			// GPUとOSに画面の変換を行うように指示
 			swapChain->Present(1, 0);
-
-			// 初期化でフェンスを作る
-			uint64_t fenceValue = 0;
-			hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
-			assert(SUCCEEDED(hr));
-
-			// フェンスのイベントを作成
-			fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-			assert(fenceEvent != nullptr);
 
 			// フェンスの値の更新
 			fenceValue++;
