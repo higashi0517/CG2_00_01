@@ -1,5 +1,4 @@
 #include "ResourceObject.h"
-//#include "DepthStencilResource.h"
 #include <Windows.h>
 #include <wrl.h>
 #include <filesystem>
@@ -663,10 +662,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	hr = dxcUtils->CreateDefaultIncludeHandler(&includehandler);
 	assert(SUCCEEDED(hr));
 
+	// 1枚目
 	DirectX::ScratchImage mipImages = LoadTexture("Resources/uvChecker.png");
 	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
 	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = CreateTextureResource(device.Get(), metadata);
 	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = UploadTextureData(textureResource, mipImages, device, commandList);
+
 
 	// metaDataを基にSRVの設定
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -674,6 +675,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
+
 
 	// SRVを作成するDescriptorHeapの場所
 	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
@@ -816,7 +818,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	graphicsPipelineStateDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
 
 	// 生成
-	Microsoft::WRL::ComPtr < ID3D12PipelineState> graphicsPipelineState = nullptr;
+	Microsoft::WRL::ComPtr <ID3D12PipelineState> graphicsPipelineState = nullptr;
 	hr = device->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&graphicsPipelineState));
 	assert(SUCCEEDED(hr));
 
@@ -829,14 +831,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 色を設定
 	*materialData = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
-	// WVP行列の設定
-	Microsoft::WRL::ComPtr <ID3D12Resource> wvpResource = CreateBufferResource(device.Get(), sizeof(Matrix4x4));
-	// データを書き込む
-	Matrix4x4* transformationMatirxData = nullptr;
-	// 書き込むためのアドレスを取得
-	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatirxData));
-	// 行列を設定
-	*transformationMatirxData = MakeIdentity4x4();
+	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource1 = CreateBufferResource(device.Get(), sizeof(Matrix4x4));
+	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource2 = CreateBufferResource(device.Get(), sizeof(Matrix4x4));
+	Matrix4x4* transformationMatirxData1 = nullptr;
+	Matrix4x4* transformationMatirxData2 = nullptr;
+	wvpResource1->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatirxData1));
+	wvpResource2->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatirxData2));
+	*transformationMatirxData1 = MakeIdentity4x4();
+	*transformationMatirxData2 = MakeIdentity4x4();
 
 	Microsoft::WRL::ComPtr <ID3D12Resource> vertexResource = CreateBufferResource(device.Get(), sizeof(VertexData) * 6);
 
@@ -869,7 +871,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexData[3].texcoord = { 0.0f, 1.0f };
 
 	// 上
-	vertexData[4].position = { 0.0f, 0.0f, 0.0f, 1.0f };
+	vertexData[4].position = { 0.0f, 0.5f, 0.0f, 1.0f };
 	vertexData[4].texcoord = { 0.5f, 0.0f };
 
 	// 右下
@@ -902,7 +904,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	MSG msg = {};
 
 	// Transformの設定
-	Transform transform{ {1.0f, 1.0f, 1.0f},{0.0f, 0.0f, 0.0f},{0.0f, 0.0f, 0.0f} };
+	Transform transform1{ {1.0f, 1.0f, 1.0f},{0.0f, 80.0f, 0.0f},{0.0f, 0.0f, 0.0f} };
+	Transform transform2{ {1.0f, 1.0f, 1.0f},{0.0f, 0.0f, 0.0f},{0.0f, 0.0f, 0.0f} };
 
 	// cameraTransformの設定
 	Transform cameraTransform{ {1.0f, 1.0f, 1.0f},{0.0f, 0.0f, 0.0f},{0.0f, 0.0f, -5.0f} };
@@ -921,6 +924,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
 	);
 
+
 	// ウィンドウのボタンが押されるまでループ
 	while (msg.message != WM_QUIT) {
 
@@ -937,18 +941,49 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui_ImplDX12_NewFrame();
 			ImGui_ImplWin32_NewFrame();
 			ImGui::NewFrame();
-			ImGui::ShowDemoWindow();
+
+			ImGui::Begin("Setting");
+
+			// カラーの設定
+			static float color[3] = { 1.0f,1.0f,1.0f };
+
+			if (ImGui::CollapsingHeader("Color", ImGuiTreeNodeFlags_DefaultOpen)) {
+
+				ImGui::ColorEdit4("Color", &(*materialData).x);
+			}
+
+			// transformの設定
+			if (ImGui::CollapsingHeader("Transform 1", ImGuiTreeNodeFlags_DefaultOpen)) {
+
+				ImGui::DragFloat3("Translate##1", &transform1.translate.x, 0.01f);
+				ImGui::SliderFloat3("Rotate##1", &transform1.rotate.x, 0.0f, 360.0f);
+				ImGui::SliderFloat3("Scale##1", &transform1.scale.x, 0.1f, 5.0f);
+			}
+
+			if (ImGui::CollapsingHeader("Transform 2", ImGuiTreeNodeFlags_DefaultOpen)) {
+
+				ImGui::DragFloat3("Translate##2", &transform2.translate.x, 0.01f);
+				ImGui::SliderFloat3("Rotate##2", &transform2.rotate.x, 0.0f, 360.0f);
+				ImGui::SliderFloat3("Scale##2", &transform2.scale.x, 0.1f, 5.0f);
+			}
+
+
+			ImGui::End();
 			ImGui::Render();
 
-			// Transformの更新
-			transform.rotate.y += 0.03f;
-			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
-			Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
-			*transformationMatirxData = worldViewProjectionMatrix;
-			//*wvpData = worldMatrix;
+			
+			// 1個目（三角形1）
+			Matrix4x4 worldMatrix1 = MakeAffineMatrix(transform1.scale, transform1.rotate, transform1.translate);
+			Matrix4x4 wvp1 = Multiply(worldMatrix1, Multiply(viewMatrix, projectionMatrix));
+			*transformationMatirxData1 = wvp1;
+
+			// 2個目（三角形2）
+			Matrix4x4 worldMatrix2 = MakeAffineMatrix(transform2.scale, transform2.rotate, transform2.translate);
+			Matrix4x4 wvp2 = Multiply(worldMatrix2, Multiply(viewMatrix, projectionMatrix));
+			*transformationMatirxData2 = wvp2;
 
 			// バックバッファのインデックスを取得
 			UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
@@ -988,7 +1023,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+			//commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 
 			// 描画用のDescriptorHeapを設定
 			ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap.Get() };
@@ -998,7 +1033,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 
 			// 描画
-			commandList->DrawInstanced(6, 1, 0, 0);
+			//commandList->DrawInstanced(6, 1, 0, 0);
+
+			// 三角形1
+			commandList->SetGraphicsRootConstantBufferView(1, wvpResource1->GetGPUVirtualAddress());
+			commandList->DrawInstanced(3, 1, 0, 0);
+
+			// 三角形2
+			commandList->SetGraphicsRootConstantBufferView(1, wvpResource2->GetGPUVirtualAddress());
+			commandList->DrawInstanced(3, 1, 3, 0);
+
 
 			// ImGuiの描画
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());
