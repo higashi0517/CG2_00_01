@@ -390,6 +390,24 @@ Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(Microso
 	return resource;
 }
 
+D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap,
+	uint32_t descriptorSize, uint32_t index
+) {
+	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	handleCPU.ptr += (descriptorSize * index);
+	return handleCPU;
+}
+
+D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap,
+	uint32_t descriptorSize, uint32_t index
+) {
+	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
+	handleGPU.ptr += (descriptorSize * index);
+	return handleGPU;
+}
+
 // Windowsアプリでのエントリーポイント
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
@@ -609,8 +627,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	);
 	assert(SUCCEEDED(hr));
 
+	const uint32_t descriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	const uint32_t descriptorSizeRTV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	const uint32_t descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
 	// rtv用ディスクリプタヒープの生成
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap = CreateDescriptorHeap(device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
+	GetCPUDescriptorHandle(rtvDescriptorHeap, descriptorSizeRTV, 0);
 
 	// srv用ディスクリプタヒープの生成
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap = CreateDescriptorHeap(device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
@@ -658,6 +681,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	assert(SUCCEEDED(hr));
 	hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
 
+	if (FAILED(hr)) {
+		Log(logStream, "Failed to create DxcCompiler");
+		assert(false);
+	}
+
 	// includeに対応するための設定
 	IDxcIncludeHandler* includehandler = nullptr;
 	hr = dxcUtils->CreateDefaultIncludeHandler(&includehandler);
@@ -687,6 +715,30 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		textureResource.Get(),
 		&srvDesc,
 		textureSrvHandleCPU
+	);
+
+	// 2枚目
+	DirectX::ScratchImage mipImages2 = LoadTexture("Resources/monsterBall.png");
+	const DirectX::TexMetadata& metadata2 = mipImages2.GetMetadata();
+	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource2 = CreateTextureResource(device.Get(), metadata2);
+	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource2 = UploadTextureData(textureResource2, mipImages2, device, commandList);
+
+	// metaDataを基にSRVの設定
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2 = {};
+	srvDesc2.Format = metadata2.format;
+	srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc2.Texture2D.MipLevels = UINT(metadata2.mipLevels);
+
+	// SRVを作成するDescriptorHeapの場所
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2 = GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 2);
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 2);
+
+	// SRVを生成
+	device->CreateShaderResourceView(
+		textureResource2.Get(),
+		&srvDesc2,
+		textureSrvHandleCPU2
 	);
 
 	// RootSignatureの設定
@@ -1125,7 +1177,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetDescriptorHeaps(1, descriptorHeaps);
 
 			// SRVのDescriptortableを設定
-			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU2);
 
 			// 描画
 			commandList->DrawInstanced(totalSphereVertices, 1, 0, 0);
