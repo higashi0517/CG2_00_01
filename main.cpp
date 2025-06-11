@@ -1080,6 +1080,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// cameraTransformの設定
 	Transform cameraTransform{ {1.0f, 1.0f, 1.0f},{0.0f, 0.0f, 0.0f},{0.0f, 0.0f, -10.0f} };
 
+	// 切り替え用のフラグ
+	bool useMonsterBall = true;
+
 	// Imguiの初期化
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -1113,6 +1116,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//ImGui::ShowDemoWindow();
 			// ImGuiによるカメラ移動
 			ImGui::SliderFloat3("Camera Translate", &cameraTransform.translate.x, -20.0f, 0.0f);
+			ImGui::Checkbox("useMonsterBall", &useMonsterBall);
 			ImGui::Render();
 
 			// Transformの更新
@@ -1177,11 +1181,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetDescriptorHeaps(1, descriptorHeaps);
 
 			// SRVのDescriptortableを設定
-			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU2);
+			commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
 
 			// 描画
 			commandList->DrawInstanced(totalSphereVertices, 1, 0, 0);
 
+			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+			
 			// スプライトの描画
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
 			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
