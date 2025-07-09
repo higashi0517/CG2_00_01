@@ -25,6 +25,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 #include "externals/DirectXTex/DirectXTex.h"
 #include "externals/DirectXTex/d3dx12.h"
 #include <vector>
+#include <numbers>
 
 // クライアント領域のサイズ
 const int32_t kClientWidth = 1280;
@@ -944,7 +945,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	directionalLightData->intensity = 1.0f;
 
 	// 頂点バッファの生成
-	uint32_t kSubdivision = 10;
+	uint32_t kSubdivision = 16;
 	uint32_t totalSphereVertices = 6 * kSubdivision * kSubdivision;
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource =
 		CreateBufferResource(device.Get(), sizeof(VertexData) * totalSphereVertices);
@@ -963,79 +964,37 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	uint32_t latIndex = 0; // 緯度
 	uint32_t lonIndex = 0; // 経度
 	uint32_t startIndex = (latIndex * kSubdivision + lonIndex) * 6;
-	const float pi = 3.14159265358979323846f;
 
 	// 経度分割1つ分の角度
-	const float kLonEvery = pi * 2.0f / float(kSubdivision);
+	const float kLonEvery = std::numbers::pi_v<float> *2.0f / float(kSubdivision);
 	// 緯度分割1つ分の角度
-	const float kLatEvery = pi / float(kSubdivision);
-	// 経度の方向に分割
-	for (latIndex = 0; latIndex < kSubdivision; ++latIndex) {
-		float lat = -pi / 2.0f + kLatEvery * float(latIndex);
-		// 緯度の方向に分割
-		for (lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
-			uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
+	const float kLatEvery = std::numbers::pi_v<float> / float(kSubdivision);
+
+	for (uint32_t latIndex = 0; latIndex < (kSubdivision + 1); ++latIndex) {
+		for (uint32_t lonIndex = 0; lonIndex < (kSubdivision + 1); ++lonIndex) {
+
 			float lon = lonIndex * kLonEvery;
+			float lat = -std::numbers::pi_v<float> / 2.0f + kLatEvery * float(latIndex);
+			VertexData vertA = {
+				{
+					std::cosf(lat) * std::cosf(lon), // x座標
+					std::sinf(lat),                 // y座標
+					std::cosf(lat) * std::sinf(lon), // z座標
+					1.0f                            // w座標
+				},
+				{
+					float(lonIndex) / float(kSubdivision),
+					1.0f - float(latIndex) / float(kSubdivision) // u, v座標
+				},
+				{
+					std::cosf(lat) * std::cosf(lon),
+					std::sinf(lat),
+					std::cosf(lat) * std::sinf(lon)
+				}
+			};
 
-			// u, v座標の計算
-			float u = float(lonIndex) / float(kSubdivision);
-			float v = 1.0f - float(latIndex) / float(kSubdivision);
-
-			// 頂点にデータを入力
-			vertexData[start].position.x = cosf(lat) * cosf(lon);
-			vertexData[start].position.y = sinf(lat);
-			vertexData[start].position.z = cosf(lat) * sinf(lon);
-			vertexData[start].position.w = 1.0f;
-			vertexData[start].texcoord.x = u;
-			vertexData[start].texcoord.y = v;
-			vertexData[start].normal.x = vertexData[start].position.x;
-			vertexData[start].normal.y = vertexData[start].position.y;
-			vertexData[start].normal.z = vertexData[start].position.z;
-			vertexData[start + 1].position.x = cosf(lat + kLatEvery) * cosf(lon);
-			vertexData[start + 1].position.y = sinf(lat + kLatEvery);
-			vertexData[start + 1].position.z = cosf(lat + kLatEvery) * sinf(lon);
-			vertexData[start + 1].position.w = 1.0f;
-			vertexData[start + 1].texcoord.x = u;
-			vertexData[start + 1].texcoord.y = v - 1.0f / float(kSubdivision);
-			vertexData[start + 1].normal.x = vertexData[start + 1].position.x;
-			vertexData[start + 1].normal.y = vertexData[start + 1].position.y;
-			vertexData[start + 1].normal.z = vertexData[start + 1].position.z;
-			vertexData[start + 2].position.x = cosf(lat) * cosf(lon + kLonEvery);
-			vertexData[start + 2].position.y = sinf(lat);
-			vertexData[start + 2].position.z = cosf(lat) * sinf(lon + kLonEvery);
-			vertexData[start + 2].position.w = 1.0f;
-			vertexData[start + 2].texcoord.x = u + 1.0f / float(kSubdivision);
-			vertexData[start + 2].texcoord.y = v;
-			vertexData[start + 2].normal.x = vertexData[start + 2].position.x;
-			vertexData[start + 2].normal.y = vertexData[start + 2].position.y;
-			vertexData[start + 2].normal.z = vertexData[start + 2].position.z;
-			vertexData[start + 3].position.x = cosf(lat + kLatEvery) * cosf(lon);
-			vertexData[start + 3].position.y = sinf(lat + kLatEvery);
-			vertexData[start + 3].position.z = cosf(lat + kLatEvery) * sinf(lon);
-			vertexData[start + 3].position.w = 1.0f;
-			vertexData[start + 3].texcoord.x = u;
-			vertexData[start + 3].texcoord.y = v - 1.0f / float(kSubdivision);
-			vertexData[start + 3].normal.x = vertexData[start + 3].position.x;
-			vertexData[start + 3].normal.y = vertexData[start + 3].position.y;
-			vertexData[start + 3].normal.z = vertexData[start + 3].position.z;
-			vertexData[start + 4].position.x = cosf(lat + kLatEvery) * cosf(lon + kLonEvery);
-			vertexData[start + 4].position.y = sinf(lat + kLatEvery);
-			vertexData[start + 4].position.z = cosf(lat + kLatEvery) * sinf(lon + kLonEvery);
-			vertexData[start + 4].position.w = 1.0f;
-			vertexData[start + 4].texcoord.x = u + 1.0f / float(kSubdivision);
-			vertexData[start + 4].texcoord.y = v - 1.0f / float(kSubdivision);
-			vertexData[start + 4].normal.x = vertexData[start + 4].position.x;
-			vertexData[start + 4].normal.y = vertexData[start + 4].position.y;
-			vertexData[start + 4].normal.z = vertexData[start + 4].position.z;
-			vertexData[start + 5].position.x = cosf(lat) * cosf(lon + kLonEvery);
-			vertexData[start + 5].position.y = sinf(lat);
-			vertexData[start + 5].position.z = cosf(lat) * sinf(lon + kLonEvery);
-			vertexData[start + 5].position.w = 1.0f;
-			vertexData[start + 5].texcoord.x = u + 1.0f / float(kSubdivision);
-			vertexData[start + 5].texcoord.y = v;
-			vertexData[start + 5].normal.x = vertexData[start + 5].position.x;
-			vertexData[start + 5].normal.y = vertexData[start + 5].position.y;
-			vertexData[start + 5].normal.z = vertexData[start + 5].position.z;
+			uint32_t start = (latIndex * (kSubdivision + 1) + lonIndex);
+			vertexData[start] = vertA;
 		}
 	}
 
@@ -1055,14 +1014,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// インデックスの設定
 	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
 		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
-			uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
-			uint32_t index = (latIndex * kSubdivision + lonIndex) * 6;
-			indexDataSphere[index] = start;
-			indexDataSphere[index + 1] = start + 1;
-			indexDataSphere[index + 2] = start + 2;
-			indexDataSphere[index + 3] = start + 3;
-			indexDataSphere[index + 4] = start + 4;
-			indexDataSphere[index + 5] = start + 5;
+
+			uint32_t lt = latIndex * (kSubdivision + 1) + lonIndex; // 左上の頂点
+			uint32_t lb = (latIndex + 1) * (kSubdivision + 1) + lonIndex; // 左下の頂点
+			uint32_t rt = latIndex * (kSubdivision + 1) + lonIndex + 1; // 右上の頂点
+			uint32_t rb = (latIndex + 1) * (kSubdivision + 1) + lonIndex + 1; // 右下の頂点
+
+			uint32_t startIndex = (latIndex * kSubdivision + lonIndex) * 6;
+			// 左上、左下、右下
+			indexDataSphere[startIndex] = lt; // 左上
+			indexDataSphere[startIndex + 1] = lb; // 左下
+			indexDataSphere[startIndex + 2] = rb; // 右下
+			// 左上、右下、右上
+			indexDataSphere[startIndex + 3] = lt; // 左上
+			indexDataSphere[startIndex + 4] = rb; // 右下
+			indexDataSphere[startIndex + 5] = rt; // 右上
 		}
 	}
 
