@@ -89,6 +89,12 @@ struct ModelData {
 	MaterialData material;
 };
 
+enum class Scene {
+	Sprite,
+	obj,
+	sphere
+};
+
 
 // ウィンドウプロシージャ
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
@@ -1192,6 +1198,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 切り替え用のフラグ
 	bool useMonsterBall = false;
 
+	// シーン
+	Scene currentScene = Scene::Sprite;
+
 	// Imguiの初期化
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -1224,6 +1233,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::NewFrame();
 			//ImGui::ShowDemoWindow();
 			// ImGuiによるカメラ移動
+
+			// シーン
+			const char* sceneNames[] = { "Sprite", "Obj", "sphere" };
+			int sceneIndex = static_cast<int>(currentScene);
+			if (ImGui::Combo("Scene", &sceneIndex, sceneNames, IM_ARRAYSIZE(sceneNames))) {
+				currentScene = static_cast<Scene>(sceneIndex);
+			}
+
+
 			ImGui::SliderFloat3("Camera Translate", &cameraTransform.translate.x, -20.0f, 0.0f);
 			ImGui::Checkbox("useMonsterBall", &useMonsterBall);
 			ImGui::SliderFloat("Transform Rotate Y", &transform.rotate.y, -3.14f, 3.14f);
@@ -1304,39 +1322,62 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->RSSetScissorRects(1, &scissorRect);
 			commandList->SetGraphicsRootSignature(rootSignature.Get());
 			commandList->SetPipelineState(graphicsPipelineState.Get());
-			commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
+			/*commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
-			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());*/
 
 			// 描画用のDescriptorHeapを設定
 			ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap.Get() };
 			commandList->SetDescriptorHeaps(1, descriptorHeaps);
 
-			// SRVのDescriptortableを設定
-			commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
+			switch (currentScene) {
+			case Scene::Sprite:
+				// スプライトの描画
+				commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
+				commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
+				commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
+				// SRVのDescriptortableを設定
+				commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU2);
+				// インデックスの描画
+				commandList->IASetIndexBuffer(&indexBufferViewSprite);
+				// 描画
+				commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+				break;
 
-			// 描画
-			//commandList->DrawInstanced(totalSphereVertices, 1, 0, 0);
-			//// インデックスの描画
-			//commandList->IASetIndexBuffer(&indexBufferViewSphere);
-			//commandList->DrawIndexedInstanced(totalSphereVertices, 1, 0, 0, 0);
-			commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+			case Scene::obj:
 
-			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+				commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
+				commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+				commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+				commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+				commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+
+				// SRVのDescriptortableを設定
+				commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+
+				// 描画
+				//commandList->DrawInstanced(totalSphereVertices, 1, 0, 0);
+				//// インデックスの描画
+				//commandList->IASetIndexBuffer(&indexBufferViewSphere);
+				//commandList->DrawIndexedInstanced(totalSphereVertices, 1, 0, 0, 0);
+				commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+
+				//commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 
 
-			// スプライトの描画
-			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
-			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
-			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
-			//commandList->DrawInstanced(6, 1, 0, 0);
+				//// スプライトの描画
+				//commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
+				//commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
+				//commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
+				////commandList->DrawInstanced(6, 1, 0, 0);
 
-			// スプライトのインデックスの描画
-			commandList->IASetIndexBuffer(&indexBufferViewSprite);
-			//commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
-
+				//// スプライトのインデックスの描画
+				//commandList->IASetIndexBuffer(&indexBufferViewSprite);
+				////commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+				break;
+			}
 			// ImGuiの描画
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());
 
