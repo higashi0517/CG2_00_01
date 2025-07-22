@@ -1253,7 +1253,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			if (key[DIK_0]) {
 				OutputDebugStringA("Hit 0\n");
 			}
-			bool 
 
 			//ゲーム処理
 
