@@ -1061,11 +1061,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialDataSprite->uvTransform = MakeIdentity4x4();
 
 	// WVP行列の設定
-	Microsoft::WRL::ComPtr <ID3D12Resource> wvpResource = CreateBufferResource(device.Get(), sizeof(TransformationMatrix));
+	Microsoft::WRL::ComPtr <ID3D12Resource> wvpResourceLeft = CreateBufferResource(device.Get(), sizeof(TransformationMatrix));
 	// データを書き込む
 	TransformationMatrix* transformationMatrixData = nullptr;
 	// 書き込むためのアドレスを取得
-	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData));
+	wvpResourceLeft->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData));
+
+	// WVP行列の設定
+	Microsoft::WRL::ComPtr <ID3D12Resource> wvpResourceRight = CreateBufferResource(device.Get(), sizeof(TransformationMatrix));
+	// データを書き込む
+	TransformationMatrix* transformationMatrixDataRight = nullptr;
+	// 書き込むためのアドレスを取得
+	wvpResourceRight->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixDataRight));
 
 	// Sprite用のTransformationの設定
 	Microsoft::WRL::ComPtr <ID3D12Resource> transformationMatrixResourceSprite = CreateBufferResource(device.Get(), sizeof(TransformationMatrix));
@@ -1157,13 +1164,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	indexDataSprite[5] = 2;
 
 	// ビューポート
-	D3D12_VIEWPORT viewport{};
-	viewport.Width = kClientWidth;
-	viewport.Height = kClientHeight;
-	viewport.TopLeftX = 0;
-	viewport.TopLeftY = 0;
-	viewport.MinDepth = 0.0f;
-	viewport.MaxDepth = 1.0f;
+	D3D12_VIEWPORT viewportLeft{};
+	viewportLeft.Width = kClientWidth / 2.0f;
+	viewportLeft.Height = kClientHeight;
+	viewportLeft.TopLeftX = 0;
+	viewportLeft.TopLeftY = 0;
+	viewportLeft.MinDepth = 0.0f;
+	viewportLeft.MaxDepth = 1.0f;
+
+	D3D12_VIEWPORT viewportRight{};
+	viewportRight.Width = kClientWidth / 2.0f;
+	viewportRight.Height = kClientHeight;
+	viewportRight.TopLeftX = kClientWidth / 2.0f;
+	viewportRight.TopLeftY = 0;
+	viewportRight.MinDepth = 0.0f;
+	viewportRight.MaxDepth = 1.0f;
 
 	// シザー矩形
 	D3D12_RECT scissorRect{};
@@ -1188,7 +1203,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// DirectionInputの初期化
 	IDirectInput8* directInput = nullptr;
-	HRESULT result = DirectInput8Create(wc.hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**) & directInput, nullptr);
+	HRESULT result = DirectInput8Create(wc.hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&directInput, nullptr);
 	assert(SUCCEEDED(result));
 
 	// キーボードデバイスの生成
@@ -1213,7 +1228,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Transform transformSprite{ {1.0f, 1.0f, 1.0f},{0.0f, 0.0f, 0.0f},{0.0f, 0.0f, 0.0f} };
 
 	// cameraTransformの設定
-	Transform cameraTransform{ {1.0f, 1.0f, 1.0f},{0.0f, 0.0f, 0.0f},{0.0f, 0.0f, -10.0f} };
+	Transform cameraTransformLeft{ {1.0f, 1.0f, 1.0f},{0.0f, 0.0f, 0.0f},{0.0f, 0.0f, -10.0f} };
+
+	// 
+	Transform cameraTransformRight{ {1.0f, 1.0f, 1.0f},{0.0f, 0.0f, 0.0f},{0.0f, 0.0f, -10.0f} };
 
 	// 
 	Transform uvTransformSprite{ {1.0f, 1.0f, 1.0f},{0.0f, 0.0f, 0.0f},{0.0f, 0.0f, 0.0f} };
@@ -1262,7 +1280,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::NewFrame();
 			//ImGui::ShowDemoWindow();
 			// ImGuiによるカメラ移動
-			ImGui::SliderFloat3("Camera Translate", &cameraTransform.translate.x, -20.0f, 0.0f);
+			ImGui::SliderFloat3("Camera Translate", &cameraTransformLeft.translate.x, -20.0f, 0.0f);
+			ImGui::SliderFloat3("Camera Translate Right", &cameraTransformRight.translate.x, -20.0f, 0.0f);
 			ImGui::Checkbox("useMonsterBall", &useMonsterBall);
 			ImGui::SliderFloat("Transform Rotate Y", &transform.rotate.y, -3.14f, 3.14f);
 
@@ -1284,14 +1303,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::Render();
 
 			// Transformの更新
-			//transform.rotate.y += 0.03f;
-			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
-			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
-			Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
-			transformationMatrixData->WVP = worldViewProjectionMatrix;
-			transformationMatrixData->World = worldMatrix;
+			////transform.rotate.y += 0.03f;
+			//Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+			//Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+			//Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+			//Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
+			//Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+			//transformationMatrixData->WVP = worldViewProjectionMatrix;
+			//transformationMatrixData->World = worldMatrix;
 
 			// TransformSpriteの更新
 			Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
@@ -1338,15 +1357,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 			// 描画先のRTVを設定
-			commandList->RSSetViewports(1, &viewport);
+			commandList->RSSetViewports(1, &viewportLeft);
 			commandList->RSSetScissorRects(1, &scissorRect);
 			commandList->SetGraphicsRootSignature(rootSignature.Get());
 			commandList->SetPipelineState(graphicsPipelineState.Get());
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(1, wvpResourceLeft->GetGPUVirtualAddress());
 			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+
+			// 
+			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+			Matrix4x4 cameraMatrixLeft = MakeAffineMatrix(cameraTransformLeft.scale, cameraTransformLeft.rotate, cameraTransformLeft.translate);
+			Matrix4x4 viewMatrixLeft = Inverse(cameraMatrixLeft);
+			Matrix4x4 projectionMatrixLeft = MakePerspectiveFovMatrix(0.45f, float(kClientWidth) /2.0f/ float(kClientHeight), 0.1f, 100.0f);
+			Matrix4x4 wvpL = Multiply(worldMatrix, Multiply(viewMatrixLeft, projectionMatrixLeft));
+			transformationMatrixData->WVP = wvpL;
+			transformationMatrixData->World = worldMatrix;
 
 			// 描画用のDescriptorHeapを設定
 			ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap.Get() };
@@ -1375,8 +1403,47 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->IASetIndexBuffer(&indexBufferViewSprite);
 			//commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
+			//// ImGuiの描画
+			//ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());
+
+			// 右
+			// 描画先のRTVを設定
+			commandList->RSSetViewports(1, &viewportRight);
+			commandList->RSSetScissorRects(1, &scissorRect);
+			commandList->SetGraphicsRootSignature(rootSignature.Get());
+			commandList->SetPipelineState(graphicsPipelineState.Get());
+			commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
+			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(1, wvpResourceRight->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+
+			Matrix4x4 worldMatrixRight = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+			Matrix4x4 cameraMatrixRight = MakeAffineMatrix(cameraTransformRight.scale, cameraTransformRight.rotate, cameraTransformRight.translate);
+			Matrix4x4 viewMatrixRight = Inverse(cameraMatrixRight);
+			Matrix4x4 projectionMatrixRight = MakePerspectiveFovMatrix(0.45f, float(kClientWidth) /2.0f/ float(kClientHeight), 0.1f, 100.0f);
+			Matrix4x4 wvpR = Multiply(worldMatrixRight, Multiply(viewMatrixRight, projectionMatrixRight));
+			transformationMatrixDataRight->WVP = wvpR;
+			transformationMatrixDataRight->World = worldMatrixRight;
+
+			// 描画用のDescriptorHeapを設定
+			ID3D12DescriptorHeap* descriptorHeapsRight[] = { srvDescriptorHeap.Get() };
+			commandList->SetDescriptorHeaps(1, descriptorHeapsRight);
+
+			// SRVのDescriptortableを設定
+			commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
+
+			// 描画
+			//commandList->DrawInstanced(totalSphereVertices, 1, 0, 0);
+			//// インデックスの描画
+			//commandList->IASetIndexBuffer(&indexBufferViewSphere);
+			//commandList->DrawIndexedInstanced(totalSphereVertices, 1, 0, 0, 0);
+			commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+
+
 			// ImGuiの描画
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());
+
 
 			// 状態を遷移
 			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
