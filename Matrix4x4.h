@@ -1,14 +1,5 @@
 #pragma once
-
-struct Matrix4x4
-{
-	float m[4][4];
-};
-
-struct Vector3
-{
-	float x, y, z;
-};
+#include "Structs.h"
 
 // 関数宣言
 Matrix4x4 MakeIdentity4x4();

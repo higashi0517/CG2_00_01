@@ -6,10 +6,10 @@
 #include <chrono>
 #include <d3d12.h>
 #include <dxgi1_6.h>
-#include <cassert>
+//#include <cassert>
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
-#include <string>
+//#include <string>
 #include <dbghelp.h>
 #pragma comment(lib,"Dbghelp.lib")
 #include <strsafe.h>
@@ -24,77 +24,19 @@
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 #include "externals/DirectXTex/DirectXTex.h"
 #include "externals/DirectXTex/d3dx12.h"
-#include <vector>
+//#include <vector>
 #include<fstream>
 #include<sstream>
 #include <xaudio2.h>
 #pragma comment (lib,"xaudio2.lib")
 #include "Sound.h"
+#include "Structs.h"
+#include "LoadObjFile.h"
+#include "DepthStencil.h"
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
 #pragma comment(lib,"dinput8.lib")
 #pragma comment(lib,"dxguid.lib")
-
-// クライアント領域のサイズ
-const int32_t kClientWidth = 1280;
-const int32_t kClientHeight = 720;
-using float32_t = float;
-
-// 
-struct Vector4 {
-	float32_t x;
-	float32_t y;
-	float32_t z;
-	float32_t w;
-};
-
-struct Vector2 {
-	float32_t x;
-	float32_t y;
-};
-
-struct Matrix3x3 {
-	float32_t m[3][3];
-};
-
-struct Transform {
-	Vector3 scale;
-	Vector3 rotate;
-	Vector3 translate;
-};
-
-struct VertexData {
-	Vector4 position;
-	Vector2 texcoord;
-	Vector3 normal;
-};
-
-struct Material {
-	Vector4 color;
-	int32_t enableLighting;
-	float padding[3];
-	Matrix4x4 uvTransform;
-};
-
-struct TransformationMatrix {
-	Matrix4x4 WVP;
-	Matrix4x4 World;
-};
-
-struct DirectionalLight {
-	Vector4 color;
-	Vector3 direction;
-	float intensity;
-};
-
-struct MaterialData {
-	std::string textureFilePath;
-};
-
-struct ModelData {
-	std::vector<VertexData> vertices;
-	MaterialData material;
-};
 
 // ウィンドウプロシージャ
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
@@ -393,42 +335,42 @@ Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(Microsoft::WRL::ComPtr<
 	return intermediateResource;
 }
 
-Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(Microsoft::WRL::ComPtr<ID3D12Device> device, int32_t width, int32_t height) {
-
-	// 生成するResourceの設定
-	D3D12_RESOURCE_DESC resourceDesc{};
-	resourceDesc.Width = width;
-	resourceDesc.Height = height;
-	resourceDesc.MipLevels = 1;
-	resourceDesc.DepthOrArraySize = 1;
-	resourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	resourceDesc.SampleDesc.Count = 1;
-	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-
-	// 利用するHeapの設定
-	D3D12_HEAP_PROPERTIES heapProperties{};
-	heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
-
-	// 深度値のクリア設定
-	D3D12_CLEAR_VALUE depthClearValue{};
-	depthClearValue.DepthStencil.Depth = 1.0f;
-	depthClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-
-	// Resourceの生成
-	Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
-	HRESULT hr = device->CreateCommittedResource(
-		&heapProperties,
-		D3D12_HEAP_FLAG_NONE,
-		&resourceDesc,
-		D3D12_RESOURCE_STATE_DEPTH_WRITE,
-		&depthClearValue,
-		IID_PPV_ARGS(&resource)
-	);
-	assert(SUCCEEDED(hr));
-
-	return resource;
-}
+//Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(Microsoft::WRL::ComPtr<ID3D12Device> device, int32_t width, int32_t height) {
+//
+//	// 生成するResourceの設定
+//	D3D12_RESOURCE_DESC resourceDesc{};
+//	resourceDesc.Width = width;
+//	resourceDesc.Height = height;
+//	resourceDesc.MipLevels = 1;
+//	resourceDesc.DepthOrArraySize = 1;
+//	resourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+//	resourceDesc.SampleDesc.Count = 1;
+//	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+//	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+//
+//	// 利用するHeapの設定
+//	D3D12_HEAP_PROPERTIES heapProperties{};
+//	heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+//
+//	// 深度値のクリア設定
+//	D3D12_CLEAR_VALUE depthClearValue{};
+//	depthClearValue.DepthStencil.Depth = 1.0f;
+//	depthClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+//
+//	// Resourceの生成
+//	Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
+//	HRESULT hr = device->CreateCommittedResource(
+//		&heapProperties,
+//		D3D12_HEAP_FLAG_NONE,
+//		&resourceDesc,
+//		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+//		&depthClearValue,
+//		IID_PPV_ARGS(&resource)
+//	);
+//	assert(SUCCEEDED(hr));
+//
+//	return resource;
+//}
 
 D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap,
@@ -448,120 +390,120 @@ D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(
 	return handleGPU;
 }
 
-MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
+//MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
+//
+//	// 変数の宣言
+//	MaterialData materialData;
+//	std::string line;
+//
+//	// ファイルを開く
+//	std::ifstream file(directoryPath + "/" + filename);
+//	assert(file.is_open());
+//
+//	// ファイル読み込み
+//	while (std::getline(file, line)) {
+//		std::string identifier;
+//		std::istringstream s(line);
+//		s >> identifier;
+//
+//		// identifierに応じた処理
+//		if (identifier == "map_Kd") {
+//			std::string textureFilename;
+//			s >> textureFilename;
+//			// 連続してファイルパスする
+//			materialData.textureFilePath = directoryPath + "/" + textureFilename;
+//		}
+//	}
+//	return materialData;
+//}
 
-	// 変数の宣言
-	MaterialData materialData;
-	std::string line;
 
-	// ファイルを開く
-	std::ifstream file(directoryPath + "/" + filename);
-	assert(file.is_open());
-
-	// ファイル読み込み
-	while (std::getline(file, line)) {
-		std::string identifier;
-		std::istringstream s(line);
-		s >> identifier;
-
-		// identifierに応じた処理
-		if (identifier == "map_Kd") {
-			std::string textureFilename;
-			s >> textureFilename;
-			// 連続してファイルパスする
-			materialData.textureFilePath = directoryPath + "/" + textureFilename;
-		}
-	}
-	return materialData;
-}
-
-
-// objファイルを読み込む関数
-ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename) {
-
-	// 変数の宣言
-	ModelData modelData;
-	std::vector<Vector4> positions;
-	std::vector<Vector3> normals;
-	std::vector<Vector2> texcoords;
-	std::string line;
-
-	// ファイルを開く
-	std::ifstream file(directoryPath + "/" + filename);
-	assert(file.is_open());
-
-	// ファイル読み込み
-	while (std::getline(file, line)) {
-		std::string identifier;
-		std::istringstream s(line);
-		s >> identifier;// 先頭の識別子を読む
-
-		// 頂点位置の読み込み
-		if (identifier == "v") {
-
-			Vector4 position;
-			s >> position.x >> position.y >> position.z;
-			position.w = 1.0f; // 同次座標のためwは1.0
-			// 位置のxを反転
-			position.x *= -1.0f;
-			positions.push_back(position);
-		} else if (identifier == "vt") {
-
-			Vector2 texcoord;
-			s >> texcoord.x >> texcoord.y;
-			// テクスチャ座標のyを反転
-			texcoord.y = 1.0f - texcoord.y;
-			texcoords.push_back(texcoord);
-		} else if (identifier == "vn") {
-
-			Vector3 normal;
-			s >> normal.x >> normal.y >> normal.z;
-			// 法線のxを反転
-			normal.x *= -1.0f;
-			normals.push_back(normal);
-		} else if (identifier == "f") {
-
-			VertexData triangle[3];
-
-			// 面は三角形限定、その他は未対応
-			for (int32_t faceVertex = 0; faceVertex < 3; ++faceVertex) {
-				std::string vertexDefinition;
-				s >> vertexDefinition;
-
-				// 頂点の要素へのIndexは「位置/UV/法線」で格納されているので、分解してIndexを取得
-				std::istringstream v(vertexDefinition);
-				uint32_t elementIndices[3];
-				for (int32_t element = 0; element < 3; ++element) {
-
-					std::string index;
-					std::getline(v, index, '/');// 区切りでインデックスを読んでいく
-					elementIndices[element] = std::stoi(index);
-				}
-
-				// 要素へのindexから、実際の要素の値を取得して、頂点を構築する
-				Vector4 position = positions[elementIndices[0] - 1];
-				Vector2 texcoord = texcoords[elementIndices[1] - 1];
-				Vector3 normal = normals[elementIndices[2] - 1];
-				//VertexData vetex = { position, texcoord, normal };
-				//modelData.vertices.push_back(vetex);
-				triangle[faceVertex] = { position, texcoord, normal };
-			}
-
-			// 頂点を逆順で登録することで、周り準を逆にする
-			modelData.vertices.push_back(triangle[2]);
-			modelData.vertices.push_back(triangle[1]);
-			modelData.vertices.push_back(triangle[0]);
-		} else if (identifier == "mtllib") {
-
-			// materialTemplateLibraryファイルの名前を取得する
-			std::string materialFilename;
-			s >> materialFilename;
-			// 基本的にobjファイルと同一階層にmtlは存在させるので、ディレクトリ名とファイル名を渡す
-			modelData.material = LoadMaterialTemplateFile(directoryPath, materialFilename);
-		}
-	}
-	return modelData;
-}
+//// objファイルを読み込む関数
+//ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename) {
+//
+//	// 変数の宣言
+//	ModelData modelData;
+//	std::vector<Vector4> positions;
+//	std::vector<Vector3> normals;
+//	std::vector<Vector2> texcoords;
+//	std::string line;
+//
+//	// ファイルを開く
+//	std::ifstream file(directoryPath + "/" + filename);
+//	assert(file.is_open());
+//
+//	// ファイル読み込み
+//	while (std::getline(file, line)) {
+//		std::string identifier;
+//		std::istringstream s(line);
+//		s >> identifier;// 先頭の識別子を読む
+//
+//		// 頂点位置の読み込み
+//		if (identifier == "v") {
+//
+//			Vector4 position;
+//			s >> position.x >> position.y >> position.z;
+//			position.w = 1.0f; // 同次座標のためwは1.0
+//			// 位置のxを反転
+//			position.x *= -1.0f;
+//			positions.push_back(position);
+//		} else if (identifier == "vt") {
+//
+//			Vector2 texcoord;
+//			s >> texcoord.x >> texcoord.y;
+//			// テクスチャ座標のyを反転
+//			texcoord.y = 1.0f - texcoord.y;
+//			texcoords.push_back(texcoord);
+//		} else if (identifier == "vn") {
+//
+//			Vector3 normal;
+//			s >> normal.x >> normal.y >> normal.z;
+//			// 法線のxを反転
+//			normal.x *= -1.0f;
+//			normals.push_back(normal);
+//		} else if (identifier == "f") {
+//
+//			VertexData triangle[3];
+//
+//			// 面は三角形限定、その他は未対応
+//			for (int32_t faceVertex = 0; faceVertex < 3; ++faceVertex) {
+//				std::string vertexDefinition;
+//				s >> vertexDefinition;
+//
+//				// 頂点の要素へのIndexは「位置/UV/法線」で格納されているので、分解してIndexを取得
+//				std::istringstream v(vertexDefinition);
+//				uint32_t elementIndices[3];
+//				for (int32_t element = 0; element < 3; ++element) {
+//
+//					std::string index;
+//					std::getline(v, index, '/');// 区切りでインデックスを読んでいく
+//					elementIndices[element] = std::stoi(index);
+//				}
+//
+//				// 要素へのindexから、実際の要素の値を取得して、頂点を構築する
+//				Vector4 position = positions[elementIndices[0] - 1];
+//				Vector2 texcoord = texcoords[elementIndices[1] - 1];
+//				Vector3 normal = normals[elementIndices[2] - 1];
+//				//VertexData vetex = { position, texcoord, normal };
+//				//modelData.vertices.push_back(vetex);
+//				triangle[faceVertex] = { position, texcoord, normal };
+//			}
+//
+//			// 頂点を逆順で登録することで、周り準を逆にする
+//			modelData.vertices.push_back(triangle[2]);
+//			modelData.vertices.push_back(triangle[1]);
+//			modelData.vertices.push_back(triangle[0]);
+//		} else if (identifier == "mtllib") {
+//
+//			// materialTemplateLibraryファイルの名前を取得する
+//			std::string materialFilename;
+//			s >> materialFilename;
+//			// 基本的にobjファイルと同一階層にmtlは存在させるので、ディレクトリ名とファイル名を渡す
+//			modelData.material = LoadMaterialTemplateFile(directoryPath, materialFilename);
+//		}
+//	}
+//	return modelData;
+//}
 
 // Windowsアプリでのエントリーポイント
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -795,7 +737,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// dsv用ディスクリプタヒープの生成
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap = CreateDescriptorHeap(device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
-	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilReosurce = CreateDepthStencilTextureResource(device.Get(), kClientWidth, kClientHeight);
+	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilReosurce = depthStencil.CreateDepthStencilTextureResource(device.Get(), kClientWidth, kClientHeight);
 
 	// SwapChainからResourceを取得
 	Microsoft::WRL::ComPtr<ID3D12Resource> swapChainResources[2] = { nullptr };
@@ -872,8 +814,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		textureSrvHandleCPU
 	);
 
+	LoadObjFile load{};
+
 	// 2枚目
-	ModelData modelData = LoadObjFile("resources", "axis.obj");
+	ModelData modelData = load.LoadObj("resources", "axis.obj");
 
 	DirectX::ScratchImage mipImages2 = LoadTexture(modelData.material.textureFilePath);
 	const DirectX::TexMetadata& metadata2 = mipImages2.GetMetadata();
