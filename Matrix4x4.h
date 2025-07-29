@@ -22,3 +22,11 @@ Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Ve
 Matrix4x4 Inverse(const Matrix4x4& m);
 Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspecRatio, float nearClip, float farClip);
 Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip);
+Vector3 Normalize(const Vector3& v);
+Vector3 Cross(const Vector3& v1, const Vector3& v2);
+float Dot(const Vector3& v1, const Vector3& v2);
+Matrix4x4 MakeLookAtMatrix(const Vector3& eye, const Vector3& target, const Vector3& up);
+Vector3 operator*(const Matrix4x4& m, const Vector3& v);
+Vector3 operator*(const Vector3& v, const Matrix4x4& m);
+Vector3 operator+(const Vector3& v1, const Vector3& v2);
+Vector3 operator-(const Vector3& v1, const Vector3& v2);

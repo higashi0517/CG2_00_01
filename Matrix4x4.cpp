@@ -26,6 +26,7 @@ Matrix4x4 MakeTranslateMatrix(const Vector3& translate) {
 	Matrix4x4 result = MakeIdentity4x4();
 	result.m[3][0] = translate.x;
 	result.m[3][1] = translate.y;
+
 	result.m[3][2] = translate.z;
 	return result;
 }
@@ -202,6 +203,73 @@ Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float botto
 	result.m[3][0] = (left + right) / (left - right);
 	result.m[3][1] = (top + bottom) / (bottom - top);
 	result.m[3][2] = nearClip / (nearClip - farClip);
+
+	return result;
+}
+
+// Normalize関数の実装
+Vector3 Normalize(const Vector3& v) {
+	float length = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+	if (length == 0.0f) return { 0.0f, 0.0f, 0.0f }; // ゼロベクトルの正規化は定義されない
+	return { v.x / length, v.y / length, v.z / length };
+}
+
+// Cross関数の実装
+Vector3 Cross(const Vector3& a, const Vector3& b) {
+	return {
+		a.y * b.z - a.z * b.y,
+		a.z * b.x - a.x * b.z,
+		a.x * b.y - a.y * b.x
+	};
+}
+
+// Dot関数
+float Dot(const Vector3& a, const Vector3& b) {
+	return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+// スカラー掛け算演算子の定義
+Vector3 operator*(const Vector3& v, float s) {
+	return { v.x * s, v.y * s, v.z * s };
+}
+Vector3 operator*(float s, const Vector3& v) {
+	return { v.x * s, v.y * s, v.z * s };
+}
+// 加算演算子
+Vector3 operator+(const Vector3& a, const Vector3& b) {
+	return { a.x + b.x, a.y + b.y, a.z + b.z };
+}
+// 減算演算子
+Vector3 operator-(const Vector3& a, const Vector3& b) {
+	return { a.x - b.x, a.y - b.y, a.z - b.z };
+}
+
+Matrix4x4 MakeLookAtMatrix(const Vector3& eye, const Vector3& target, const Vector3& up)
+{
+	Vector3 zaxis = Normalize(target - eye);        // forward
+	Vector3 xaxis = Normalize(Cross(up, zaxis));    // right
+	Vector3 yaxis = Cross(zaxis, xaxis);            // up (修正済)
+
+	Matrix4x4 result{};
+	result.m[0][0] = xaxis.x;
+	result.m[0][1] = yaxis.x;
+	result.m[0][2] = zaxis.x;
+	result.m[0][3] = 0.0f;
+
+	result.m[1][0] = xaxis.y;
+	result.m[1][1] = yaxis.y;
+	result.m[1][2] = zaxis.y;
+	result.m[1][3] = 0.0f;
+
+	result.m[2][0] = xaxis.z;
+	result.m[2][1] = yaxis.z;
+	result.m[2][2] = zaxis.z;
+	result.m[2][3] = 0.0f;
+
+	result.m[3][0] = -Dot(xaxis, eye);
+	result.m[3][1] = -Dot(yaxis, eye);
+	result.m[3][2] = -Dot(zaxis, eye);
+	result.m[3][3] = 1.0f;
 
 	return result;
 }
