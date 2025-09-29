@@ -34,6 +34,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 #include <dinput.h>
 #pragma comment(lib,"dinput8.lib")
 #pragma comment(lib,"dxguid.lib")
+#include "DebugCamera.h"
 
 // クライアント領域のサイズ
 const int32_t kClientWidth = 1280;
@@ -1204,6 +1205,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	result = keyboard->SetCooperativeLevel(hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
 	assert(SUCCEEDED(result));
 
+	DebugCamera debugCamera;
+
 	MSG msg = {};
 
 	// Transformの設定
@@ -1253,6 +1256,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			if (key[DIK_0]) {
 				OutputDebugStringA("Hit 0\n");
 			}
+			debugCamera.Update(key);
 
 			//ゲーム処理
 

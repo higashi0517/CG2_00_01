@@ -18,7 +18,7 @@ Sound::~Sound() {
 // 音声の再生に必要なデータ
 Sound::SoundData Sound::LoadWave(const char* filePath) {
 
-	HRESULT result;
+	//HRESULT result;
 
 	// ファイルを開く
 	// ファイル入力ストリームのインスタンス
