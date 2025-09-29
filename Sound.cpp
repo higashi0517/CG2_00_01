@@ -52,6 +52,7 @@ Sound::SoundData Sound::LoadWave(const char* filePath) {
 	assert(format.chunk.size <= sizeof(format.fmt));
 	file.read((char*)&format.fmt, format.chunk.size);
 
+
 	// Dataチャンクの読み込み
 	Sound::ChunkHeader data;
 	file.read((char*)&data, sizeof(data));
