@@ -1,4 +1,5 @@
 #pragma once
+#include <assert.h>
 
 struct Matrix4x4
 {
@@ -22,3 +23,5 @@ Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Ve
 Matrix4x4 Inverse(const Matrix4x4& m);
 Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspecRatio, float nearClip, float farClip);
 Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip);
+Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth);
+Vector3 TransformNormal(const Vector3& vector, const Matrix4x4& matrix);
