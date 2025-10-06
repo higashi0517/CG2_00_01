@@ -135,14 +135,14 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\externals\imgui\imgui.cpp" />
-    <ClCompile Include="..\externals\imgui\imgui_demo.cpp" />
-    <ClCompile Include="..\externals\imgui\imgui_draw.cpp" />
-    <ClCompile Include="..\externals\imgui\imgui_impl_dx12.cpp" />
-    <ClCompile Include="..\externals\imgui\imgui_impl_win32.cpp" />
-    <ClCompile Include="..\externals\imgui\imgui_tables.cpp" />
-    <ClCompile Include="..\externals\imgui\imgui_widgets.cpp" />
     <ClCompile Include="DebugCamera.cpp" />
+    <ClCompile Include="externals\imgui\imgui.cpp" />
+    <ClCompile Include="externals\imgui\imgui_demo.cpp" />
+    <ClCompile Include="externals\imgui\imgui_draw.cpp" />
+    <ClCompile Include="externals\imgui\imgui_impl_dx12.cpp" />
+    <ClCompile Include="externals\imgui\imgui_impl_win32.cpp" />
+    <ClCompile Include="externals\imgui\imgui_tables.cpp" />
+    <ClCompile Include="externals\imgui\imgui_widgets.cpp" />
     <ClCompile Include="main.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
       <WholeProgramOptimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</WholeProgramOptimization>
@@ -169,22 +169,21 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\externals\imgui\imconfig.h" />
-    <ClInclude Include="..\externals\imgui\imgui.h" />
-    <ClInclude Include="..\externals\imgui\imgui_impl_dx12.h" />
-    <ClInclude Include="..\externals\imgui\imgui_impl_win32.h" />
-    <ClInclude Include="..\externals\imgui\imgui_internal.h" />
-    <ClInclude Include="..\externals\imgui\imstb_rectpack.h" />
-    <ClInclude Include="..\externals\imgui\imstb_textedit.h" />
-    <ClInclude Include="..\externals\imgui\imstb_truetype.h" />
     <ClInclude Include="DebugCamera.h" />
     <ClInclude Include="DepthStencilResource.h" />
+    <ClInclude Include="externals\imgui\imconfig.h" />
+    <ClInclude Include="externals\imgui\imgui.h" />
+    <ClInclude Include="externals\imgui\imgui_impl_dx12.h" />
+    <ClInclude Include="externals\imgui\imgui_impl_win32.h" />
+    <ClInclude Include="externals\imgui\imgui_internal.h" />
+    <ClInclude Include="externals\imgui\imstb_rectpack.h" />
+    <ClInclude Include="externals\imgui\imstb_textedit.h" />
+    <ClInclude Include="externals\imgui\imstb_truetype.h" />
     <ClInclude Include="Matrix4x4.h" />
     <ClInclude Include="ResourceObject.h" />
     <ClInclude Include="Sound.h" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\externals\imgui\LICENSE.txt" />
     <Text Include="externals\imgui\LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
