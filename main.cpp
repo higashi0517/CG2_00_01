@@ -97,6 +97,16 @@ struct ModelData {
 	MaterialData material;
 };
 
+enum BlendMode {
+	kBlendModeNone,
+	kBlendModeNormal,
+	kBlendModeAdd,
+	kBlendModeSubtract,
+	kBlendModeMultiply,
+	kBlendModeScreen,
+	kCountOfBlendMode,
+};
+
 // ウィンドウプロシージャ
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
@@ -982,18 +992,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	inputLayoutDesc.pInputElementDescs = inputElementDescs;
 	inputLayoutDesc.NumElements = _countof(inputElementDescs);
 
-	// BlendStateの設定
-	D3D12_BLEND_DESC blendDesc{};
-	// すべての色要素
-	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-	blendDesc.RenderTarget[0].BlendEnable = TRUE;
-	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
-	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
-	blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
-
 	// RasterizerStateの設定
 	D3D12_RASTERIZER_DESC rasterizerDesc{};
 	// 裏面を表示しない
@@ -1014,7 +1012,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;
 	graphicsPipelineStateDesc.VS = { vertexShaderBlob->GetBufferPointer(),vertexShaderBlob->GetBufferSize() };
 	graphicsPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(),pixelShaderBlob->GetBufferSize() };
-	graphicsPipelineStateDesc.BlendState = blendDesc;
+	//graphicsPipelineStateDesc.BlendState = blendDesc;
 	graphicsPipelineStateDesc.RasterizerState = rasterizerDesc;
 
 	// DepthStencilStateの設定
@@ -1038,6 +1036,60 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	graphicsPipelineStateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	graphicsPipelineStateDesc.SampleDesc.Count = 1;
 	graphicsPipelineStateDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
+
+	// BlendStateの設定
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> psoList[kCountOfBlendMode];
+	for (int i = 0; i < kCountOfBlendMode; ++i) {
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = graphicsPipelineStateDesc;
+
+		D3D12_BLEND_DESC blend{};
+		blend.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+		switch ((BlendMode)i) {
+		case kBlendModeNone:
+			blend.RenderTarget[0].BlendEnable = FALSE;
+			break;
+		case kBlendModeNormal:
+			blend.RenderTarget[0].BlendEnable = TRUE;
+			blend.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+			blend.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+			blend.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+			break;
+		case kBlendModeAdd:
+			blend.RenderTarget[0].BlendEnable = TRUE;
+			blend.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+			blend.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+			blend.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+			break;
+		case kBlendModeSubtract:
+			blend.RenderTarget[0].BlendEnable = TRUE;
+			blend.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+			blend.RenderTarget[0].BlendOp = D3D12_BLEND_OP_REV_SUBTRACT;
+			blend.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+			break;
+		case kBlendModeMultiply:
+			blend.RenderTarget[0].BlendEnable = TRUE;
+			blend.RenderTarget[0].SrcBlend = D3D12_BLEND_ZERO;
+			blend.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+			blend.RenderTarget[0].DestBlend = D3D12_BLEND_SRC_COLOR;
+			break;
+		case kBlendModeScreen:
+			blend.RenderTarget[0].BlendEnable = TRUE;
+			blend.RenderTarget[0].SrcBlend = D3D12_BLEND_INV_DEST_COLOR;
+			blend.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+			blend.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+			break;
+		}
+
+		blend.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+		blend.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+		blend.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+
+		desc.BlendState = blend;
+
+		HRESULT hr = device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&psoList[i]));
+		assert(SUCCEEDED(hr));
+	}
 
 	// 生成
 	Microsoft::WRL::ComPtr < ID3D12PipelineState> graphicsPipelineState = nullptr;
@@ -1196,7 +1248,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// DirectionInputの初期化
 	IDirectInput8* directInput = nullptr;
-	HRESULT result = DirectInput8Create(wc.hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**) & directInput, nullptr);
+	HRESULT result = DirectInput8Create(wc.hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&directInput, nullptr);
 	assert(SUCCEEDED(result));
 
 	// キーボードデバイスの生成
@@ -1273,25 +1325,34 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::NewFrame();
 			//ImGui::ShowDemoWindow();
 			// ImGuiによるカメラ移動
-			ImGui::SliderFloat3("Camera Translate", &cameraTransform.translate.x, -20.0f, 0.0f);
-			ImGui::Checkbox("useMonsterBall", &useMonsterBall);
-			ImGui::SliderFloat("Transform Rotate Y", &transform.rotate.y, -3.14f, 3.14f);
+			//ImGui::SliderFloat3("Camera Translate", &cameraTransform.translate.x, -20.0f, 0.0f);
+			//ImGui::Checkbox("useMonsterBall", &useMonsterBall);
+			//ImGui::SliderFloat("Transform Rotate Y", &transform.rotate.y, -3.14f, 3.14f);
+
+
+			//// ライティング
+			//bool enableLighting = (materialData->enableLighting != 0);
+			//if (ImGui::Checkbox("enableLighting", &enableLighting)) {
+			//	materialData->enableLighting = enableLighting ? 1 : 0;
+			//}
+			//ImGui::ColorEdit4("Directional Light Color", &directionalLightData->color.x);
+			//ImGui::SliderFloat3("Directional Light Direction", &directionalLightData->direction.x, -1.0f, 1.0f);
+			//ImGui::SliderFloat("Directional Light Intensity", &directionalLightData->intensity, 0.0f, 10.0f);
+
+			//// 
+			//ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
+			//ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
+			//ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
+
+			static BlendMode blendMode = kBlendModeAdd; // 既定
+			const char* blendNames[] = { "None","Normal","Add","Subtract","Multiply","Screen" };
+			int idx = static_cast<int>(blendMode);
+			if (ImGui::Combo("BlendMode", &idx, blendNames, IM_ARRAYSIZE(blendNames))) {
+				blendMode = static_cast<BlendMode>(idx);
+			}
+
 
 			ImGui::ColorEdit4("Material Color", &materialData->color.x);
-
-			// ライティング
-			bool enableLighting = (materialData->enableLighting != 0);
-			if (ImGui::Checkbox("enableLighting", &enableLighting)) {
-				materialData->enableLighting = enableLighting ? 1 : 0;
-			}
-			ImGui::ColorEdit4("Directional Light Color", &directionalLightData->color.x);
-			ImGui::SliderFloat3("Directional Light Direction", &directionalLightData->direction.x, -1.0f, 1.0f);
-			ImGui::SliderFloat("Directional Light Intensity", &directionalLightData->intensity, 0.0f, 10.0f);
-
-			// 
-			ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
-			ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
-			ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
 			ImGui::Render();
 
 			// Transformの更新
@@ -1352,7 +1413,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->RSSetViewports(1, &viewport);
 			commandList->RSSetScissorRects(1, &scissorRect);
 			commandList->SetGraphicsRootSignature(rootSignature.Get());
-			commandList->SetPipelineState(graphicsPipelineState.Get());
+			//commandList->SetPipelineState(graphicsPipelineState.Get());
+			// ImGuiで選択された blendMode を使う
+			commandList->SetPipelineState(psoList[blendMode].Get());
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
