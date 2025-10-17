@@ -516,21 +516,24 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 			// 位置のxを反転
 			position.x *= -1.0f;
 			positions.push_back(position);
-		} else if (identifier == "vt") {
+		}
+		else if (identifier == "vt") {
 
 			Vector2 texcoord;
 			s >> texcoord.x >> texcoord.y;
 			// テクスチャ座標のyを反転
 			texcoord.y = 1.0f - texcoord.y;
 			texcoords.push_back(texcoord);
-		} else if (identifier == "vn") {
+		}
+		else if (identifier == "vn") {
 
 			Vector3 normal;
 			s >> normal.x >> normal.y >> normal.z;
 			// 法線のxを反転
 			normal.x *= -1.0f;
 			normals.push_back(normal);
-		} else if (identifier == "f") {
+		}
+		else if (identifier == "f") {
 
 			VertexData triangle[3];
 
@@ -562,7 +565,8 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 			modelData.vertices.push_back(triangle[2]);
 			modelData.vertices.push_back(triangle[1]);
 			modelData.vertices.push_back(triangle[0]);
-		} else if (identifier == "mtllib") {
+		}
+		else if (identifier == "mtllib") {
 
 			// materialTemplateLibraryファイルの名前を取得する
 			std::string materialFilename;
@@ -857,7 +861,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	hr = dxcUtils->CreateDefaultIncludeHandler(&includehandler);
 	assert(SUCCEEDED(hr));
 
-	DirectX::ScratchImage mipImages = LoadTexture("Resources/uvChecker.png");
+	DirectX::ScratchImage mipImages = LoadTexture("Resources/fence.png");
 	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
 	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = CreateTextureResource(device.Get(), metadata);
 	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = UploadTextureData(textureResource, mipImages, device, commandList);
@@ -884,7 +888,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	);
 
 	// 2枚目
-	ModelData modelData = LoadObjFile("resources", "axis.obj");
+	ModelData modelData = LoadObjFile("resources", "fence.obj");
 
 	DirectX::ScratchImage mipImages2 = LoadTexture(modelData.material.textureFilePath);
 	const DirectX::TexMetadata& metadata2 = mipImages2.GetMetadata();
@@ -995,7 +999,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// RasterizerStateの設定
 	D3D12_RASTERIZER_DESC rasterizerDesc{};
 	// 裏面を表示しない
-	rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
+	rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
 	// 三角形を塗りつぶす
 	rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 
@@ -1269,7 +1273,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	MSG msg = {};
 
 	// Transformの設定
-	Transform transform{ {1.0f, 1.0f, 1.0f},{0.0f, 0.0f, 0.0f},{0.0f, 0.0f, 0.0f} };
+	Transform transform{ {1.0f, 1.0f, 1.0f},{-0.4f, 0.0f, 0.0f},{0.0f, 0.0f, 0.0f} };
 
 	// TransformSpriteの設定
 	Transform transformSprite{ {1.0f, 1.0f, 1.0f},{0.0f, 0.0f, 0.0f},{0.0f, 0.0f, 0.0f} };
@@ -1305,7 +1309,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
-		} else {
+		}
+		else {
 
 			// キーボード情報の取得開始
 			keyboard->Acquire();
@@ -1327,8 +1332,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// ImGuiによるカメラ移動
 			//ImGui::SliderFloat3("Camera Translate", &cameraTransform.translate.x, -20.0f, 0.0f);
 			//ImGui::Checkbox("useMonsterBall", &useMonsterBall);
-			//ImGui::SliderFloat("Transform Rotate Y", &transform.rotate.y, -3.14f, 3.14f);
-
+			//ImGui::SliderFloat("Transform Rotate Y", &transform.rotate.x, -3.14f, 3.14f);
 
 			//// ライティング
 			//bool enableLighting = (materialData->enableLighting != 0);
@@ -1344,13 +1348,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
 			//ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
 
-			static BlendMode blendMode = kBlendModeAdd; // 既定
+			static BlendMode blendMode = kBlendModeNone; // 既定
 			const char* blendNames[] = { "None","Normal","Add","Subtract","Multiply","Screen" };
 			int idx = static_cast<int>(blendMode);
 			if (ImGui::Combo("BlendMode", &idx, blendNames, IM_ARRAYSIZE(blendNames))) {
 				blendMode = static_cast<BlendMode>(idx);
 			}
-
 
 			ImGui::ColorEdit4("Material Color", &materialData->color.x);
 			ImGui::Render();
@@ -1414,7 +1417,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->RSSetScissorRects(1, &scissorRect);
 			commandList->SetGraphicsRootSignature(rootSignature.Get());
 			//commandList->SetPipelineState(graphicsPipelineState.Get());
-			// ImGuiで選択された blendMode を使う
 			commandList->SetPipelineState(psoList[blendMode].Get());
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -1436,7 +1438,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//commandList->DrawIndexedInstanced(totalSphereVertices, 1, 0, 0, 0);
 			commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 
-			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU2);
 
 
 			// スプライトの描画
