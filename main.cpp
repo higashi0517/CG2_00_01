@@ -29,7 +29,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 #include<sstream>
 #include <xaudio2.h>
 #pragma comment (lib,"xaudio2.lib")
-#include "Sound.h"
+#include "sound/Sound.h"
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
 #pragma comment(lib,"dinput8.lib")

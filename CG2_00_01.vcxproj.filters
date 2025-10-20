@@ -9,9 +9,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="imgui">
-      <UniqueIdentifier>{a84d8058-aabd-4b84-979e-fa4dc4da548e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ソース ファイル\sound">
       <UniqueIdentifier>{aee1b375-11da-4b49-ae0d-1c1e0cf14feb}</UniqueIdentifier>
     </Filter>
@@ -22,40 +19,64 @@
     <Filter Include="リソース ファイル\shaders">
       <UniqueIdentifier>{1dcad5e4-7f78-4c49-b2c5-34c19dc7b899}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\math">
+      <UniqueIdentifier>{da8d6574-d200-4f78-98f1-d76608578e92}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External">
+      <UniqueIdentifier>{fdbd2cb3-96c2-4471-b138-be1e4c74b045}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\imgui">
+      <UniqueIdentifier>{a84d8058-aabd-4b84-979e-fa4dc4da548e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\camera">
+      <UniqueIdentifier>{1cba705a-d1fb-4e5c-a2c9-855763897d71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\camera">
+      <UniqueIdentifier>{7b654f52-4d52-4026-b3f8-d31278160a59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\sound">
+      <UniqueIdentifier>{3a43ffcb-ea73-4c6b-9360-7becfe8c9e5b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\resource">
+      <UniqueIdentifier>{377a4ecf-c944-40f2-87e5-ad072b3c320c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\math">
+      <UniqueIdentifier>{272eedd7-5ab8-408d-9d6b-258440cb0f82}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Matrix4x4.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="DebugCamera.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="externals\imgui\imgui.cpp">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClCompile>
     <ClCompile Include="externals\imgui\imgui_demo.cpp">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClCompile>
     <ClCompile Include="externals\imgui\imgui_draw.cpp">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClCompile>
     <ClCompile Include="externals\imgui\imgui_impl_dx12.cpp">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClCompile>
     <ClCompile Include="externals\imgui\imgui_impl_win32.cpp">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClCompile>
     <ClCompile Include="externals\imgui\imgui_tables.cpp">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClCompile>
     <ClCompile Include="externals\imgui\imgui_widgets.cpp">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClCompile>
     <ClCompile Include="sound\Sound.cpp">
       <Filter>ソース ファイル\sound</Filter>
+    </ClCompile>
+    <ClCompile Include="Matrix4x4.cpp">
+      <Filter>ソース ファイル\math</Filter>
+    </ClCompile>
+    <ClCompile Include="DebugCamera.cpp">
+      <Filter>ソース ファイル\camera</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -67,44 +88,41 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DepthStencilResource.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="Matrix4x4.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="ResourceObject.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="DebugCamera.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="externals\imgui\imconfig.h">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClInclude>
     <ClInclude Include="externals\imgui\imgui.h">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClInclude>
     <ClInclude Include="externals\imgui\imgui_impl_dx12.h">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClInclude>
     <ClInclude Include="externals\imgui\imgui_impl_win32.h">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClInclude>
     <ClInclude Include="externals\imgui\imgui_internal.h">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClInclude>
     <ClInclude Include="externals\imgui\imstb_rectpack.h">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClInclude>
     <ClInclude Include="externals\imgui\imstb_textedit.h">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
     </ClInclude>
     <ClInclude Include="externals\imgui\imstb_truetype.h">
-      <Filter>imgui</Filter>
+      <Filter>External\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="DebugCamera.h">
+      <Filter>ヘッダー ファイル\camera</Filter>
     </ClInclude>
     <ClInclude Include="sound\Sound.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\sound</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceObject.h">
+      <Filter>ヘッダー ファイル\resource</Filter>
+    </ClInclude>
+    <ClInclude Include="Matrix4x4.h">
+      <Filter>ヘッダー ファイル\math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
