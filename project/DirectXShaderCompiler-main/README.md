@@ -100,5 +100,3 @@ See [LICENSE.txt](LICENSE.TXT) and [ThirdPartyNotices.txt](ThirdPartyNotices.txt
 ## Code of Conduct
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
-
-[![DebugBuild](https://github.com/higashi0517/CG2_00_01/actions/workflows/DebugBuild.yml/badge.svg)](https://github.com/higashi0517/CG2_00_01/actions/workflows/DebugBuild.yml)
