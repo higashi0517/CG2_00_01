@@ -21,7 +21,7 @@
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_win32.h"
 #include "externals/imgui/imgui_impl_dx12.h"
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+//extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 #include "externals/DirectXTex/DirectXTex.h"
 #include "externals/DirectXTex/d3dx12.h"
 #include <vector>
@@ -32,6 +32,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 #include "Sound.h"
 #include "DebugCamera.h"
 #include "Input.h"
+#include "WinApp.h"
 
 // クライアント領域のサイズ
 const int32_t kClientWidth = 1280;
@@ -93,25 +94,25 @@ struct ModelData {
 	std::vector<VertexData> vertices;
 	MaterialData material;
 };
-
-// ウィンドウプロシージャ
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-
-	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
-		return true;
-	}
-
-	// メッセージ処理
-	switch (msg) {
-		// ウィンドウが閉じられた
-	case WM_DESTROY:
-		// アプリの終了
-		PostQuitMessage(0);
-		return 0;
-	}
-
-	return DefWindowProc(hwnd, msg, wparam, lparam);
-}
+//
+//// ウィンドウプロシージャ
+//LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+//
+//	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
+//		return true;
+//	}
+//
+//	// メッセージ処理
+//	switch (msg) {
+//		// ウィンドウが閉じられた
+//	case WM_DESTROY:
+//		// アプリの終了
+//		PostQuitMessage(0);
+//		return 0;
+//	}
+//
+//	return DefWindowProc(hwnd, msg, wparam, lparam);
+//}
 
 void Log(std::ostream& os, const std::string& message) {
 
@@ -575,44 +576,54 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	SetUnhandledExceptionFilter(ExportDump);
 
-	// ウィンドウクラス
-	WNDCLASS wc = {};
+	//// ウィンドウクラス
+	//WNDCLASS wc = {};
 
-	// ウィンドウプロシージャ
-	wc.lpfnWndProc = WindowProc;
-	// ウィンドウクラス名
-	wc.lpszClassName = L"CG2WondowClass";
-	// インスタンスハンドル
-	wc.hInstance = GetModuleHandle(nullptr);
-	// カーソル
-	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+	//// ウィンドウプロシージャ
+	//wc.lpfnWndProc = WindowProc;
+	//// ウィンドウクラス名
+	//wc.lpszClassName = L"CG2WondowClass";
+	//// インスタンスハンドル
+	//wc.hInstance = GetModuleHandle(nullptr);
+	//// カーソル
+	//wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
 
-	// ウィンドウクラスの登録
-	RegisterClass(&wc);
+	//// ウィンドウクラスの登録
+	//RegisterClass(&wc);
 
-	// ウィンドウサイズを表す構造体にクライアント領域を入れる
-	RECT wrc = { 0,0,kClientWidth,kClientHeight };
+	//// ウィンドウサイズを表す構造体にクライアント領域を入れる
+	//RECT wrc = { 0,0,kClientWidth,kClientHeight };
 
-	// クライアント領域を元に実際のサイズにwrcを変更してもらう
-	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
+	//// クライアント領域を元に実際のサイズにwrcを変更してもらう
+	//AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
 
-	// ウィンドウの生成
-	HWND hwnd = CreateWindow(
-		wc.lpszClassName,          // クラス名
-		L"CG2",                    // タイトルバーのテキスト
-		WS_OVERLAPPEDWINDOW,       // ウィンドウスタイル
-		CW_USEDEFAULT,             // 表示X座標
-		CW_USEDEFAULT,             // 表示Y座標
-		wrc.right - wrc.left,      // ウィンドウの横幅
-		wrc.bottom - wrc.top,      // ウィンドウの縦幅
-		nullptr,                   // 親ウィンドウハンドル
-		nullptr,                   // メニューハンドル
-		wc.hInstance,              // インスタンスハンドル
-		nullptr                    // オプション
-	);
+	//// ウィンドウの生成
+	//HWND hwnd = CreateWindow(
+	//	wc.lpszClassName,          // クラス名
+	//	L"CG2",                    // タイトルバーのテキスト
+	//	WS_OVERLAPPEDWINDOW,       // ウィンドウスタイル
+	//	CW_USEDEFAULT,             // 表示X座標
+	//	CW_USEDEFAULT,             // 表示Y座標
+	//	wrc.right - wrc.left,      // ウィンドウの横幅
+	//	wrc.bottom - wrc.top,      // ウィンドウの縦幅
+	//	nullptr,                   // 親ウィンドウハンドル
+	//	nullptr,                   // メニューハンドル
+	//	wc.hInstance,              // インスタンスハンドル
+	//	nullptr                    // オプション
+	//);
 
-	// ウィンドウの表示
-	ShowWindow(hwnd, SW_SHOW);
+	//// ウィンドウの表示
+	//ShowWindow(hwnd, SW_SHOW);
+
+	// ポインタ
+	WinApp* winApp = nullptr;
+	
+	// WindowsAPIの初期化
+	winApp = new WinApp();
+	winApp->Initialize();
+
+	// hr
+	//HRESULT hr = S_OK;
 
 #ifdef _DEBUG
 
@@ -776,7 +787,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// コマンドキュー、ウィンドウハンドル、設定を渡して生成
 	hr = dxgiFactory->CreateSwapChainForHwnd(
 		commandQueue.Get(),
-		hwnd,
+		winApp->GetHwnd(),
 		&swapChainDesc,
 		nullptr,
 		nullptr,
@@ -1192,7 +1203,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Input* input = nullptr;
 	// 入力の初期化
 	input = new Input();
-	input->Initialize(wc.hInstance, hwnd);
+	input->Initialize(winApp);
 
 	DebugCamera debugCamera;
 
@@ -1217,7 +1228,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGui::StyleColorsDark();
-	ImGui_ImplWin32_Init(hwnd);
+	ImGui_ImplWin32_Init(winApp->GetHwnd());
 	ImGui_ImplDX12_Init(
 		device.Get(),
 		swapChainDesc.BufferCount,
@@ -1402,14 +1413,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 	}
 
+	winApp->Finalize();
 	CloseHandle(fenceEvent);
-	CloseWindow(hwnd);
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
-	CoUninitialize();
 	sound.Unload(&soundData1);
 	delete input;
+	delete winApp; 	// WindowsAPIの解放
 
 	return 0;
 }

@@ -1,8 +1,8 @@
 #pragma once
 #include <Windows.h>
 #include <wrl.h>
-#define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
+#include "WinApp.h"
 
 class Input
 {
@@ -12,7 +12,7 @@ public:
 public:
 
 	// 初期化
-	void Initialize(HINSTANCE hInstance, HWND hwnd);
+	void Initialize(WinApp* winApp);
 	// 更新
 	void Update();
 
@@ -38,5 +38,8 @@ private:
 	BYTE keyPre[256] = {};
 
 	ComPtr <IDirectInput8> directInput;
+
+	// WindowsAPI
+	WinApp* winApp_ = nullptr;
 };
 
