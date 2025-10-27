@@ -43,6 +43,12 @@
     <Filter Include="ヘッダー ファイル\math">
       <UniqueIdentifier>{272eedd7-5ab8-408d-9d6b-258440cb0f82}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\input">
+      <UniqueIdentifier>{d4e7fd12-1820-46d3-a02f-f8f2bd73ef5f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\input">
+      <UniqueIdentifier>{e1368323-1b24-4068-98d8-49732e6d8db2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -69,14 +75,17 @@
     <ClCompile Include="externals\imgui\imgui_widgets.cpp">
       <Filter>External\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="sound\Sound.cpp">
+    <ClCompile Include="Src\Engine\Sound\Sound.cpp">
       <Filter>ソース ファイル\sound</Filter>
     </ClCompile>
-    <ClCompile Include="Matrix4x4.cpp">
+    <ClCompile Include="Src\Engine\Math\Matrix4x4.cpp">
       <Filter>ソース ファイル\math</Filter>
     </ClCompile>
-    <ClCompile Include="DebugCamera.cpp">
+    <ClCompile Include="Src\Engine\DebugCamera\DebugCamera.cpp">
       <Filter>ソース ファイル\camera</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Engine\Input\Input.cpp">
+      <Filter>ソース ファイル\input</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -112,17 +121,20 @@
     <ClInclude Include="externals\imgui\imstb_truetype.h">
       <Filter>External\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="DebugCamera.h">
+    <ClInclude Include="Src\Engine\DebugCamera\DebugCamera.h">
       <Filter>ヘッダー ファイル\camera</Filter>
     </ClInclude>
-    <ClInclude Include="sound\Sound.h">
+    <ClInclude Include="Src\Engine\Sound\Sound.h">
       <Filter>ヘッダー ファイル\sound</Filter>
     </ClInclude>
     <ClInclude Include="ResourceObject.h">
       <Filter>ヘッダー ファイル\resource</Filter>
     </ClInclude>
-    <ClInclude Include="Matrix4x4.h">
+    <ClInclude Include="Src\Engine\Math\Matrix4x4.h">
       <Filter>ヘッダー ファイル\math</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Engine\Input\Input.h">
+      <Filter>ヘッダー ファイル\input</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
