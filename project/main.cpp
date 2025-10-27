@@ -29,12 +29,9 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 #include<sstream>
 #include <xaudio2.h>
 #pragma comment (lib,"xaudio2.lib")
-#include "sound/Sound.h"
-#define DIRECTINPUT_VERSION 0x0800
-#include <dinput.h>
-#pragma comment(lib,"dinput8.lib")
-#pragma comment(lib,"dxguid.lib")
+#include "Sound.h"
 #include "DebugCamera.h"
+#include "Input.h"
 
 // クライアント領域のサイズ
 const int32_t kClientWidth = 1280;
@@ -506,21 +503,24 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 			// 位置のxを反転
 			position.x *= -1.0f;
 			positions.push_back(position);
-		} else if (identifier == "vt") {
+		}
+		else if (identifier == "vt") {
 
 			Vector2 texcoord;
 			s >> texcoord.x >> texcoord.y;
 			// テクスチャ座標のyを反転
 			texcoord.y = 1.0f - texcoord.y;
 			texcoords.push_back(texcoord);
-		} else if (identifier == "vn") {
+		}
+		else if (identifier == "vn") {
 
 			Vector3 normal;
 			s >> normal.x >> normal.y >> normal.z;
 			// 法線のxを反転
 			normal.x *= -1.0f;
 			normals.push_back(normal);
-		} else if (identifier == "f") {
+		}
+		else if (identifier == "f") {
 
 			VertexData triangle[3];
 
@@ -552,7 +552,8 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 			modelData.vertices.push_back(triangle[2]);
 			modelData.vertices.push_back(triangle[1]);
 			modelData.vertices.push_back(triangle[0]);
-		} else if (identifier == "mtllib") {
+		}
+		else if (identifier == "mtllib") {
 
 			// materialTemplateLibraryファイルの名前を取得する
 			std::string materialFilename;
@@ -1187,23 +1188,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 音声の再生
 	sound.PlayWave(/*xAudio2.Get(),*/soundData1);
 
-	// DirectionInputの初期化
-	IDirectInput8* directInput = nullptr;
-	HRESULT result = DirectInput8Create(wc.hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**) & directInput, nullptr);
-	assert(SUCCEEDED(result));
-
-	// キーボードデバイスの生成
-	IDirectInputDevice8* keyboard = nullptr;
-	result = directInput->CreateDevice(GUID_SysKeyboard, &keyboard, NULL);
-	assert(SUCCEEDED(result));
-
-	// 入力データ形式のセット
-	result = keyboard->SetDataFormat(&c_dfDIKeyboard);
-	assert(SUCCEEDED(result));
-
-	// 排他制御レベルのセット
-	result = keyboard->SetCooperativeLevel(hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
-	assert(SUCCEEDED(result));
+	// ポインタ
+	Input* input = nullptr;
+	// 入力の初期化
+	input = new Input();
+	input->Initialize(wc.hInstance, hwnd);
 
 	DebugCamera debugCamera;
 
@@ -1246,17 +1235,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
-		} else {
+		}
+		else {
 
-			// キーボード情報の取得開始
-			keyboard->Acquire();
-			// 全キーの入力状態を取得する
-			BYTE key[256] = {};
-			keyboard->GetDeviceState(sizeof(key), key);
-			if (key[DIK_0]) {
+			input->Update();
+			if (input->TriggerKey(DIK_0)) {
 				OutputDebugStringA("Hit 0\n");
 			}
-			debugCamera.Update(key);
+			//debugCamera.Update(key);
 
 			//ゲーム処理
 
@@ -1423,6 +1409,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ImGui::DestroyContext();
 	CoUninitialize();
 	sound.Unload(&soundData1);
+	delete input;
 
 	return 0;
 }
