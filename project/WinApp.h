@@ -24,6 +24,9 @@ public:
 	HWND GetHwnd() const { return hwnd; }
 	HINSTANCE GetHinstance() const { return wc.hInstance; }
 
+	// メッセージの処理
+	bool ProcessMessage();
+
 private:
 	// ウィンドウハンドル
 	HWND hwnd = nullptr;
