@@ -6,8 +6,6 @@ namespace Logger {
 
 	void Log(const std::string& message) {
 
-		std::cout << message << std::endl;
-
 		OutputDebugStringA(message.c_str());
 	}
 }
