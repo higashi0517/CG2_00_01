@@ -33,6 +33,7 @@ public:
 		WAVEFORMATEX wfex; // 波形データのフォーマット
 		BYTE* pBuffer;     // バッファの先着アドレス
 		unsigned int bufferSize; // バッファのサイズ
+		IXAudio2SourceVoice* pSourceVoice; // 再生中のソースボイス
 	};
 
 	Sound();
@@ -42,7 +43,7 @@ public:
 
 	void Unload(SoundData* soundData);
 
-	void PlayWave(const SoundData& soundData);
+	void PlayWave(SoundData& soundData);
 
 
 

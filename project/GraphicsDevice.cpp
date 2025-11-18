@@ -35,6 +35,94 @@ void GraphicsDevice::Initialize(WinApp* winApp) {
 	ImGui();
 }
 
+void GraphicsDevice::PreDraw() {
+
+	// バックバッファのインデックスを取得
+	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+
+	// TransitionBarrierの設定
+	D3D12_RESOURCE_BARRIER barrier = {};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+
+	//バリアを張るリソース
+	barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
+	// 遷移前                                        
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+	// 遷移後
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	// バリア
+	commandList->ResourceBarrier(1, &barrier);
+
+	// 描画先のRTVとDSVの設定
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+
+	// 描画先のRTVを設定
+	commandList->OMSetRenderTargets(1, &rtvHandle[backBufferIndex], false, &dsvHandle);
+
+	// 指定した色で画面全体をクリア
+	float clearColor[] = { 0.1f,0.25f,0.5f,1.0f };
+	commandList->ClearRenderTargetView(rtvHandle[backBufferIndex], clearColor, 0, nullptr);
+
+	// 指定した深度で画面全体をクリア
+	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
+	// 描画用のDescriptorHeapを設定
+	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap.Get() };
+	commandList->SetDescriptorHeaps(1, descriptorHeaps);
+
+	// 描画先のRTVを設定
+	commandList->RSSetViewports(1, &viewport);
+	commandList->RSSetScissorRects(1, &scissorRect);
+}
+
+void GraphicsDevice::PostDraw() {
+
+	HRESULT hr;
+
+	// バックバッファのインデックスを取得
+	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+
+	// TransitionBarrierの設定
+	D3D12_RESOURCE_BARRIER barrier = {};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+
+	// バリア
+	barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+	commandList->ResourceBarrier(1, &barrier);
+
+	// コマンドリストのクローズ
+	hr = commandList->Close();
+	assert(SUCCEEDED(hr));
+
+	// コマンドリストを実行
+	ID3D12CommandList* commandLists[] = { commandList.Get() };
+	commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+
+	// GPUとOSに画面の変換を行うように指示
+	swapChain->Present(1, 0);
+
+	// フェンスの値の更新
+	fenceValue++;
+	commandQueue->Signal(fence.Get(), fenceValue);
+
+	if (fence->GetCompletedValue() < fenceValue) {
+
+		fence->SetEventOnCompletion(fenceValue, fenceEvent);
+
+		// イベントが発生するまで待機
+		WaitForSingleObject(fenceEvent, INFINITE);
+	}
+	// 次フレームのコマンドリストを準備
+	hr = commandAllocator->Reset();
+	assert(SUCCEEDED(hr));
+	hr = commandList->Reset(commandAllocator.Get(), nullptr);
+	assert(SUCCEEDED(hr));
+}
+
 void GraphicsDevice::Device() {
 
 	HRESULT hr;
@@ -192,14 +280,14 @@ void GraphicsDevice::DepthBuffer(int32_t width, int32_t height) {
 	depthClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 	// Resourceの生成
-	ComPtr<ID3D12Resource> resource = nullptr;
+	depthStencilReosurce.Reset();
 	HRESULT hr = device->CreateCommittedResource(
 		&heapProperties,
 		D3D12_HEAP_FLAG_NONE,
 		&resourceDesc,
 		D3D12_RESOURCE_STATE_DEPTH_WRITE,
 		&depthClearValue,
-		IID_PPV_ARGS(&resource)
+		IID_PPV_ARGS(&depthStencilReosurce)
 	);
 	assert(SUCCEEDED(hr));
 }
@@ -248,7 +336,6 @@ void GraphicsDevice::RenderTargetView() {
 	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 	// ディスクリプタの先頭を取得
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle[2];
 
 	for (uint32_t i = 0; i < 2; ++i) {
 
@@ -307,13 +394,12 @@ void GraphicsDevice::Fence() {
 	HRESULT hr;
 
 	// フェンスの設定
-	HANDLE fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-	uint64_t fenceValue = 0;
+	fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 	hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
 	assert(SUCCEEDED(hr));
 }
 
-void GraphicsDevice::ViewportRect(){
+void GraphicsDevice::ViewportRect() {
 
 	// ビューポート
 	viewport.Width = kClientWidth;
@@ -324,18 +410,17 @@ void GraphicsDevice::ViewportRect(){
 	viewport.MaxDepth = 1.0f;
 }
 
-void GraphicsDevice::ScissorRect(){
+void GraphicsDevice::ScissorRect() {
 
 	// シザー矩形
-	D3D12_RECT scissorRect{};
 	scissorRect.left = 0;
 	scissorRect.right = kClientWidth;
 	scissorRect.top = 0;
 	scissorRect.bottom = kClientHeight;
 }
 
-void GraphicsDevice::DxcCompiler(){
-	
+void GraphicsDevice::DxcCompiler() {
+
 	HRESULT hr;
 
 	// dxcCompilerの初期化
@@ -356,7 +441,7 @@ void GraphicsDevice::DxcCompiler(){
 	assert(SUCCEEDED(hr));
 }
 
-void GraphicsDevice::ImGui(){
+void GraphicsDevice::ImGui() {
 
 	// Imguiの初期化
 	IMGUI_CHECKVERSION();

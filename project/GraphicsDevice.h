@@ -13,6 +13,10 @@ class GraphicsDevice
 public:
 	// 初期化
 	void Initialize(WinApp* winApp);
+	// 描画前処理
+	void PreDraw();
+	// 描画後処理
+	void PostDraw();
 
 private:
 	// デバイスの初期化
@@ -91,6 +95,15 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Fence> fence;
 	// ビューポート
 	D3D12_VIEWPORT viewport{};
+	// rtvハンドル
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle[2];
+	// シザー矩形
+	D3D12_RECT scissorRect{};
+	// フェンス値
+	uint64_t fenceValue = 0;
+	// フェンスイベント
+	HANDLE fenceEvent;
+
 
 	// WindowsAPI
 	WinApp* winApp_ = nullptr;

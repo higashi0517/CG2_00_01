@@ -18,9 +18,7 @@ Sound::~Sound() {
 // 音声の再生に必要なデータ
 Sound::SoundData Sound::LoadWave(const char* filePath) {
 
-	//HRESULT result;
-
-	// ファイルを開く
+	//ファイルを開く
 	// ファイル入力ストリームのインスタンス
 	std::ifstream file;
 	// .wavファイルをバイナリモードで開く
@@ -79,11 +77,19 @@ Sound::SoundData Sound::LoadWave(const char* filePath) {
 	soundData.wfex = format.fmt; // 波形データのフォーマットを設定
 	soundData.pBuffer = reinterpret_cast<BYTE*>(pBuffer); // バッファの先頭アドレスを設定
 	soundData.bufferSize = data.size; // バッファのサイズを設定
+	soundData.pSourceVoice = nullptr; // ソースボイスを初期化
 
 	return soundData;
 }
 
 void Sound::Unload(SoundData* soundData) {
+
+	// 再生中のソースボイスを停止して破棄
+	if (soundData->pSourceVoice) {
+		soundData->pSourceVoice->Stop();
+		soundData->pSourceVoice->DestroyVoice();
+		soundData->pSourceVoice = nullptr;
+	}
 
 	// バッファの解放
 	delete[] soundData->pBuffer;
@@ -93,13 +99,19 @@ void Sound::Unload(SoundData* soundData) {
 	soundData->wfex = {};
 }
 
-void Sound::PlayWave(const SoundData& soundData) {
+void Sound::PlayWave(SoundData& soundData) {
 
 	HRESULT result;
 
+	// 既存のソースボイスがあれば停止して破棄
+	if (soundData.pSourceVoice) {
+		soundData.pSourceVoice->Stop();
+		soundData.pSourceVoice->DestroyVoice();
+		soundData.pSourceVoice = nullptr;
+	}
+
 	// 波形フォーマットを元にSOURCEVoiceを作成
-	IXAudio2SourceVoice* pSourceVoice = nullptr;
-	result = xAudio2_->CreateSourceVoice(&pSourceVoice, &soundData.wfex);
+	result = xAudio2_->CreateSourceVoice(&soundData.pSourceVoice, &soundData.wfex);
 	assert(SUCCEEDED(result));
 
 	// 再生する波形データの設定
@@ -109,6 +121,6 @@ void Sound::PlayWave(const SoundData& soundData) {
 	buf.Flags = XAUDIO2_END_OF_STREAM;
 
 	// 波形データの再生
-	result = pSourceVoice->SubmitSourceBuffer(&buf);
-	result = pSourceVoice->Start();
+	result = soundData.pSourceVoice->SubmitSourceBuffer(&buf);
+	result = soundData.pSourceVoice->Start();
 }
