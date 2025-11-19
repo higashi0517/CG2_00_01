@@ -4,6 +4,9 @@
 #include <wrl.h>
 #include <cstdint>
 #include <array>
+#include <string>
+#include <dxcapi.h>
+#include <externals/DirectXTex/DirectXTex.h>
 
 class WinApp;
 
@@ -17,6 +20,32 @@ public:
 	void PreDraw();
 	// 描画後処理
 	void PostDraw();
+
+	// SRVの指定番号のでスクリプタハンドルの取得
+	D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index);  // CPU
+	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index);  // GPU
+
+	// デバイスの取得
+	Microsoft::WRL::ComPtr<ID3D12Device> GetDevice() { return device; }
+	// DXGIファクトリーの取得
+	Microsoft::WRL::ComPtr<IDXGIFactory7> GetDxgiFactory() { return dxgiFactory; }
+	// コマンドリストの取得
+	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> GetCommandList() { return commandList; }
+
+	// シェーダーコンパイル
+	Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(const std::wstring& filePath, const wchar_t* profile);
+
+	// バッファリソース生成
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
+
+	// テクスチャリソース生成
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metadata);
+
+	// テクスチャアップロード
+	void UploadTextureData(Microsoft::WRL::ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages);
+
+	// テクスチャ読み込み
+	static DirectX::ScratchImage LoadTexture(const std::string& filePath);
 
 private:
 	// デバイスの初期化
@@ -33,9 +62,6 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
 	// レンダーターゲットビューの初期化
 	void RenderTargetView();
-	// SRVの指定番号のでスクリプタハンドルの取得
-	D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index);  // CPU
-	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index);  // GPU
 	// 深度ステンシルビューの初期化
 	void DepthStencilView();
 	// フェンスの初期化
@@ -47,17 +73,8 @@ private:
 	// DXCコンパイラの生成
 	void DxcCompiler();
 	// ImGuiの初期化
-	void ImGui();
+	void InitializeImGui();
 
-public:
-	// デバイスの取得
-	Microsoft::WRL::ComPtr<ID3D12Device> GetDevice() { return device; }
-	// DXGIファクトリーの取得
-	Microsoft::WRL::ComPtr<IDXGIFactory7> GetDxgiFactory() { return dxgiFactory; }
-	// コマンドリストの取得
-	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> GetCommandList() { return commandList; }
-
-private:
 	// デバイス
 	Microsoft::WRL::ComPtr<ID3D12Device> device;
 	// DXGIファクトリー
@@ -103,6 +120,10 @@ private:
 	uint64_t fenceValue = 0;
 	// フェンスイベント
 	HANDLE fenceEvent;
+	// DXCコンパイラ
+	Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils;
+	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler;
+	Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler;
 
 
 	// WindowsAPI
