@@ -42,7 +42,7 @@ public:
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metadata);
 
 	// テクスチャアップロード
-	void UploadTextureData(Microsoft::WRL::ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages);
+	Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(const DirectX::ScratchImage& mipImages, const Microsoft::WRL::ComPtr<ID3D12Resource>& texture);
 
 	// テクスチャ読み込み
 	static DirectX::ScratchImage LoadTexture(const std::string& filePath);

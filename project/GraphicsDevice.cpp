@@ -4,12 +4,14 @@
 #include "WinApp.h"
 #include <cassert>
 #include <format>
-#include <externals/imgui/imgui_impl_win32.h>
-#include <externals/imgui/imgui_impl_dx12.h>
-#include <externals/DirectXTex/d3dx12.h>
+#include <vector>
+#include "externals/imgui/imgui_impl_win32.h"
+#include "externals/imgui/imgui_impl_dx12.h"
+#include "externals/DirectXTex/d3dx12.h"
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
 #pragma comment(lib, "dxcompiler.lib")
+
 
 using namespace Microsoft::WRL;
 using namespace Logger;
@@ -55,7 +57,7 @@ void GraphicsDevice::PreDraw() {
 	// バリア
 	commandList->ResourceBarrier(1, &barrier);
 
-	// 描画先のRTVとDSVの設定
+	// 描画先のDSVの設定
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
 	// 描画先のRTVを設定
@@ -552,7 +554,7 @@ ComPtr<ID3D12Resource> GraphicsDevice::CreateBufferResource(size_t sizeInBytes){
 	return vertexResource;
 }
 
-Microsoft::WRL::ComPtr<ID3D12Resource> GraphicsDevice::CreateTextureResource(const DirectX::TexMetadata& metadata){
+ComPtr<ID3D12Resource> GraphicsDevice::CreateTextureResource(const DirectX::TexMetadata& metadata){
 
 	// Metadataを基にResourceの設定
 	D3D12_RESOURCE_DESC resourceDesc{};
@@ -585,7 +587,8 @@ Microsoft::WRL::ComPtr<ID3D12Resource> GraphicsDevice::CreateTextureResource(con
 	return resource;
 }
 
-void GraphicsDevice::UploadTextureData(ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages){
+[[nodiscard]]
+ComPtr<ID3D12Resource> GraphicsDevice::UploadTextureData(const DirectX::ScratchImage& mipImages, const ComPtr<ID3D12Resource>& texture){
 
 	std::vector<D3D12_SUBRESOURCE_DATA> subresources;
 	DirectX::PrepareUpload(
@@ -620,6 +623,8 @@ void GraphicsDevice::UploadTextureData(ComPtr<ID3D12Resource>& texture, const Di
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_GENERIC_READ;
 	commandList->ResourceBarrier(1, &barrier);
+
+	return intermediateResource;
 }
 
 DirectX::ScratchImage GraphicsDevice::LoadTexture(const std::string& filePath){
@@ -636,8 +641,3 @@ DirectX::ScratchImage GraphicsDevice::LoadTexture(const std::string& filePath){
 
 	return mipImages;
 }
-
-
-
-
-
