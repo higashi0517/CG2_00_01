@@ -7,6 +7,7 @@
 #include <string>
 #include <dxcapi.h>
 #include <externals/DirectXTex/DirectXTex.h>
+#include <chrono>
 
 class WinApp;
 
@@ -74,6 +75,10 @@ private:
 	void DxcCompiler();
 	// ImGuiの初期化
 	void InitializeImGui();
+	// FPS固定初期化
+	void InitializeFixFPS();
+	// FPS固定処理
+	void UpdateFixFPS();
 
 	// デバイス
 	Microsoft::WRL::ComPtr<ID3D12Device> device;
@@ -124,7 +129,8 @@ private:
 	Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils;
 	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler;
 	Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler;
-
+	// 記録時間
+	std::chrono::steady_clock::time_point reference_;
 
 	// WindowsAPI
 	WinApp* winApp_ = nullptr;
