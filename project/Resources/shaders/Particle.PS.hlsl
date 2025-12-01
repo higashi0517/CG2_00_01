@@ -3,8 +3,8 @@
 struct Material
 {
     float32_t4 color;
-    int32_t enableLighting;
-    float32_t3 _padding; // C++ 側と同じ 16byte 揃え用
+    //int32_t enableLighting;
+    //float32_t3 _padding; // C++ 側と同じ 16byte 揃え用
     float32_t4x4 uvTransform;
 };
 
@@ -38,13 +38,13 @@ PixelShaderOutput main(VertexShaderOutput input)
     float32_t4 resultColor = gMaterial.color * textureColor;
 
     // 簡単な平行光ライティング（必要なければ enableLighting=0 にする）
-    if (gMaterial.enableLighting != 0)
-    {
-        float32_t3 n = normalize(input.normal);
-        float32_t3 l = normalize(-gDirectionalLight.direction);
-        float32_t cosTheta = saturate(dot(n, l));
-        resultColor *= gDirectionalLight.color * (cosTheta * gDirectionalLight.intensity);
-    }
+    //if (gMaterial.enableLighting != 0)
+    //{
+    //    float32_t3 n = normalize(input.normal);
+    //    float32_t3 l = normalize(-gDirectionalLight.direction);
+    //    float32_t cosTheta = saturate(dot(n, l));
+    //    resultColor *= gDirectionalLight.color * (cosTheta * gDirectionalLight.intensity);
+    //}
 
     output.color = resultColor;
 

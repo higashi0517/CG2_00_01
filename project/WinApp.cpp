@@ -23,7 +23,7 @@ void WinApp::Initialize()
 	// ウィンドウの生成
 	hwnd = CreateWindow(
 		wc.lpszClassName,          // クラス名
-		L"CG2",                    // タイトルバーのテキスト
+		L"LE2C_23_ヒガシ_サチエ",  // タイトルバーのテキスト
 		WS_OVERLAPPEDWINDOW,       // ウィンドウスタイル
 		CW_USEDEFAULT,             // 表示X座標
 		CW_USEDEFAULT,             // 表示Y座標
@@ -41,8 +41,8 @@ void WinApp::Initialize()
 
 void WinApp::Update()
 {
-}
 
+}
 
 // ウィンドウプロシージャ
 LRESULT CALLBACK WinApp::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {

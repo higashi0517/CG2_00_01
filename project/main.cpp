@@ -45,12 +45,6 @@ static const int kNumInstances = 10;
 using namespace Logger;
 using namespace StringUtility;
 
-inline UINT AlignConstantBufferSize(UINT size)
-{
-	return (size + 0xff) & ~0xff;   // 256バイトに切り上げ
-}
-
-// 
 struct Vector4 {
 	float32_t x;
 	float32_t y;
@@ -81,8 +75,7 @@ struct VertexData {
 
 struct Material {
 	Vector4 color;
-	int32_t enableLighting;
-	float padding[3];
+	/*int32_t enableLighting;*/
 	Matrix4x4 uvTransform;
 };
 
@@ -131,21 +124,6 @@ static LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception) {
 
 	return EXCEPTION_EXECUTE_HANDLER;
 }
-
-//// リソースリークチェック
-//struct D3DResourceLeakCheker {
-//	~D3DResourceLeakCheker() {
-//
-//		Microsoft::WRL::ComPtr<IDXGIDebug> debug;
-//
-//		if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
-//
-//			debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
-//			debug->ReportLiveObjects(DXGI_DEBUG_APP, DXGI_DEBUG_RLO_ALL);
-//			debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
-//		}
-//	}
-//};
 
 MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
 
@@ -346,9 +324,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		textureSrvHandleCPU
 	);
 
-	// モデル読み込み
-	//ModelData modelData = LoadObjFile("resources", "axis.obj");
-
 	// 
 	ModelData modelData;
 
@@ -393,26 +368,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	textureUploadBuffers.push_back(
 		graphicsDevice->UploadTextureData(mipImages2, textureResource2)
 	);
-
-	// metaDataを基にSRVの設定
-	//D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2 = {};
-	//srvDesc2.Format = metadata2.format;
-	//srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	//srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	//srvDesc2.Texture2D.MipLevels = UINT(metadata2.mipLevels);
-
-	//// SRVを作成するDescriptorHeapの場所
-	//D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2 = graphicsDevice->GetSRVCPUDescriptorHandle(2);
-	//D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = graphicsDevice->GetSRVGPUDescriptorHandle(2);
-
-	//// SRVを生成
-	//graphicsDevice->GetDevice()->CreateShaderResourceView(
-	//	textureResource2.Get(),
-	//	&srvDesc2,
-	//	textureSrvHandleCPU2
-	//);
-
-	//Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource;
 
 	// WVP行列の設定
 	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource =
@@ -539,7 +494,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// RasterizerStateの設定
 	D3D12_RASTERIZER_DESC rasterizerDesc{};
-	rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
+	rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
 	rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 
 	// Shaderのコンパイル
@@ -583,15 +538,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// Materialの設定
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource =
 		graphicsDevice->CreateBufferResource(
-			AlignConstantBufferSize(sizeof(Material)));	Material* materialData = nullptr;
+			sizeof(Material));	Material* materialData = nullptr;
 	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	materialData->enableLighting = true;
 	materialData->uvTransform = MakeIdentity4x4();
-
-	//// WVP行列の設定
-	//Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource=
-	//graphicsDevice->CreateBufferResource(sizeof(TransformationMatrix) * kNumInstances);
 
 	TransformationMatrix* instancingData = nullptr;
 	instancingResource->Map(0, nullptr, reinterpret_cast<void**>(&instancingData));
@@ -602,11 +552,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		instancingData[index].World = MakeIdentity4x4();
 	}
 
-
 	// 平行光源の設定
 	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource =
 		graphicsDevice->CreateBufferResource(
-			AlignConstantBufferSize(sizeof(DirectionalLight)));	DirectionalLight* directionalLightData = nullptr;
+			sizeof(DirectionalLight));	DirectionalLight* directionalLightData = nullptr;
 	directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
 	directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
@@ -667,26 +616,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		// ゲーム処理
 
-		// Imguiのフレーム開始
-		ImGui_ImplDX12_NewFrame();
-		ImGui_ImplWin32_NewFrame();
-		ImGui::NewFrame();
+		//// Imguiのフレーム開始
+		//ImGui_ImplDX12_NewFrame();
+		//ImGui_ImplWin32_NewFrame();
+		//ImGui::NewFrame();
 
-		// ImGuiによるカメラ移動
-		ImGui::SliderFloat3("Camera Translate", &cameraTransform.translate.x, -20.0f, 0.0f);
-		ImGui::Checkbox("useMonsterBall", &useMonsterBall);
-		//ImGui::SliderFloat("Transform Rotate Y", &transform.rotate.y, -3.14f, 3.14f);
+		//// ImGuiによるカメラ移動
+		//ImGui::SliderFloat3("Camera Translate", &cameraTransform.translate.x, -20.0f, 0.0f);
+		//ImGui::Checkbox("useMonsterBall", &useMonsterBall);
+		//
+		//ImGui::ColorEdit4("Directional Light Color", &directionalLightData->color.x);
+		//ImGui::SliderFloat3("Directional Light Direction", &directionalLightData->direction.x, -1.0f, 1.0f);
+		//ImGui::SliderFloat("Directional Light Intensity", &directionalLightData->intensity, 0.0f, 10.0f);
 
-		// ライティング
-		bool enableLighting = (materialData->enableLighting != 0);
-		if (ImGui::Checkbox("enableLighting", &enableLighting)) {
-			materialData->enableLighting = enableLighting ? 1 : 0;
-		}
-		ImGui::ColorEdit4("Directional Light Color", &directionalLightData->color.x);
-		ImGui::SliderFloat3("Directional Light Direction", &directionalLightData->direction.x, -1.0f, 1.0f);
-		ImGui::SliderFloat("Directional Light Intensity", &directionalLightData->intensity, 0.0f, 10.0f);
-
-		ImGui::Render();
+		//ImGui::Render();
 
 		// Transformの更新
 		Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
@@ -713,8 +656,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		graphicsDevice->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 		graphicsDevice->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), kNumInstances, 0, 0);
 
-		// ImGuiの描画
-		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), graphicsDevice->GetCommandList().Get());
+		//// ImGuiの描画
+		//ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), graphicsDevice->GetCommandList().Get());
 
 		// PostDrawの処理
 		graphicsDevice->PostDraw();
