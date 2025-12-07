@@ -36,6 +36,8 @@
 #include "Logger.h"
 #include "StringUtility.h"
 #include "D3DResourceLeakChecker.h"
+#include "SpriteManager.h"
+#include "Sprite.h"
 
 // クライアント領域のサイズ
 const int32_t kClientWidth = 1280;
@@ -67,12 +69,12 @@ struct Transform {
 	Vector3 rotate;
 	Vector3 translate;
 };
-
-struct VertexData {
-	Vector4 position;
-	Vector2 texcoord;
-	Vector3 normal;
-};
+//
+//struct VertexData {
+//	Vector4 position;
+//	Vector2 texcoord;
+//	Vector3 normal;
+//};
 
 struct Material {
 	Vector4 color;
@@ -268,6 +270,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// グラフィックスデバイスの初期化
 	graphicsDevice = new GraphicsDevice();
 	graphicsDevice->Initialize(winApp);
+
+	SpriteManager* spriteManager = nullptr;
+	// スプライト共通部の初期化
+	spriteManager = new SpriteManager();
+	spriteManager->Initialize();
+
+	Sprite* sprite = new Sprite();
+	sprite->Initialize();
 
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> textureUploadBuffers;
 
@@ -504,16 +514,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
 	directionalLightData->intensity = 1.0f;
 
-	// 頂点リソ－スを作る
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = graphicsDevice->CreateBufferResource(sizeof(VertexData) * modelData.vertices.size());
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
-	vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * modelData.vertices.size());
-	vertexBufferView.StrideInBytes = sizeof(VertexData);
+	//// 頂点リソ－スを作る
+	//Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = graphicsDevice->CreateBufferResource(sizeof(VertexData) * modelData.vertices.size());
+	//D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+	//vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
+	//vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * modelData.vertices.size());
+	//vertexBufferView.StrideInBytes = sizeof(VertexData);
 
-	VertexData* vertexData = nullptr;
-	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
-	std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());
+	//VertexData* vertexData = nullptr;
+	//vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
+	//std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());
 
 	// 音声の初期化
 	Sound sound;
@@ -586,6 +596,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// PreDrawの処理
 		graphicsDevice->PreDraw();
 
+		// sprite描画前共通設定
+		spriteManager->SetCommonRenderState();
+
 		// 描画コマンド
 		graphicsDevice->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
 		graphicsDevice->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
@@ -612,6 +625,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete input;
 	delete winApp;
 	delete graphicsDevice;
+	delete sprite;
+	delete spriteManager;
 
 	return 0;
 }
