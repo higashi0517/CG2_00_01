@@ -14,12 +14,12 @@ on:
       # パターンはスペース区切りで指定
 env:
   # 特定のファイル名のパターン
-  UNWATNED_NAME_PATTERNS: "*.pdb *.ilk *.user *.ncb 
+  UNWANTNED_NAME_PATTERNS: "*.pdb *.ilk *.user *.ncb 
    *.suo *.log *.dmp *.zip imgui.ini desktop.ini 
    dxcompiler.dll dxil.dill"
 
   # ディレクトリ名のパターン
-  UNWATNED_DIR_PATTERNS: "generated x64 win32 arm64 .vs
+  UNWANTNED_DIR_PATTERNS: "generated x64 win32 arm64 .vs
     bin ipch logs Dump"
 jobs:
    check-files:
@@ -33,16 +33,16 @@ jobs:
           run: |
             # ディレクトリ条件を構築（最初の不要な -o を後で削除）
             DIR_CONDITIONS=()
-            for pattern in $UNWATNED_DIR_PATTERNS; do 
+            for pattern in $UNWANTNED_DIR_PATTERNS; do 
               DIR_CONDITIONS+=(-o -iname "$pattern")
             done
-            uset DIR_CONDITIONS[0]
+            unset DIR_CONDITIONS[0]
             # ディレクトリ条件を構築（最初の不要な -o を後で削除）
             NAME_CONDITIONS=()
-            for pattern in $UNWATNED_NAME_PATTERNS; do 
+            for pattern in $UNWANTNED_NAME_PATTERNS; do 
               NAME_CONDITIONS+=(-o -iname "$pattern")
             done
-            uset NAME_CONDITIONS[0]
+            unset NAME_CONDITIONS[0]
             # 1回の find 実行で全件を検索
             # 1. .git を除外
             # 2. 不要なファイルとディレクトリを検索(-type d)し、見つけたらパスを出力(-print)し、その中身を枝刈り(-prune)
