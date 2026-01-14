@@ -29,6 +29,8 @@ private:
 		Matrix4x4 World;
 	};
 
+	Vector2 position = { 0.0f, 0.0f };
+
 	SpriteManager* spriteManager = nullptr;
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
@@ -48,10 +50,29 @@ private:
 
 	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU{};
 
+	// 回転
+	float rotation = 0.0f;
+	// サイズ
+	Vector2 size = { 640.0f,360.0f };
+
 public:
 	void Initialize(SpriteManager* spriteManager);
 	void Update();
 	void Draw();
+	
+	// getter
+	const Vector2& GetPosition() const { return position; }
+	float GetRotation() const { return rotation; }
+	const Vector4& GetColor() const { return materialData->color; }
+	const Vector2& GetSize() const { return size; }
+
+	// setter
+	void SetPosition(const Vector2& pos) { this->position = pos; }
+	void SetRotation(float rot) { this->rotation = rot; }
+	void SetColor(const Vector4& color) { this->materialData->color = color; }
+	void SetSize(const Vector2& size) { this->size = size; }
+
+	//
 
 };
 
