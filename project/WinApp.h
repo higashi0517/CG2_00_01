@@ -9,8 +9,8 @@ class WinApp
 public: // 静的メンバ変数
 	static LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
-	const int32_t kClientWidth = 1280;
-	const int32_t kClientHeight = 720;
+	static const int32_t kClientWidth = 1280;
+	static const int32_t kClientHeight = 720;
 
 public:
 	// 初期化

@@ -1,22 +1,23 @@
 #pragma once
 
+#include <d3d12.h>
+#include <wrl.h>      
+
 class GraphicsDevice;
-class SpriteManager
-{
 
+class SpriteManager {
 public:
-	void Initialize(GraphicsDevice* graphicsDevice);
-
-	GraphicsDevice* GetGraphicsDevice() const { return graphicsDevice_; }
+    void Initialize(GraphicsDevice* graphicsDevice);
+    GraphicsDevice* GetGraphicsDevice() const { return graphicsDevice_; }
+    void SetCommonRenderState();
 
 private:
-	// ルートシグネチャの作成
-	void CreateRootSignature();
-	// グラフィックパイプラインの作成
-	void CreateGraphicsPipelineState();
-	// 共通描画設定
-	void SetCommonRenderState();
+    void CreateRootSignature();
+    void CreateGraphicsPipelineState();
 
-	GraphicsDevice* graphicsDevice_;
+private:
+    GraphicsDevice* graphicsDevice_ = nullptr;
+
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature_;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState_;
 };
-

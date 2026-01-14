@@ -31,7 +31,7 @@ void GraphicsDevice::Initialize(WinApp* winApp) {
 	Device();
 	CommandQueue();
 	SwapChain();
-	DepthBuffer(kClientWidth, kClientHeight);
+	DepthBuffer(WinApp::kClientWidth, WinApp::kClientHeight);
 	DescriptorHeap();
 	RenderTargetView();
 	DepthStencilView();
@@ -247,8 +247,8 @@ void GraphicsDevice::SwapChain() {
 	HRESULT hr;
 
 	// スワップチェーンの生成
-	swapChainDesc.Width = kClientWidth;                        // 画面の幅
-	swapChainDesc.Height = kClientHeight;                       // 画面の高さ
+	swapChainDesc.Width = WinApp::kClientWidth;                        // 画面の幅
+	swapChainDesc.Height = WinApp::kClientHeight;                       // 画面の高さ
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;          // 色の形式
 	swapChainDesc.SampleDesc.Count = 1;                         // マルチサンプルしない
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;// 描画のターゲットとして利用する
@@ -412,8 +412,8 @@ void GraphicsDevice::Fence() {
 void GraphicsDevice::ViewportRect() {
 
 	// ビューポート
-	viewport.Width = kClientWidth;
-	viewport.Height = kClientHeight;
+	viewport.Width = WinApp::kClientWidth;
+	viewport.Height = WinApp::kClientHeight;
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
 	viewport.MinDepth = 0.0f;
@@ -424,9 +424,9 @@ void GraphicsDevice::ScissorRect() {
 
 	// シザー矩形
 	scissorRect.left = 0;
-	scissorRect.right = kClientWidth;
+	scissorRect.right = WinApp::kClientWidth;
 	scissorRect.top = 0;
-	scissorRect.bottom = kClientHeight;
+	scissorRect.bottom = WinApp::kClientHeight;
 }
 
 void GraphicsDevice::DxcCompiler() {
