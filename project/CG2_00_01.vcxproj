@@ -150,6 +150,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Object3D.cpp" />
+    <ClCompile Include="Object3DManager.cpp" />
     <ClCompile Include="Src\Engine\Core\D3DResourceLeakChecker.cpp" />
     <ClCompile Include="Src\Engine\Graphics\GraphicsDevice.cpp" />
     <ClCompile Include="Src\Engine\Core\Logger.cpp" />
@@ -193,6 +195,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Object3D.h" />
+    <ClInclude Include="Object3DManager.h" />
     <ClInclude Include="Src\Engine\Core\D3DResourceLeakChecker.h" />
     <ClInclude Include="Src\Engine\Graphics\GraphicsDevice.h" />
     <ClInclude Include="Src\Engine\Core\Logger.h" />

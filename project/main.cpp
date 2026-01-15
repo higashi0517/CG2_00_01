@@ -40,6 +40,8 @@
 #include "Sprite.h"
 #include "Matrix4x4.h"
 #include "TextureManager.h"
+#include "Object3DManager.h"
+#include "Object3D.h"
 
 // クライアント領域のサイズ
 //using float32_t = float;
@@ -229,6 +231,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// グラフィックスデバイスの初期化
 	graphicsDevice = new GraphicsDevice();
 	graphicsDevice->Initialize(winApp);
+
+	Object3DManager* object3DManager = nullptr;
+	// 3Dオブジェクトマネージャの初期化
+	object3DManager = new Object3DManager();
+	object3DManager->Initialize(graphicsDevice);
+
+	Object3D* object3D = nullptr;
+	// 3Dオブジェクトの初期化
+	object3D = new Object3D();
 
 	// テクスチャマネージャの初期化
 	TextureManager::GetInstance()->Initialize(graphicsDevice);
@@ -435,6 +446,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// PreDrawの処理
 		graphicsDevice->PreDraw();
 
+		// 3Dオブジェクト描画前共通設定
+		object3DManager->SetCommonRenderState();
+
+
 		// sprite描画前共通設定
 		spriteManager->SetCommonRenderState();
 
@@ -443,7 +458,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			sprite->Update();
 			sprite->Draw();
 		}
-
 
 		// ImGuiの描画
 		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), graphicsDevice->GetCommandList().Get());
@@ -463,6 +477,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete input;
 	delete winApp;
 	delete graphicsDevice;
+	delete object3D;
+	delete object3DManager;
 	for (Sprite* sprite : sprites) {
 		delete sprite;
 	}
