@@ -8,14 +8,16 @@
 #include "externals/imgui/imgui_impl_win32.h"
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/DirectXTex/d3dx12.h"
+#include <thread>
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
 #pragma comment(lib, "dxcompiler.lib")
 
-
 using namespace Microsoft::WRL;
 using namespace Logger;
 using namespace StringUtility;
+
+const uint32_t GraphicsDevice::kMaxSRVCount = 512;
 
 void GraphicsDevice::Initialize(WinApp* winApp) {
 
@@ -24,10 +26,13 @@ void GraphicsDevice::Initialize(WinApp* winApp) {
 	// メンバ変数に記録
 	winApp_ = winApp;
 
+	// FPS固定初期化
+	InitializeFixFPS();
+
 	Device();
 	CommandQueue();
 	SwapChain();
-	DepthBuffer(kClientWidth, kClientHeight);
+	DepthBuffer(WinApp::kClientWidth, WinApp::kClientHeight);
 	DescriptorHeap();
 	RenderTargetView();
 	DepthStencilView();
@@ -104,6 +109,9 @@ void GraphicsDevice::PostDraw() {
 	// コマンドリストを実行
 	ID3D12CommandList* commandLists[] = { commandList.Get() };
 	commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+
+	// FPS固定処理
+	UpdateFixFPS();
 
 	// GPUとOSに画面の変換を行うように指示
 	swapChain->Present(1, 0);
@@ -240,8 +248,8 @@ void GraphicsDevice::SwapChain() {
 	HRESULT hr;
 
 	// スワップチェーンの生成
-	swapChainDesc.Width = kClientWidth;                        // 画面の幅
-	swapChainDesc.Height = kClientHeight;                       // 画面の高さ
+	swapChainDesc.Width = WinApp::kClientWidth;                        // 画面の幅
+	swapChainDesc.Height = WinApp::kClientHeight;                       // 画面の高さ
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;          // 色の形式
 	swapChainDesc.SampleDesc.Count = 1;                         // マルチサンプルしない
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;// 描画のターゲットとして利用する
@@ -317,7 +325,7 @@ void GraphicsDevice::DescriptorHeap() {
 	GetCPUDescriptorHandle(rtvDescriptorHeap, descriptorSizeRTV, 0);
 
 	// srv用ディスクリプタヒープの生成
-	srvDescriptorHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
+	srvDescriptorHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);
 
 	// dsv用ディスクリプタヒープの生成
 	dsvDescriptorHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
@@ -405,8 +413,8 @@ void GraphicsDevice::Fence() {
 void GraphicsDevice::ViewportRect() {
 
 	// ビューポート
-	viewport.Width = kClientWidth;
-	viewport.Height = kClientHeight;
+	viewport.Width = WinApp::kClientWidth;
+	viewport.Height = WinApp::kClientHeight;
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
 	viewport.MinDepth = 0.0f;
@@ -417,9 +425,9 @@ void GraphicsDevice::ScissorRect() {
 
 	// シザー矩形
 	scissorRect.left = 0;
-	scissorRect.right = kClientWidth;
+	scissorRect.right = WinApp::kClientWidth;
 	scissorRect.top = 0;
-	scissorRect.bottom = kClientHeight;
+	scissorRect.bottom = WinApp::kClientHeight;
 }
 
 void GraphicsDevice::DxcCompiler() {
@@ -457,6 +465,36 @@ void GraphicsDevice::InitializeImGui() {
 		srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
 	);
 
+}
+
+void GraphicsDevice::InitializeFixFPS(){
+
+	// 現在時間を記録する
+	reference_ = std::chrono::steady_clock::now();
+}
+
+void GraphicsDevice::UpdateFixFPS(){
+
+	// 1/60秒ぴったりの時間
+	const std::chrono::microseconds kMinTime(uint64_t(1000000.0f / 60.0f));
+	// 1/60秒よりわずかに短い時間
+	const std::chrono::microseconds kMinCheckTime(uint64_t(1000000.0f / 65.0f));
+
+	// 現在時間を取得
+	std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+	// 前回記録した時間からの経過時間を取得する
+	std::chrono::microseconds elapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - reference_);
+
+	// 1/60秒(よりわずかに短い時間)経っていない場合
+	if (elapsed < kMinCheckTime) {
+		// 1/60秒経過するまで微小なスリープを繰り返す
+		while (std::chrono::steady_clock::now() - reference_ < kMinTime) {
+			// 1マイクロ秒スリープ
+			std::this_thread::sleep_for(std::chrono::microseconds(1));
+		}
+	}
+	// 現在時間を記録する
+	reference_ = std::chrono::steady_clock::now();
 }
 
 ComPtr<IDxcBlob> GraphicsDevice::CompileShader(const std::wstring& filePath, const wchar_t* profile){
@@ -627,17 +665,31 @@ ComPtr<ID3D12Resource> GraphicsDevice::UploadTextureData(const DirectX::ScratchI
 	return intermediateResource;
 }
 
-DirectX::ScratchImage GraphicsDevice::LoadTexture(const std::string& filePath){
+void GraphicsDevice::CloseCommandList() {
+	HRESULT hr = commandList->Close();
+	assert(SUCCEEDED(hr));
+}
 
-	DirectX::ScratchImage image{};
-	std::wstring filePathW = ConvertString(filePath);
-	HRESULT hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_NONE, nullptr, image);
+void GraphicsDevice::ExecuteCommandList() {
+	ID3D12CommandList* lists[] = { commandList.Get() };
+	commandQueue->ExecuteCommandLists(_countof(lists), lists);
+}
+
+void GraphicsDevice::WaitForGPU() {
+	fenceValue++;
+	HRESULT hr = commandQueue->Signal(fence.Get(), fenceValue);
 	assert(SUCCEEDED(hr));
 
-	// ミニマップの作成
-	DirectX::ScratchImage mipImages{};
-	hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_DEFAULT, 0, mipImages);
-	assert(SUCCEEDED(hr));
+	if (fence->GetCompletedValue() < fenceValue) {
+		hr = fence->SetEventOnCompletion(fenceValue, fenceEvent);
+		assert(SUCCEEDED(hr));
+		WaitForSingleObject(fenceEvent, INFINITE);
+	}
+}
 
-	return mipImages;
+void GraphicsDevice::ResetCommandList() {
+	HRESULT hr = commandAllocator->Reset();
+	assert(SUCCEEDED(hr));
+	hr = commandList->Reset(commandAllocator.Get(), nullptr);
+	assert(SUCCEEDED(hr));
 }

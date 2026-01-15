@@ -7,6 +7,7 @@
 #include <string>
 #include <dxcapi.h>
 #include <externals/DirectXTex/DirectXTex.h>
+#include <chrono>
 
 class WinApp;
 
@@ -44,8 +45,14 @@ public:
 	// テクスチャアップロード
 	Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(const DirectX::ScratchImage& mipImages, const Microsoft::WRL::ComPtr<ID3D12Resource>& texture);
 
-	// テクスチャ読み込み
-	static DirectX::ScratchImage LoadTexture(const std::string& filePath);
+	// 最大SRV数
+	static const uint32_t kMaxSRVCount;
+
+	// コマンドリスト関連
+	void CloseCommandList();
+	void ExecuteCommandList();
+	void WaitForGPU();
+	void ResetCommandList();
 
 private:
 	// デバイスの初期化
@@ -74,6 +81,10 @@ private:
 	void DxcCompiler();
 	// ImGuiの初期化
 	void InitializeImGui();
+	// FPS固定初期化
+	void InitializeFixFPS();
+	// FPS固定処理
+	void UpdateFixFPS();
 
 	// デバイス
 	Microsoft::WRL::ComPtr<ID3D12Device> device;
@@ -124,13 +135,10 @@ private:
 	Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils;
 	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler;
 	Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler;
-
+	// 記録時間
+	std::chrono::steady_clock::time_point reference_;
 
 	// WindowsAPI
 	WinApp* winApp_ = nullptr;
-
-	// サイズ
-	static const int32_t kClientWidth = 1280;
-	static const int32_t kClientHeight = 720;
 };
 

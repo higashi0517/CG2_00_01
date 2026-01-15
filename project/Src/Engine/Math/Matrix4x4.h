@@ -1,15 +1,44 @@
 #pragma once
 #include <assert.h>
 
+using float32_t = float;
+
 struct Matrix4x4
 {
 	float m[4][4];
 };
 
+struct Matrix3x3 {
+	float32_t m[3][3];
+};
+
+struct Vector2
+{
+	float32_t x;
+	float32_t y;
+};
+
 struct Vector3
 {
-	float x, y, z;
+	float32_t x;
+	float32_t y;
+	float32_t z;
 };
+
+struct Vector4
+{
+	float32_t x;
+	float32_t y;
+	float32_t z;
+	float32_t w;
+};
+
+struct Transform {
+	Vector3 scale;
+	Vector3 rotate;
+	Vector3 translate;
+};
+
 
 // 関数宣言
 Matrix4x4 MakeIdentity4x4();
@@ -25,3 +54,6 @@ Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspecRatio, float nearClip,
 Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip);
 Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth);
 Vector3 TransformNormal(const Vector3& vector, const Matrix4x4& matrix);
+
+Vector2 operator+(const Vector2& v1, const Vector2& v2);
+Vector2& operator+=(Vector2& v1, const Vector2& v2);
