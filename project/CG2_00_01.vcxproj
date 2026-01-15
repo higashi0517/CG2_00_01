@@ -80,7 +80,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)externals;$(ProjectDir);$(ProjectDir)Src\Engine\App;$(ProjectDir)Src\Engine\Graphics\Texture;$(ProjectDir)Src\Engine\Graphics\Sprite;$(ProjectDir)Src\Engine\Utility;$(ProjectDir)Src\Engine\Sound;$(ProjectDir)Src\Engine\Math;$(ProjectDir)Src\Engine\Input;$(ProjectDir)Src\Engine\Graphics;$(ProjectDir)Src\Engine\DebugCamera;$(ProjectDir)Src\Engine\Core;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)externals\;$(ProjectDir)Src\;$(ProjectDir)Src\Engine\;$(ProjectDir)Src\App\;$(ProjectDir)Src\Engine\Sound\;$(ProjectDir)Src\Engine\Math\;$(ProjectDir)Src\Engine\Input\;$(ProjectDir)Src\Engine\DebugCamera\;$(ProjectDir)Src\Engine\Utility\;$(ProjectDir)Src\Engine\Graphics\Sprite\;$(ProjectDir)Src\Engine\Graphics\Texture\;$(ProjectDir)Src\Engine\Graphics\;$(ProjectDir)Src\Engine\Core\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -106,7 +106,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Src\Engine\Sound;$(ProjectDir)Src\Engine\Math;$(ProjectDir)Src\Engine\Input;$(ProjectDir)Src\Engine\DebugCamera</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)externals\;$(ProjectDir)Src\;$(ProjectDir)Src\Engine\;$(ProjectDir)Src\App\;$(ProjectDir)Src\Engine\Sound\;$(ProjectDir)Src\Engine\Math\;$(ProjectDir)Src\Engine\Input\;$(ProjectDir)Src\Engine\DebugCamera\;$(ProjectDir)Src\Engine\Utility\;$(ProjectDir)Src\Engine\Graphics\Sprite\;$(ProjectDir)Src\Engine\Graphics\Texture\;$(ProjectDir)Src\Engine\Graphics\;$(ProjectDir)Src\Engine\Core\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -134,7 +134,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <Optimization>Disabled</Optimization>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Src\Engine\Sound;$(ProjectDir)Src\Engine\Math;$(ProjectDir)Src\Engine\Input;$(ProjectDir)Src\Engine\DebugCamera</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)externals\;$(ProjectDir)Src\;$(ProjectDir)Src\Engine\;$(ProjectDir)Src\App\;$(ProjectDir)Src\Engine\Sound\;$(ProjectDir)Src\Engine\Math\;$(ProjectDir)Src\Engine\Input\;$(ProjectDir)Src\Engine\DebugCamera\;$(ProjectDir)Src\Engine\Utility\;$(ProjectDir)Src\Engine\Graphics\Sprite\;$(ProjectDir)Src\Engine\Graphics\Texture\;$(ProjectDir)Src\Engine\Graphics\;$(ProjectDir)Src\Engine\Core\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -172,7 +172,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Src\Engine\Sound\Sound.cpp" />
     <ClCompile Include="Src\Engine\Utility\StringUtility.cpp" />
     <ClCompile Include="Src\Engine\Graphics\Texture\TextureManager.cpp" />
-    <ClCompile Include="Src\Engine\App\WinApp.cpp" />
+    <ClCompile Include="Src\App\WinApp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Object3d.VS.hlsl">
@@ -214,7 +214,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Src\Engine\Sound\Sound.h" />
     <ClInclude Include="Src\Engine\Utility\StringUtility.h" />
     <ClInclude Include="Src\Engine\Graphics\Texture\TextureManager.h" />
-    <ClInclude Include="Src\Engine\App\WinApp.h" />
+    <ClInclude Include="Src\App\WinApp.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

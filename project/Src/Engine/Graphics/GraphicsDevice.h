@@ -6,7 +6,7 @@
 #include <array>
 #include <string>
 #include <dxcapi.h>
-#include <externals/DirectXTex/DirectXTex.h>
+#include <DirectXTex/DirectXTex.h>
 #include <chrono>
 
 class WinApp;
