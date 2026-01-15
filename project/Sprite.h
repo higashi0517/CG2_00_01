@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <d3d12.h>
 #include <dxgi1_6.h>
+#include <string>
 
 class SpriteManager;
 
@@ -55,10 +56,15 @@ private:
 	// サイズ
 	Vector2 size = { 640.0f,360.0f };
 
+	// テクスチャ番号
+	uint32_t textureIndex = 0;
+
 public:
-	void Initialize(SpriteManager* spriteManager);
+	void Initialize(SpriteManager* spriteManager,std::string textureFilePath);
 	void Update();
 	void Draw();
+	// テクスチャ変更
+	void ChangeTexture(std::string textureFilePath);
 	
 	// getter
 	const Vector2& GetPosition() const { return position; }
@@ -71,8 +77,5 @@ public:
 	void SetRotation(float rot) { this->rotation = rot; }
 	void SetColor(const Vector4& color) { this->materialData->color = color; }
 	void SetSize(const Vector2& size) { this->size = size; }
-
-	//
-
 };
 

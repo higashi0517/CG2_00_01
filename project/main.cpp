@@ -39,6 +39,7 @@
 #include "SpriteManager.h"
 #include "Sprite.h"
 #include "Matrix4x4.h"
+#include "TextureManager.h"
 
 // クライアント領域のサイズ
 //using float32_t = float;
@@ -229,20 +230,29 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	graphicsDevice = new GraphicsDevice();
 	graphicsDevice->Initialize(winApp);
 
+	// テクスチャマネージャの初期化
+	TextureManager::GetInstance()->Initialize(graphicsDevice);
+	TextureManager::GetInstance()->LoadTexture("Resources/uvChecker.png");
+	TextureManager::GetInstance()->LoadTexture("Resources/monsterBall.png");
+
 	SpriteManager* spriteManager = nullptr;
 	// スプライト共通部の初期化
 	spriteManager = new SpriteManager();
 	spriteManager->Initialize(graphicsDevice);
 
 	std::vector<Sprite*> sprites;
-	for(uint32_t i = 0; i < 5; ++i ){
+	for (uint32_t i = 0; i < 5; ++i) {
 		Sprite* sprite = new Sprite();
-		sprite->Initialize(spriteManager);
+		sprite->Initialize(spriteManager, "Resources/uvChecker.png");
+		if (i % 2 == 1)
+		{
+			sprite->ChangeTexture("Resources/monsterBall.png");
+		}
 		sprite->SetPosition({ 100.0f + i * 120.0f, 50.0f });
 		sprite->SetSize({ 100.0f,100.0f });
 		sprites.push_back(sprite);
 	}
-	
+
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> textureUploadBuffers;
 
 	// ログのディレクトリを表示
@@ -274,59 +284,59 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Log("Complete create D3D12Device!!!\n");
 
 	// テクスチャ読み込み
-	DirectX::ScratchImage mipImages = graphicsDevice->LoadTexture("Resources/uvChecker.png");
-	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
-	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = graphicsDevice->CreateTextureResource(metadata);
+	//DirectX::ScratchImage mipImages = TextureManager::GetInstance()->LoadTexture("Resources/uvChecker.png");
+	//const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
+	//Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = graphicsDevice->CreateTextureResource(metadata);
 
-	textureUploadBuffers.push_back(
+	/*textureUploadBuffers.push_back(
 		graphicsDevice->UploadTextureData(mipImages, textureResource)
-	);
+	);*/
 
-	// metaDataを基にSRVの設定
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Format = metadata.format;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
+	//// metaDataを基にSRVの設定
+	//D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	//srvDesc.Format = metadata.format;
+	//srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	//srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	//srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
 
-	// SRVを作成するDescriptorHeapの場所
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = graphicsDevice->GetSRVCPUDescriptorHandle(1);
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = graphicsDevice->GetSRVGPUDescriptorHandle(1);
+	//// SRVを作成するDescriptorHeapの場所
+	//D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = graphicsDevice->GetSRVCPUDescriptorHandle(1);
+	//D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = graphicsDevice->GetSRVGPUDescriptorHandle(1);
 
-	// SRVを生成
-	graphicsDevice->GetDevice()->CreateShaderResourceView(
-		textureResource.Get(),
-		&srvDesc,
-		textureSrvHandleCPU
-	);
+	//// SRVを生成
+	//graphicsDevice->GetDevice()->CreateShaderResourceView(
+	//	textureResource.Get(),
+	//	&srvDesc,
+	//	textureSrvHandleCPU
+	//);
 
 	// モデル読み込み
 	ModelData modelData = LoadObjFile("resources", "axis.obj");
 
-	DirectX::ScratchImage mipImages2 = GraphicsDevice::LoadTexture(modelData.material.textureFilePath);
+	/*DirectX::ScratchImage mipImages2 = GraphicsDevice::LoadTexture(modelData.material.textureFilePath);
 	const DirectX::TexMetadata& metadata2 = mipImages2.GetMetadata();
 	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource2 = graphicsDevice->CreateTextureResource(metadata2);
 	textureUploadBuffers.push_back(
 		graphicsDevice->UploadTextureData(mipImages2, textureResource2)
-	);
+	);*/
 
-	// metaDataを基にSRVの設定
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2 = {};
-	srvDesc2.Format = metadata2.format;
-	srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc2.Texture2D.MipLevels = UINT(metadata2.mipLevels);
+	//// metaDataを基にSRVの設定
+	//D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2 = {};
+	//srvDesc2.Format = metadata2.format;
+	//srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	//srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	//srvDesc2.Texture2D.MipLevels = UINT(metadata2.mipLevels);
 
-	// SRVを作成するDescriptorHeapの場所
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2 = graphicsDevice->GetSRVCPUDescriptorHandle(2);
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = graphicsDevice->GetSRVGPUDescriptorHandle(2);
+	//// SRVを作成するDescriptorHeapの場所
+	//D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2 = graphicsDevice->GetSRVCPUDescriptorHandle(2);
+	//D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = graphicsDevice->GetSRVGPUDescriptorHandle(2);
 
-	// SRVを生成
-	graphicsDevice->GetDevice()->CreateShaderResourceView(
-		textureResource2.Get(),
-		&srvDesc2,
-		textureSrvHandleCPU2
-	);
+	//// SRVを生成
+	//graphicsDevice->GetDevice()->CreateShaderResourceView(
+	//	textureResource2.Get(),
+	//	&srvDesc2,
+	//	textureSrvHandleCPU2
+	//);
 
 	// 平行光源の設定
 	Microsoft::WRL::ComPtr <ID3D12Resource> directionalLightResource = graphicsDevice->CreateBufferResource(sizeof(DirectionalLight));
@@ -419,7 +429,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//sprite->SetRotation(rot);
 		//sprite->SetSize(size);
 		//sprite->SetColor(col);
-		
+
 		ImGui::Render();
 
 		// PreDrawの処理
@@ -429,11 +439,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		spriteManager->SetCommonRenderState();
 
 		for (auto& sprite : sprites) {
-			
+
 			sprite->Update();
 			sprite->Draw();
 		}
-		
+
 
 		// ImGuiの描画
 		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), graphicsDevice->GetCommandList().Get());
@@ -441,6 +451,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// PostDrawの処理
 		graphicsDevice->PostDraw();
 	}
+
+	// テクスチャマネージャの終了
+	TextureManager::GetInstance()->Finalize();
 
 	winApp->Finalize();
 	ImGui_ImplDX12_Shutdown();

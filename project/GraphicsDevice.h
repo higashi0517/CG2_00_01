@@ -45,8 +45,14 @@ public:
 	// テクスチャアップロード
 	Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(const DirectX::ScratchImage& mipImages, const Microsoft::WRL::ComPtr<ID3D12Resource>& texture);
 
-	// テクスチャ読み込み
-	static DirectX::ScratchImage LoadTexture(const std::string& filePath);
+	// 最大SRV数
+	static const uint32_t kMaxSRVCount;
+
+	// コマンドリスト関連
+	void CloseCommandList();
+	void ExecuteCommandList();
+	void WaitForGPU();
+	void ResetCommandList();
 
 private:
 	// デバイスの初期化

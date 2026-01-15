@@ -13,10 +13,11 @@
 #pragma comment(lib,"dxgi.lib")
 #pragma comment(lib, "dxcompiler.lib")
 
-
 using namespace Microsoft::WRL;
 using namespace Logger;
 using namespace StringUtility;
+
+const uint32_t GraphicsDevice::kMaxSRVCount = 512;
 
 void GraphicsDevice::Initialize(WinApp* winApp) {
 
@@ -324,7 +325,7 @@ void GraphicsDevice::DescriptorHeap() {
 	GetCPUDescriptorHandle(rtvDescriptorHeap, descriptorSizeRTV, 0);
 
 	// srv用ディスクリプタヒープの生成
-	srvDescriptorHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
+	srvDescriptorHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);
 
 	// dsv用ディスクリプタヒープの生成
 	dsvDescriptorHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
@@ -664,17 +665,31 @@ ComPtr<ID3D12Resource> GraphicsDevice::UploadTextureData(const DirectX::ScratchI
 	return intermediateResource;
 }
 
-DirectX::ScratchImage GraphicsDevice::LoadTexture(const std::string& filePath){
+void GraphicsDevice::CloseCommandList() {
+	HRESULT hr = commandList->Close();
+	assert(SUCCEEDED(hr));
+}
 
-	DirectX::ScratchImage image{};
-	std::wstring filePathW = ConvertString(filePath);
-	HRESULT hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_NONE, nullptr, image);
+void GraphicsDevice::ExecuteCommandList() {
+	ID3D12CommandList* lists[] = { commandList.Get() };
+	commandQueue->ExecuteCommandLists(_countof(lists), lists);
+}
+
+void GraphicsDevice::WaitForGPU() {
+	fenceValue++;
+	HRESULT hr = commandQueue->Signal(fence.Get(), fenceValue);
 	assert(SUCCEEDED(hr));
 
-	// ミニマップの作成
-	DirectX::ScratchImage mipImages{};
-	hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_DEFAULT, 0, mipImages);
-	assert(SUCCEEDED(hr));
+	if (fence->GetCompletedValue() < fenceValue) {
+		hr = fence->SetEventOnCompletion(fenceValue, fenceEvent);
+		assert(SUCCEEDED(hr));
+		WaitForSingleObject(fenceEvent, INFINITE);
+	}
+}
 
-	return mipImages;
+void GraphicsDevice::ResetCommandList() {
+	HRESULT hr = commandAllocator->Reset();
+	assert(SUCCEEDED(hr));
+	hr = commandList->Reset(commandAllocator.Get(), nullptr);
+	assert(SUCCEEDED(hr));
 }

@@ -4,16 +4,18 @@
 #include "Matrix4x4.h"
 #include <d3d12.h>
 #include "WinApp.h"
+#include "TextureManager.h"
 
 using namespace Microsoft::WRL;
 
-void Sprite::Initialize(SpriteManager* spriteManager)
+void Sprite::Initialize(SpriteManager* spriteManager, std::string textureFilePath)
 {
-
 	// 引数で受け取ってメンバ変数に記録する
 	this->spriteManager = spriteManager;
-
-	textureSrvHandleGPU = spriteManager->GetGraphicsDevice()->GetSRVGPUDescriptorHandle(1);
+	// テクスチャ番号を取得
+	textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
+	// テクスチャのGPUハンドルを取得
+	textureSrvHandleGPU = TextureManager::GetInstance()->GetSrvHandleGPU(textureIndex);
 
 	// 頂点リソ－スを作る
 	vertexResource = spriteManager->GetGraphicsDevice()->CreateBufferResource(sizeof(VertexData) * 4);
@@ -50,7 +52,6 @@ void Sprite::Initialize(SpriteManager* spriteManager)
 	// 単位行列
 	transformationMatrixData->WVP = MakeIdentity4x4();
 	transformationMatrixData->World = MakeIdentity4x4();
-
 }
 
 void Sprite::Update()
@@ -125,10 +126,15 @@ void Sprite::Draw()
 	spriteManager->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 	spriteManager->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 
-	spriteManager->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+	spriteManager->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureIndex));
 
 	spriteManager->GetGraphicsDevice()->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
+}
+
+void Sprite::ChangeTexture(std::string textureFilePath)
+{
+	textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
 }
 
 
