@@ -1,4 +1,4 @@
-#include "ResourceObject.h"
+//#include "ResourceObject.h"
 #include <Windows.h>
 #include <wrl.h>
 #include <filesystem>
