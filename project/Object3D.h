@@ -11,29 +11,6 @@ class Object3D
 private:
 	Object3DManager* object3DManager = nullptr;
 
-	/*struct MaterialData {
-		std::string textureFilePath;
-		uint32_t textureIndex = 0;
-	};
-
-	struct ModelData {
-		std::vector<Sprite::VertexData> vertices;
-		MaterialData material;
-	};
-
-	struct VertexData {
-		Vector4 position;
-		Vector2 texcord;
-		Vector3 normal;
-	};
-
-	struct Material {
-		Vector4 color;
-		int32_t enableLighting;
-		float padding[3];
-		Matrix4x4 uvTransform;
-	};*/
-
 	struct TransformationMatrix {
 		Matrix4x4 WVP;
 		Matrix4x4 World;
@@ -44,25 +21,6 @@ private:
 		Vector3 direction;
 		float intensity;
 	};
-
-	////objファイルのデータ
-	//ModelData modelData;
-	//// バッファリソース
-	//Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
-	//// バッファリソース内のデータを指すポインタ
-	//VertexData* vertexData = nullptr;
-	//// バッファリソースの使い道を補足するバッファビュー
-	//D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-
-	//// .mtlファイルの読み取り
-	//static MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
-	//// .objファイルの読み取り
-	//static ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
-
-	//// マテリアルバッファリソース
-	//Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
-	//// マテリアルデータを指すポインタ
-	//Material* materialData = nullptr;
 
 	// WVP行列バッファリソース
 	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource;
@@ -88,4 +46,11 @@ public:
 	void Draw();
 	// setter
 	void SetModel(Model* model_) { this->model = model_; }
+	void SetTranslate(const Vector3& translate_) { this->transform.translate = translate_; }
+	void SetScale(const Vector3& scale_) { this->transform.scale = scale_; }
+	void SetRotate(const Vector3& rotate_) { this->transform.rotate = rotate_; }
+	// getter
+	const Vector3& GetScale() const { return transform.scale; }
+	const Vector3& GetRotate() const { return transform.rotate; }
+	const Vector3& GetTranslate() const { return transform.translate; }
 };

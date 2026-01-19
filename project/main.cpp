@@ -237,13 +237,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	TextureManager::GetInstance()->LoadTexture("Resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("Resources/monsterBall.png");
 
-	//// モデルマネージャの初期化
-	//ModelManager* modelManager = new ModelManager();
-	//modelManager->Initialize(graphicsDevice);
+	// モデルマネージャの初期化
+	ModelManager* modelManager = new ModelManager();
+	modelManager->Initialize(graphicsDevice);
 
-	//// モデルの生成
-	//Model* model = new Model();
-	//model->Initialize(modelManager);
+	// モデルの生成
+	Model* model = new Model();
+	model->Initialize(modelManager);
 
 	Object3DManager* object3DManager = nullptr;
 	// 3Dオブジェクトマネージャの初期化
@@ -251,9 +251,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	object3DManager->Initialize(graphicsDevice);
 
 	Object3D* object3D = nullptr;
-	// 3Dオブジェクトの初期化
 	object3D = new Object3D();
 	object3D->Initialize(object3DManager);
+	object3D->SetModel(model);           // モデルをセット
+
+	Object3D* object3D_2 = new Object3D();      // 2つ目を生成
+	object3D_2->Initialize(object3DManager);
+	object3D_2->SetModel(model);                // ★同じモデルをセット（使い回し）
 
 	SpriteManager* spriteManager = nullptr;
 	// スプライト共通部の初期化
@@ -369,7 +373,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 音声の初期化
 	Sound sound;
 	Sound::SoundData soundData1 = sound.LoadWave("Resources/Alarm01.wav");
-	sound.PlayWave(soundData1);
+	//sound.PlayWave(soundData1);
 
 	// 入力の初期化
 	Input* input = nullptr;
@@ -411,44 +415,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		Sprite* s = sprites[selected];
 
-		// 取得（編集用のローカル変数）
+		// sprite
 		Vector2 pos = s->GetPosition();
 		float   rot = s->GetRotation();
 		Vector2 size = s->GetSize();
 		Vector4 col = s->GetColor();
 
-		// 編集
 		if (ImGui::DragFloat2("Position", &pos.x, 1.0f)) s->SetPosition(pos);
 		if (ImGui::DragFloat("Rotation", &rot, 0.01f))   s->SetRotation(rot);
 		if (ImGui::DragFloat2("Size", &size.x, 1.0f))    s->SetSize(size);
 		if (ImGui::ColorEdit4("Color", &col.x))          s->SetColor(col);
 
+		// 3d object
+		static Vector3 pos3D = object3D->GetTranslate();
+
+		if (ImGui::DragFloat3("3D Position", &pos3D.x, 0.01f)) {
+			object3D->SetTranslate(pos3D);
+		}
+
 		ImGui::End();
-
-
-		//// 変数を受け取る
-		//static Vector2 pos = sprite->GetPosition();
-		//static float rot = sprite->GetRotation();
-		//static Vector2 size = sprite->GetSize();
-		//static Vector4 col = sprite->GetColor();
-
-		//ImGui::Begin("Sprite ");
-		//// 位置
-		//ImGui::DragFloat2("Position", &pos.x, 1.0f);
-		//// 回転
-		//ImGui::DragFloat("Rotation", &rot, 0.01f);
-		//// サイズ
-		//ImGui::DragFloat2("Size", &size.x, 1.0f);
-		//// 色
-		//ImGui::ColorEdit4("Color", &col.x);
-
-		//ImGui::End();
-
-		//// 変更を反映
-		//sprite->SetPosition(pos);
-		//sprite->SetRotation(rot);
-		//sprite->SetSize(size);
-		//sprite->SetColor(col);
 
 		ImGui::Render();
 
@@ -460,6 +445,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		object3D->Update();
 		object3D->Draw();
+		object3D_2->Update();
+		object3D_2->Draw();
 
 		// sprite描画前共通設定
 		spriteManager->SetCommonRenderState();
@@ -489,7 +476,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete winApp;
 	delete graphicsDevice;
 	delete object3D;
+	delete object3D_2;
 	delete object3DManager;
+	delete model;
+	delete modelManager;
 	for (Sprite* sprite : sprites) {
 		delete sprite;
 	}
