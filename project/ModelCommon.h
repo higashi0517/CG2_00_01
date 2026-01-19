@@ -1,7 +1,7 @@
 #pragma once
 #include <GraphicsDevice.h>
 
-class ModelManager
+class ModelCommon
 {
 private:
 	GraphicsDevice* graphicsDevice_;

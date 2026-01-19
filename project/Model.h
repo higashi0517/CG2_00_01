@@ -5,7 +5,7 @@
 #include <wrl.h>
 #include "Sprite.h"
 
-class ModelManager;
+class ModelCommon;
 
 class Model
 {
@@ -34,7 +34,7 @@ private:
 	};
 
 	// modelManagerのポインタ
-	ModelManager* modelManager = nullptr;
+	ModelCommon* modelCommon = nullptr;
 	// objファイルのデータ
 	ModelData modelData;
 	// バッファリソース
@@ -55,7 +55,7 @@ private:
 
 public:
 	// 初期化
-	void Initialize(ModelManager* modelManager);
+	void Initialize(ModelCommon* modelCommon);
 	// 描画
 	void Draw();
 };

@@ -1,22 +1,22 @@
 #include "Model.h"
 #include "TextureManager.h"
-#include "ModelManager.h"
+#include "ModelCommon.h"
 #include <vector>
 #include <string>
 #include <fstream>
 #include <sstream>
 #include <cassert>
 
-void Model::Initialize(ModelManager* modelManager)
+void Model::Initialize(ModelCommon* modelCommon)
 {
 	// 引数で受け取ってメンバ変数に記録する
-	this->modelManager = modelManager;
+	this->modelCommon = modelCommon;
 
 	// モデル読み込み
 	modelData = LoadObjFile("Resources/plane", "plane.obj");
 
 	// 頂点バッファの生成
-	vertexResource = modelManager->GetGraphicsDevice()->CreateBufferResource(sizeof(VertexData) * static_cast<uint32_t>(modelData.vertices.size()));
+	vertexResource = modelCommon->GetGraphicsDevice()->CreateBufferResource(sizeof(VertexData) * static_cast<uint32_t>(modelData.vertices.size()));
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
 	vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * static_cast<uint32_t>(modelData.vertices.size()));
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
@@ -26,7 +26,7 @@ void Model::Initialize(ModelManager* modelManager)
 	std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());
 
 	// マテリアルバッファの生成
-	materialResource = modelManager->GetGraphicsDevice()->CreateBufferResource(sizeof(Material));
+	materialResource = modelCommon->GetGraphicsDevice()->CreateBufferResource(sizeof(Material));
 	// データを書き込むためのポインタを取得
 	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 	// マテリアルデータの設定
@@ -43,16 +43,16 @@ void Model::Initialize(ModelManager* modelManager)
 void Model::Draw() 
 {
 	// プリミティブトポロジーの設定
-	modelManager->GetGraphicsDevice()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	modelCommon->GetGraphicsDevice()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// 頂点バッファの設定
-	modelManager->GetGraphicsDevice()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+	modelCommon->GetGraphicsDevice()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
 	// 定数バッファの設定
-	modelManager->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+	modelCommon->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 	// テクスチャの設定
-	modelManager->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootDescriptorTable(2,
+	modelCommon->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootDescriptorTable(2,
 		TextureManager::GetInstance()->GetSrvHandleGPU(modelData.material.textureIndex));
 	// 描画コマンド
-	modelManager->GetGraphicsDevice()->GetCommandList()->DrawInstanced(static_cast<uint32_t>(modelData.vertices.size()), 1, 0, 0);
+	modelCommon->GetGraphicsDevice()->GetCommandList()->DrawInstanced(static_cast<uint32_t>(modelData.vertices.size()), 1, 0, 0);
 }
 
 Model::MaterialData Model::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
