@@ -42,7 +42,7 @@
 #include "Object3D.h"
 #include "ModelCommon.h"
 #include "Model.h"
-//#include "ModelManager.h"
+#include "ModelManager.h"
 
 // クライアント領域のサイズ
 //using float32_t = float;
@@ -104,13 +104,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	TextureManager::GetInstance()->LoadTexture("Resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("Resources/monsterBall.png");
 
-	// モデルマネージャの初期化
-	ModelCommon* modelCommon = new ModelCommon();
-	modelCommon->Initialize(graphicsDevice);
+	// 3Dモデルマネジャの初期化
+	ModelManager::GetInstance()->Initialize(graphicsDevice);
+	// .objモデルの読み込み
+	ModelManager::GetInstance()->LoadModel("plane.obj");
 
-	// モデルの生成
-	Model* model = new Model();
-	model->Initialize(modelCommon);
+	//// モデルマネージャの初期化
+	//ModelCommon* modelCommon = new ModelCommon();
+	//modelCommon->Initialize(graphicsDevice);
+
+	//// モデルの生成
+	//Model* model = new Model();
+	//model->Initialize(modelCommon);
 
 	Object3DManager* object3DManager = nullptr;
 	// 3Dオブジェクトマネージャの初期化
@@ -120,11 +125,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Object3D* object3D = nullptr;
 	object3D = new Object3D();
 	object3D->Initialize(object3DManager);
-	object3D->SetModel(model);           // モデルをセット
+	//object3D->SetModel(model);           // モデルをセット
+	// 初期化済みの3Dオブジェクトモデルを紐づける
+	object3D->SetModel("plane.obj");
 
 	Object3D* object3D_2 = new Object3D();      // 2つ目を生成
 	object3D_2->Initialize(object3DManager);
-	object3D_2->SetModel(model);                // ★同じモデルをセット（使い回し）
+	object3D_2->SetModel("plane.obj");                // ★同じモデルをセット（使い回し）
 
 	SpriteManager* spriteManager = nullptr;
 	// スプライト共通部の初期化
@@ -333,6 +340,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// テクスチャマネージャの終了
 	TextureManager::GetInstance()->Finalize();
+	// 3Dモデルマネージャの終了
+	ModelManager::GetInstance()->Finalize();
 
 	winApp->Finalize();
 	ImGui_ImplDX12_Shutdown();
@@ -345,8 +354,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete object3D;
 	delete object3D_2;
 	delete object3DManager;
-	delete model;
-	delete modelCommon;
+	//delete model;
+	//delete modelCommon;
 	for (Sprite* sprite : sprites) {
 		delete sprite;
 	}

@@ -37,6 +37,8 @@ private:
 
 	Model* model = nullptr;
 
+	// 
+
 public:
 	// 初期化
 	void Initialize(Object3DManager* object3DManager);
@@ -45,7 +47,8 @@ public:
 	// 描画
 	void Draw();
 	// setter
-	void SetModel(Model* model_) { this->model = model_; }
+	void SetModel(const std::string& filePath);
+	//void SetModel(Model* model_) { this->model = model_; }
 	void SetTranslate(const Vector3& translate_) { this->transform.translate = translate_; }
 	void SetScale(const Vector3& scale_) { this->transform.scale = scale_; }
 	void SetRotate(const Vector3& rotate_) { this->transform.rotate = rotate_; }

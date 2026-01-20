@@ -7,6 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include <cassert>
+#include "ModelManager.h"
 
 void Object3D::Initialize(Object3DManager* object3DManager)
 {
@@ -63,4 +64,10 @@ void Object3D::Draw()
 	if(model){
 		model->Draw();
 	}
+}
+
+void Object3D::SetModel(const std::string& filePath)
+{
+	// モデルを検索してセット
+	model = ModelManager::GetInstance()->FindModel(filePath);
 }

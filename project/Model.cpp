@@ -7,13 +7,13 @@
 #include <sstream>
 #include <cassert>
 
-void Model::Initialize(ModelCommon* modelCommon)
+void Model::Initialize(ModelCommon* modelCommon, const std::string& directorypath, const std::string& filename)
 {
 	// 引数で受け取ってメンバ変数に記録する
 	this->modelCommon = modelCommon;
 
 	// モデル読み込み
-	modelData = LoadObjFile("Resources/plane", "plane.obj");
+	modelData = LoadObjFile(directorypath, filename);
 
 	// 頂点バッファの生成
 	vertexResource = modelCommon->GetGraphicsDevice()->CreateBufferResource(sizeof(VertexData) * static_cast<uint32_t>(modelData.vertices.size()));
@@ -40,7 +40,7 @@ void Model::Initialize(ModelCommon* modelCommon)
 		TextureManager::GetInstance()->GetTextureIndexByFilePath(modelData.material.textureFilePath);
 }
 
-void Model::Draw() 
+void Model::Draw()
 {
 	// プリミティブトポロジーの設定
 	modelCommon->GetGraphicsDevice()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
