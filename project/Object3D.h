@@ -22,6 +22,10 @@ private:
 		float intensity;
 	};
 
+	struct CameraForGPU {
+		Vector3 worldPosition;
+	};
+
 	// WVP行列バッファリソース
 	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource;
 	// WVP行列データを指すポインタ
@@ -31,6 +35,10 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource;
 	// 平行光源データを指すポインタ
 	DirectionalLight* directionalLightData = nullptr;
+	// カメラ位置バッファリソース
+	Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource;
+	// カメラ位置データを指すポインタ
+	CameraForGPU* cameraData = nullptr;
 
 	Transform transform;
 	Transform cameraTransform;

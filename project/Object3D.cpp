@@ -29,6 +29,10 @@ void Object3D::Initialize(Object3DManager* object3DManager)
 	directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
 	directionalLightData->intensity = 1.0f;
+	// カメラ用バッファの作成
+	cameraResource = object3DManager->GetGraphicsDevice()->CreateBufferResource(sizeof(CameraForGPU));
+	cameraResource->Map(0, nullptr, reinterpret_cast<void**>(&cameraData));
+	cameraData->worldPosition = { 0.0f, 0.0f, 0.0f }; // 一旦初期値
 
 	// transformの初期化
 	transform={
@@ -53,6 +57,8 @@ void Object3D::Update()
 	transformationMatrixData->WVP = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 	transformationMatrixData->World = worldMatrix;
 
+	cameraData->worldPosition = cameraTransform.translate;
+
 	transform.rotate.y += 0.01f;
 }
 
@@ -60,7 +66,8 @@ void Object3D::Draw()
 {
 	object3DManager->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 	object3DManager->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-	
+	object3DManager->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootConstantBufferView(4, cameraResource->GetGPUVirtualAddress());
+
 	if(model){
 		model->Draw();
 	}

@@ -107,7 +107,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 3Dモデルマネジャの初期化
 	ModelManager::GetInstance()->Initialize(graphicsDevice);
 	// .objモデルの読み込み
-	ModelManager::GetInstance()->LoadModel("plane.obj");
+	ModelManager::GetInstance()->LoadModel("sphere.obj");
 
 	//// モデルマネージャの初期化
 	//ModelCommon* modelCommon = new ModelCommon();
@@ -125,13 +125,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Object3D* object3D = nullptr;
 	object3D = new Object3D();
 	object3D->Initialize(object3DManager);
-	//object3D->SetModel(model);           // モデルをセット
+	//object3D->SetModel(model);          
 	// 初期化済みの3Dオブジェクトモデルを紐づける
-	object3D->SetModel("plane.obj");
+	object3D->SetModel("sphere.obj");
 
-	Object3D* object3D_2 = new Object3D();      // 2つ目を生成
+	Object3D* object3D_2 = new Object3D();      
 	object3D_2->Initialize(object3DManager);
-	object3D_2->SetModel("plane.obj");                // ★同じモデルをセット（使い回し）
+	object3D_2->SetModel("sphere.obj");                
 
 	SpriteManager* spriteManager = nullptr;
 	// スプライト共通部の初期化
