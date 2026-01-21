@@ -59,7 +59,7 @@ void Object3D::Update()
 
 	cameraData->worldPosition = cameraTransform.translate;
 
-	transform.rotate.y += 0.01f;
+	//transform.rotate.y += 0.01f;
 }
 
 void Object3D::Draw()

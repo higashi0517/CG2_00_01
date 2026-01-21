@@ -129,9 +129,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 初期化済みの3Dオブジェクトモデルを紐づける
 	object3D->SetModel("sphere.obj");
 
-	Object3D* object3D_2 = new Object3D();      
+	/*Object3D* object3D_2 = new Object3D();      
 	object3D_2->Initialize(object3DManager);
-	object3D_2->SetModel("sphere.obj");                
+	object3D_2->SetModel("sphere.obj");                */
 
 	SpriteManager* spriteManager = nullptr;
 	// スプライト共通部の初期化
@@ -319,8 +319,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		object3D->Update();
 		object3D->Draw();
-		object3D_2->Update();
-		object3D_2->Draw();
+		/*object3D_2->Update();
+		object3D_2->Draw();*/
 
 		// sprite描画前共通設定
 		spriteManager->SetCommonRenderState();
@@ -352,7 +352,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete winApp;
 	delete graphicsDevice;
 	delete object3D;
-	delete object3D_2;
+	//delete object3D_2;
 	delete object3DManager;
 	//delete model;
 	//delete modelCommon;

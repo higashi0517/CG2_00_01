@@ -31,6 +31,7 @@ private:
 		int32_t enableLighting;
 		float padding[3];
 		Matrix4x4 uvTransform;
+		float shininess;      
 	};
 
 	// modelManagerのポインタ
