@@ -60,8 +60,14 @@ public:
 	void SetTranslate(const Vector3& translate_) { this->transform.translate = translate_; }
 	void SetScale(const Vector3& scale_) { this->transform.scale = scale_; }
 	void SetRotate(const Vector3& rotate_) { this->transform.rotate = rotate_; }
+	void SetCameraTranslate(const Vector3& translate_) { this->cameraTransform.translate = translate_; }
+	void SetCameraRotate(const Vector3& rotate_) { this->cameraTransform.rotate = rotate_; }
+
 	// getter
 	const Vector3& GetScale() const { return transform.scale; }
 	const Vector3& GetRotate() const { return transform.rotate; }
 	const Vector3& GetTranslate() const { return transform.translate; }
+	const Vector3& GetCameraTranslate() const { return cameraTransform.translate; }
+	const Vector3& GetCameraRotate() const { return cameraTransform.rotate; }
+	DirectionalLight& GetDirectionalLightData() { return *directionalLightData; }
 };

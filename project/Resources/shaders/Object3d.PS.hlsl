@@ -47,9 +47,15 @@ PixelShaderOutput main(VertexShaderOutput input)
        // float cos = saturate(dot(normalize(input.normal), -gDirectionalLight.direction));
         float32_t3 toEye = normalize(gCamera.worldPosition - input.worldPosition);
     
-        float32_t3 reflectLight = reflect(gDirectionalLight.direction, normalize(input.normal));
-        float RdotE = dot(reflectLight, toEye);
-        float specularPow = pow(saturate(RdotE), gMaterial.shininess);
+        // phongモデル
+        //float32_t3 reflectLight = reflect(gDirectionalLight.direction, normalize(input.normal));
+        //float RdotE = dot(reflectLight, toEye);
+        //float specularPow = pow(saturate(RdotE), gMaterial.shininess);
+        
+        // Blinn-Phongモデル
+        float32_t3 halfVvector = normalize(-gDirectionalLight.direction + toEye);
+        float NdotH = dot(normalize(input.normal), halfVvector);
+        float specularPow = pow(saturate(NdotH), gMaterial.shininess);
     
         // 拡散反射
         float32_t3 diffuse =

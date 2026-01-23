@@ -33,6 +33,7 @@ void Model::Initialize(ModelCommon* modelCommon, const std::string& directorypat
 	materialData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	materialData->enableLighting = true;
 	materialData->uvTransform = MakeIdentity4x4();
+	materialData->shininess = 50.0f;
 
 	// .objの参照しているテクスチャを読み込む
 	TextureManager::GetInstance()->LoadTexture(modelData.material.textureFilePath);

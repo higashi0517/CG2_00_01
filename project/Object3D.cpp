@@ -32,7 +32,7 @@ void Object3D::Initialize(Object3DManager* object3DManager)
 	// カメラ用バッファの作成
 	cameraResource = object3DManager->GetGraphicsDevice()->CreateBufferResource(sizeof(CameraForGPU));
 	cameraResource->Map(0, nullptr, reinterpret_cast<void**>(&cameraData));
-	cameraData->worldPosition = { 0.0f, 0.0f, 0.0f }; // 一旦初期値
+	cameraData->worldPosition = { 0.0f, 0.0f, 0.0f };
 
 	// transformの初期化
 	transform={

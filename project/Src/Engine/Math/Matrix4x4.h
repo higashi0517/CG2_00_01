@@ -57,3 +57,8 @@ Vector3 TransformNormal(const Vector3& vector, const Matrix4x4& matrix);
 
 Vector2 operator+(const Vector2& v1, const Vector2& v2);
 Vector2& operator+=(Vector2& v1, const Vector2& v2);
+
+Vector3 operator+(const Vector3& v1, const Vector3& v2);
+Vector3& operator+=(Vector3& v1, const Vector3& v2);
+
+void Normalize(Vector3& v);

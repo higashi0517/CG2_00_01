@@ -302,9 +302,34 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		// 3d object
 		static Vector3 pos3D = object3D->GetTranslate();
+		Vector3  rot3D = object3D->GetRotate();
 
 		if (ImGui::DragFloat3("3D Position", &pos3D.x, 0.01f)) {
 			object3D->SetTranslate(pos3D);
+		}
+
+		if (ImGui::DragFloat3("3D Rotation", &rot3D.x, 0.01f)) {
+			object3D->SetRotate(rot3D);
+		}
+
+		// 平行光源
+		auto& lightData = object3D->GetDirectionalLightData();
+
+		ImGui::ColorEdit4("Light Color", &lightData.color.x);
+		ImGui::DragFloat3("Light Direction", &lightData.direction.x, 0.01f);
+		ImGui::DragFloat("Light Intensity", &lightData.intensity, 0.01f, 0.0f, 10.0f);
+		Normalize(lightData.direction);
+
+		// camera
+		static Vector3 camPos = object3D->GetCameraTranslate();
+		static Vector3 camRot = object3D->GetCameraRotate();
+
+		if (ImGui::DragFloat3("Camera Position", &camPos.x, 0.01f)) {
+			object3D->SetCameraTranslate(camPos);
+		}
+
+		if (ImGui::DragFloat3("Camera Rotation", &camRot.x, 0.01f)) {
+			object3D->SetCameraRotate(camRot);
 		}
 
 		ImGui::End();
