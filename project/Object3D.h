@@ -4,6 +4,7 @@
 #include <vector>
 #include <d3d12.h>
 #include "Model.h"
+#include "Camera.h"
 
 class Object3DManager;
 class Object3D
@@ -33,11 +34,12 @@ private:
 	DirectionalLight* directionalLightData = nullptr;
 
 	Transform transform;
-	Transform cameraTransform;
+	//Transform cameraTransform;
 
 	Model* model = nullptr;
 
-	// 
+	// カメラ
+	Camera* camera = nullptr;
 
 public:
 	// 初期化
@@ -52,6 +54,8 @@ public:
 	void SetTranslate(const Vector3& translate_) { this->transform.translate = translate_; }
 	void SetScale(const Vector3& scale_) { this->transform.scale = scale_; }
 	void SetRotate(const Vector3& rotate_) { this->transform.rotate = rotate_; }
+	void SetCamera(Camera* camera_) { this->camera = camera_; }
+
 	// getter
 	const Vector3& GetScale() const { return transform.scale; }
 	const Vector3& GetRotate() const { return transform.rotate; }

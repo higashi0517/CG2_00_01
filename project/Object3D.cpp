@@ -8,6 +8,7 @@
 #include <sstream>
 #include <cassert>
 #include "ModelManager.h"
+#include "Camera.h"
 
 void Object3D::Initialize(Object3DManager* object3DManager)
 {
@@ -36,24 +37,33 @@ void Object3D::Initialize(Object3DManager* object3DManager)
 		.rotate = {0.0f, 0.0f, 0.0f},
 		.translate = {0.0f, 0.0f, 0.0f}
 	};
-	cameraTransform = {
+	/*cameraTransform = {
 		.scale = {1.0f, 1.0f, 1.0f},
 		.rotate = {0.3f, 0.0f, 0.0f},
 		.translate = {0.0f, 4.0f, -10.0f}
-	};
+	};*/
+	this->camera = object3DManager->GetDefaultCamera();
 }
 
 void Object3D::Update()
 {
 	// Transformの更新
 	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-	Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+	Matrix4x4 worldViewProjectionMatrix;
+	if (camera) {
+		const Matrix4x4& viewProjectionMatrix = camera->GetViewProjectionMatrix();
+		worldViewProjectionMatrix = Multiply(worldMatrix, viewProjectionMatrix);
+	}
+	else {
+		worldViewProjectionMatrix = worldMatrix;
+	}
+	/*Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 	Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-	Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(WinApp::kClientWidth) / float(WinApp::kClientHeight), 0.1f, 100.0f);
-	transformationMatrixData->WVP = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+	Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(WinApp::kClientWidth) / float(WinApp::kClientHeight), 0.1f, 100.0f);*/
+	transformationMatrixData->WVP = worldViewProjectionMatrix;
 	transformationMatrixData->World = worldMatrix;
 
-	transform.rotate.y += 0.01f;
+	//transform.rotate.y = +1.0f;
 }
 
 void Object3D::Draw()

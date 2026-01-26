@@ -43,6 +43,7 @@
 #include "ModelCommon.h"
 #include "Model.h"
 #include "ModelManager.h"
+#include "Camera.h"
 
 // クライアント領域のサイズ
 //using float32_t = float;
@@ -117,26 +118,34 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//Model* model = new Model();
 	//model->Initialize(modelCommon);
 
+
 	Object3DManager* object3DManager = nullptr;
 	// 3Dオブジェクトマネージャの初期化
 	object3DManager = new Object3DManager();
 	object3DManager->Initialize(graphicsDevice);
 
+	Camera* camera = new Camera();
+	camera->SetTranslate({ 0.0f, 0.0f, -10.0f });
+	camera->SetRotate({ 0.0f, 0.0f, 0.0f });
+	object3DManager->SetDefaultCamera(camera);
+
 	Object3D* object3D = nullptr;
 	object3D = new Object3D();
 	object3D->Initialize(object3DManager);
-	//object3D->SetModel(model);           // モデルをセット
+	//object3D->SetModel(model);           
 	// 初期化済みの3Dオブジェクトモデルを紐づける
 	object3D->SetModel("plane.obj");
+	object3D->SetRotate({ 0.0f,3.0f,0.0f });
 
-	Object3D* object3D_2 = new Object3D();      // 2つ目を生成
+	Object3D* object3D_2 = new Object3D();
 	object3D_2->Initialize(object3DManager);
-	object3D_2->SetModel("plane.obj");                // ★同じモデルをセット（使い回し）
+	object3D_2->SetModel("plane.obj");
 
 	SpriteManager* spriteManager = nullptr;
 	// スプライト共通部の初期化
 	spriteManager = new SpriteManager();
 	spriteManager->Initialize(graphicsDevice);
+
 
 	std::vector<Sprite*> sprites;
 	for (uint32_t i = 0; i < 5; ++i) {
@@ -301,10 +310,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		if (ImGui::ColorEdit4("Color", &col.x))          s->SetColor(col);
 
 		// 3d object
-		static Vector3 pos3D = object3D->GetTranslate();
+		Vector3 pos3D = object3D->GetTranslate();
+		Vector3 rotate3D = object3D->GetRotate();
 
 		if (ImGui::DragFloat3("3D Position", &pos3D.x, 0.01f)) {
 			object3D->SetTranslate(pos3D);
+		}
+		if (ImGui::DragFloat3("3D Rotation", &rotate3D.x, 0.01f)) {
+			object3D->SetRotate(rotate3D);
+		}
+
+		// camera
+		Vector3 cameraPos = camera->GetTranslate();
+
+		if (ImGui::DragFloat3("Camera Position", &cameraPos.x, 0.01f)) {
+			camera->SetTranslate(cameraPos);
 		}
 
 		ImGui::End();
@@ -313,6 +333,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		// PreDrawの処理
 		graphicsDevice->PreDraw();
+
+		// カメラの更新
+		camera->Update();
 
 		// 3Dオブジェクト描画前共通設定
 		object3DManager->SetCommonRenderState();
