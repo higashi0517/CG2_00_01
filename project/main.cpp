@@ -44,6 +44,8 @@
 #include "Model.h"
 #include "ModelManager.h"
 #include "Camera.h"
+#include "SrvManager.h"
+#include "ImGuiManager.h"
 
 // クライアント領域のサイズ
 //using float32_t = float;
@@ -100,8 +102,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	graphicsDevice = new GraphicsDevice();
 	graphicsDevice->Initialize(winApp);
 
+	//graphicsDevice = GraphicsDevice::GetInstance();
+
+	SrvManager* srvManager = nullptr;
+	srvManager = new SrvManager();
+	srvManager->Initialize(graphicsDevice);
+
+
 	// テクスチャマネージャの初期化
-	TextureManager::GetInstance()->Initialize(graphicsDevice);
+	TextureManager::GetInstance()->Initialize(graphicsDevice,srvManager);
 	TextureManager::GetInstance()->LoadTexture("Resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("Resources/monsterBall.png");
 
@@ -374,6 +383,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete input;
 	delete winApp;
 	delete graphicsDevice;
+	delete srvManager;
 	delete object3D;
 	delete object3D_2;
 	delete object3DManager;

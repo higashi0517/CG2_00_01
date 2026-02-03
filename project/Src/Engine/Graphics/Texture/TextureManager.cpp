@@ -1,6 +1,7 @@
 #include "TextureManager.h"
 #include "GraphicsDevice.h"
 #include "StringUtility.h"
+#include "SrvManager.h"
 
 TextureManager* TextureManager::instance = nullptr;
 // ImGuiで0番を使用するため、1番から開始する
@@ -57,32 +58,33 @@ void TextureManager::Finalize()
 	instance = nullptr;
 }
 
-void TextureManager::Initialize(GraphicsDevice* graphicsDevice)
+void TextureManager::Initialize(GraphicsDevice* graphicsDevice, SrvManager* srvManager)
 {
 	// SRVの数と同数
 	textureDatas.reserve(GraphicsDevice::kMaxSRVCount);
 
 	// グラフィックスデバイス
 	graphicsDevice_ = graphicsDevice;
+	// SRVマネージャー
+	srvManager_ = srvManager;
 }
 
 void TextureManager::LoadTexture(const std::string& filePath) 
 {
+	TextureData& textureData = textureDatas[filePath];
+
+	// SRV確保
+	textureData.srvIndex = srvManager_->Allocate();
+	textureData.srvHandleCPU = srvManager_->GetCPUDescriptorHandle(textureData.srvIndex);
+	textureData.srvHandleGPU = srvManager_->GetGPUDescriptorHandle(textureData.srvIndex);
+
 	// 読み込み済みテクスチャを検索
-	auto it = std::find_if(
-		textureDatas.begin(),
-		textureDatas.end(),
-		[&](TextureData& textureData) {
-			return textureData.filePath == filePath;
-		}
-	);
-	if (it != textureDatas.end()) {
-		// 見つかった場合は何もしない
-		return;
+	if(textureDatas.contains(filePath)){
+	
 	}
 
 	// テクスチャ枚数上限
-	assert(textureDatas.size() + kSRVIndexTop < GraphicsDevice::kMaxSRVCount);
+	assert(srvManager->Check());
 
 	DirectX::ScratchImage image{};
 	std::wstring filePathW = StringUtility::ConvertString(filePath);
