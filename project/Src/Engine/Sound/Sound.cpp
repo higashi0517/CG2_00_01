@@ -1,4 +1,5 @@
 #include "Sound.h"
+#include <vector>
 
 Sound::Sound() {
 
@@ -66,18 +67,18 @@ Sound::SoundData Sound::LoadWave(const char* filePath) {
 	}
 
 	// Dataチャンクのデータ部（波形データ）を読み込む
-	char* pBuffer = new char[data.size];
-	file.read(pBuffer, data.size);
+	// ★ std::vector を使用してメモリ管理を安全にする
+	std::vector<char> buffer(data.size);
+	file.read(buffer.data(), data.size);
 
-	// Waveファイルを閉じる
 	file.close();
 
-	// 読み込んだデータをreturnする
 	Sound::SoundData soundData = {};
-	soundData.wfex = format.fmt; // 波形データのフォーマットを設定
-	soundData.pBuffer = reinterpret_cast<BYTE*>(pBuffer); // バッファの先頭アドレスを設定
-	soundData.bufferSize = data.size; // バッファのサイズを設定
-	soundData.pSourceVoice = nullptr; // ソースボイスを初期化
+	soundData.wfex = format.fmt;
+	soundData.pBuffer = reinterpret_cast<BYTE*>(new char[data.size]);
+	std::memcpy(soundData.pBuffer, buffer.data(), data.size);
+	soundData.bufferSize = data.size;
+	soundData.pSourceVoice = nullptr;
 
 	return soundData;
 }

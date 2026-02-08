@@ -19,11 +19,11 @@ private:
 	void CreateSRVforTexture2D(uint32_t srvIndex, ID3D12Resource* pResource,DXGI_FORMAT format,UINT MipLevels);
 	void CreateSRVforStructuredBuffer(uint32_t srvIndex, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride);
 
-	void PreDraw();
 	void SetGraphicsRootDescriptorTable(UINT RootParameterIndex, uint32_t srvIndex);
 
 public:
 	void Initialize(GraphicsDevice* graphicsDevice_);
+	void PreDraw();
 	uint32_t Allocate(); 
 	static SrvManager* GetInstance();
 	// 

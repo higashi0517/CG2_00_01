@@ -104,29 +104,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//graphicsDevice = GraphicsDevice::GetInstance();
 
-	SrvManager* srvManager = nullptr;
-	srvManager = new SrvManager();
+	SrvManager* srvManager = SrvManager::GetInstance();
 	srvManager->Initialize(graphicsDevice);
 
-
 	// テクスチャマネージャの初期化
-	TextureManager::GetInstance()->Initialize(graphicsDevice,srvManager);
-	TextureManager::GetInstance()->LoadTexture("Resources/uvChecker.png");
-	TextureManager::GetInstance()->LoadTexture("Resources/monsterBall.png");
+	TextureManager::GetInstance()->Initialize(graphicsDevice, srvManager);
+
+	ImGuiManager::GetInstance()->Initialize(winApp, graphicsDevice);
 
 	// 3Dモデルマネジャの初期化
 	ModelManager::GetInstance()->Initialize(graphicsDevice);
 	// .objモデルの読み込み
 	ModelManager::GetInstance()->LoadModel("plane.obj");
-
-	//// モデルマネージャの初期化
-	//ModelCommon* modelCommon = new ModelCommon();
-	//modelCommon->Initialize(graphicsDevice);
-
-	//// モデルの生成
-	//Model* model = new Model();
-	//model->Initialize(modelCommon);
-
 
 	Object3DManager* object3DManager = nullptr;
 	// 3Dオブジェクトマネージャの初期化
@@ -150,11 +139,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	object3D_2->Initialize(object3DManager);
 	object3D_2->SetModel("plane.obj");
 
+
 	SpriteManager* spriteManager = nullptr;
 	// スプライト共通部の初期化
 	spriteManager = new SpriteManager();
 	spriteManager->Initialize(graphicsDevice);
 
+	TextureManager::GetInstance()->LoadTexture("Resources/uvChecker.png");
+	TextureManager::GetInstance()->LoadTexture("Resources/monsterBall.png");
 
 	std::vector<Sprite*> sprites;
 	for (uint32_t i = 0; i < 5; ++i) {
@@ -296,52 +288,50 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		// ゲーム処理
 
-		//// Imguiのフレーム開始
-		//ImGui_ImplDX12_NewFrame();
-		//ImGui_ImplWin32_NewFrame();
-		//ImGui::NewFrame();
+		// Imguiのフレーム開始
+		ImGuiManager::GetInstance()->Begin();
 
 		//ImGui::Begin("Sprites");
 
-		//ImGui::SliderInt("Selected", &selected, 0, (int)sprites.size() - 1);
+		ImGui::SliderInt("Selected", &selected, 0, (int)sprites.size() - 1);
 
-		//Sprite* s = sprites[selected];
+		Sprite* s = sprites[selected];
 
-		//// sprite
-		//Vector2 pos = s->GetPosition();
-		//float   rot = s->GetRotation();
-		//Vector2 size = s->GetSize();
-		//Vector4 col = s->GetColor();
+		// sprite
+		Vector2 pos = s->GetPosition();
+		float   rot = s->GetRotation();
+		Vector2 size = s->GetSize();
+		Vector4 col = s->GetColor();
 
-		//if (ImGui::DragFloat2("Position", &pos.x, 1.0f)) s->SetPosition(pos);
-		//if (ImGui::DragFloat("Rotation", &rot, 0.01f))   s->SetRotation(rot);
-		//if (ImGui::DragFloat2("Size", &size.x, 1.0f))    s->SetSize(size);
-		//if (ImGui::ColorEdit4("Color", &col.x))          s->SetColor(col);
+		if (ImGui::DragFloat2("Position", &pos.x, 1.0f)) s->SetPosition(pos);
+		if (ImGui::DragFloat("Rotation", &rot, 0.01f))   s->SetRotation(rot);
+		if (ImGui::DragFloat2("Size", &size.x, 1.0f))    s->SetSize(size);
+		if (ImGui::ColorEdit4("Color", &col.x))          s->SetColor(col);
 
-		//// 3d object
-		//Vector3 pos3D = object3D->GetTranslate();
-		//Vector3 rotate3D = object3D->GetRotate();
+		// 3d object
+		Vector3 pos3D = object3D->GetTranslate();
+		Vector3 rotate3D = object3D->GetRotate();
 
-		//if (ImGui::DragFloat3("3D Position", &pos3D.x, 0.01f)) {
-		//	object3D->SetTranslate(pos3D);
-		//}
-		//if (ImGui::DragFloat3("3D Rotation", &rotate3D.x, 0.01f)) {
-		//	object3D->SetRotate(rotate3D);
-		//}
+		if (ImGui::DragFloat3("3D Position", &pos3D.x, 0.01f)) {
+			object3D->SetTranslate(pos3D);
+		}
+		if (ImGui::DragFloat3("3D Rotation", &rotate3D.x, 0.01f)) {
+			object3D->SetRotate(rotate3D);
+		}
 
-		//// camera
-		//Vector3 cameraPos = camera->GetTranslate();
+		// camera
+		Vector3 cameraPos = camera->GetTranslate();
 
-		//if (ImGui::DragFloat3("Camera Position", &cameraPos.x, 0.01f)) {
-		//	camera->SetTranslate(cameraPos);
-		//}
+		if (ImGui::DragFloat3("Camera Position", &cameraPos.x, 0.01f)) {
+			camera->SetTranslate(cameraPos);
+		}
 
-		//ImGui::End();
-
-		//ImGui::Render();
+		ImGuiManager::GetInstance()->End();
 
 		// PreDrawの処理
 		graphicsDevice->PreDraw();
+
+		srvManager->PreDraw();
 
 		// カメラの更新
 		camera->Update();
@@ -364,7 +354,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 
 		// ImGuiの描画
-		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), graphicsDevice->GetCommandList().Get());
+		ImGuiManager::GetInstance()->Draw();
 
 		// PostDrawの処理
 		graphicsDevice->PostDraw();
@@ -376,14 +366,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ModelManager::GetInstance()->Finalize();
 
 	winApp->Finalize();
-	ImGui_ImplDX12_Shutdown();
-	ImGui_ImplWin32_Shutdown();
-	ImGui::DestroyContext();
+	ImGuiManager::GetInstance()->Finalize();
 	sound.Unload(&soundData1);
 	delete input;
 	delete winApp;
 	delete graphicsDevice;
-	delete srvManager;
+	//delete srvManager;
 	delete object3D;
 	delete object3D_2;
 	delete object3DManager;

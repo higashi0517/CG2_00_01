@@ -103,7 +103,8 @@ void TextureManager::LoadTexture(const std::string& filePath)
 	textureData.metadata = mipImages.GetMetadata(); // テクスチャメタデータの取得
 	textureData.resource = graphicsDevice_->CreateTextureResource(textureData.metadata); // テクスチャリソースの生成
 	// テクスチャデータの要素数番号をSRVの番号にする
-	uint32_t srvIndex = static_cast<uint32_t>(textureDatas.size() - 1) + kSRVIndexTop;
+	uint32_t srvIndex = srvManager_->Allocate();
+	textureData.srvIndex = srvIndex;
 
 	textureData.srvHandleCPU = srvManager_->GetCPUDescriptorHandle(srvIndex);
 	textureData.srvHandleGPU = srvManager_->GetGPUDescriptorHandle(srvIndex);

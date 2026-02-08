@@ -1,7 +1,9 @@
 #include "SpriteManager.h"
+#include "SrvManager.h"
 #include <d3dcommon.h>
 #include <cassert>
 #include <GraphicsDevice.h>
+
 
 void SpriteManager::Initialize(GraphicsDevice* graphicsDevice) {
 
@@ -15,10 +17,12 @@ void SpriteManager::Initialize(GraphicsDevice* graphicsDevice) {
 void SpriteManager::SetCommonRenderState()
 {
 	assert(graphicsDevice_);
-	auto* commandList = graphicsDevice_->GetCommandList().Get(); // main.cpp でもこの形で使ってたはず
+	auto* commandList = graphicsDevice_->GetCommandList().Get(); 
 	assert(commandList);
 	assert(rootSignature_);
 	assert(graphicsPipelineState_);
+
+    SrvManager::GetInstance()->PreDraw();
 
 	graphicsDevice_->GetCommandList()->SetGraphicsRootSignature(rootSignature_.Get());
 	graphicsDevice_->GetCommandList()->SetPipelineState(graphicsPipelineState_.Get());
