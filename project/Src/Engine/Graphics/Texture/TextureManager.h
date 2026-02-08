@@ -47,14 +47,14 @@ public:
 	// テクスチャ読み込み
 	void LoadTexture(const std::string& filePath);
 	// ファイルパスからテクスチャ番号を取得
-	uint32_t GetTextureIndexByFilePath(const std::string& filePath);
+	//uint32_t GetTextureIndexByFilePath(const std::string& filePath);
 	// テクスチャ番号からGPUハンドルを取得
-	D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandleGPU(uint32_t textureIndex);
+	D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandleGPU(const std::string& filePath);
 	// メタデータ取得
 	const DirectX::TexMetadata& GetMetaData(const std::string& filePath);
 	// SRV数取得
 	uint32_t GetSrvIndex(const std::string& filePath);
 	//GPUハンドル取得
-	D3D12_GPU_BASED_VALIDATION_FLAGS GetSrvHandleGPU(const std::string& filePath);
+//D3D12_GPU_BASED_VALIDATION_FLAGS GetSrvHandleGPU(const std::string& filePath);
 };
 

@@ -12,10 +12,13 @@ void Sprite::Initialize(SpriteManager* spriteManager, std::string textureFilePat
 {
 	// 引数で受け取ってメンバ変数に記録する
 	this->spriteManager = spriteManager;
+
+	this->textureFilePath = textureFilePath;
+
 	// テクスチャ番号を取得
-	textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
+	//textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
 	// テクスチャのGPUハンドルを取得
-	textureSrvHandleGPU = TextureManager::GetInstance()->GetSrvHandleGPU(textureIndex);
+	textureSrvHandleGPU = TextureManager::GetInstance()->GetSrvHandleGPU((this->textureFilePath));
 
 	// 頂点リソ－スを作る
 	vertexResource = spriteManager->GetGraphicsDevice()->CreateBufferResource(sizeof(VertexData) * 4);
@@ -72,7 +75,7 @@ void Sprite::Update()
 		bottom = -bottom;
 	}
 
-	const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetaData(textureIndex);
+	const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetaData(this->textureFilePath);
 	float tex_left = textureLeftTop.x / static_cast<float>(metadata.width);
 	float tex_right = (textureLeftTop.x + textureSize.x) / static_cast<float>(metadata.width);
 	float tex_top = textureLeftTop.y / static_cast<float>(metadata.height);
@@ -148,7 +151,7 @@ void Sprite::Draw()
 	spriteManager->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 	spriteManager->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 
-	spriteManager->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureIndex));
+	spriteManager->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(this->textureFilePath));
 
 	spriteManager->GetGraphicsDevice()->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
@@ -156,13 +159,13 @@ void Sprite::Draw()
 
 void Sprite::ChangeTexture(std::string textureFilePath)
 {
-	textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
+	//textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
 }
 
 void Sprite::AdjustTextureSize()
 {
 	// テクスチャのメタデータを取得
-	const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetaData(textureIndex);
+	const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetaData(this->textureFilePath);
 
 	textureSize.x = static_cast<float>(metadata.width);
 	textureSize.y = static_cast<float>(metadata.height);

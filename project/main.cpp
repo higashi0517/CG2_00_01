@@ -296,49 +296,49 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		// ゲーム処理
 
-		// Imguiのフレーム開始
-		ImGui_ImplDX12_NewFrame();
-		ImGui_ImplWin32_NewFrame();
-		ImGui::NewFrame();
+		//// Imguiのフレーム開始
+		//ImGui_ImplDX12_NewFrame();
+		//ImGui_ImplWin32_NewFrame();
+		//ImGui::NewFrame();
 
-		ImGui::Begin("Sprites");
+		//ImGui::Begin("Sprites");
 
-		ImGui::SliderInt("Selected", &selected, 0, (int)sprites.size() - 1);
+		//ImGui::SliderInt("Selected", &selected, 0, (int)sprites.size() - 1);
 
-		Sprite* s = sprites[selected];
+		//Sprite* s = sprites[selected];
 
-		// sprite
-		Vector2 pos = s->GetPosition();
-		float   rot = s->GetRotation();
-		Vector2 size = s->GetSize();
-		Vector4 col = s->GetColor();
+		//// sprite
+		//Vector2 pos = s->GetPosition();
+		//float   rot = s->GetRotation();
+		//Vector2 size = s->GetSize();
+		//Vector4 col = s->GetColor();
 
-		if (ImGui::DragFloat2("Position", &pos.x, 1.0f)) s->SetPosition(pos);
-		if (ImGui::DragFloat("Rotation", &rot, 0.01f))   s->SetRotation(rot);
-		if (ImGui::DragFloat2("Size", &size.x, 1.0f))    s->SetSize(size);
-		if (ImGui::ColorEdit4("Color", &col.x))          s->SetColor(col);
+		//if (ImGui::DragFloat2("Position", &pos.x, 1.0f)) s->SetPosition(pos);
+		//if (ImGui::DragFloat("Rotation", &rot, 0.01f))   s->SetRotation(rot);
+		//if (ImGui::DragFloat2("Size", &size.x, 1.0f))    s->SetSize(size);
+		//if (ImGui::ColorEdit4("Color", &col.x))          s->SetColor(col);
 
-		// 3d object
-		Vector3 pos3D = object3D->GetTranslate();
-		Vector3 rotate3D = object3D->GetRotate();
+		//// 3d object
+		//Vector3 pos3D = object3D->GetTranslate();
+		//Vector3 rotate3D = object3D->GetRotate();
 
-		if (ImGui::DragFloat3("3D Position", &pos3D.x, 0.01f)) {
-			object3D->SetTranslate(pos3D);
-		}
-		if (ImGui::DragFloat3("3D Rotation", &rotate3D.x, 0.01f)) {
-			object3D->SetRotate(rotate3D);
-		}
+		//if (ImGui::DragFloat3("3D Position", &pos3D.x, 0.01f)) {
+		//	object3D->SetTranslate(pos3D);
+		//}
+		//if (ImGui::DragFloat3("3D Rotation", &rotate3D.x, 0.01f)) {
+		//	object3D->SetRotate(rotate3D);
+		//}
 
-		// camera
-		Vector3 cameraPos = camera->GetTranslate();
+		//// camera
+		//Vector3 cameraPos = camera->GetTranslate();
 
-		if (ImGui::DragFloat3("Camera Position", &cameraPos.x, 0.01f)) {
-			camera->SetTranslate(cameraPos);
-		}
+		//if (ImGui::DragFloat3("Camera Position", &cameraPos.x, 0.01f)) {
+		//	camera->SetTranslate(cameraPos);
+		//}
 
-		ImGui::End();
+		//ImGui::End();
 
-		ImGui::Render();
+		//ImGui::Render();
 
 		// PreDrawの処理
 		graphicsDevice->PreDraw();

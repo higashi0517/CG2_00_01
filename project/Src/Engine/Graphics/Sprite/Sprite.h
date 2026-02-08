@@ -74,6 +74,8 @@ private:
 	// テクスチャサイズをイメージの合わせる
 	void AdjustTextureSize();
 
+	std::string textureFilePath;
+
 public:
 	void Initialize(SpriteManager* spriteManager,std::string textureFilePath);
 	void Update();
