@@ -24,8 +24,7 @@
 #include "externals/DirectXTex/DirectXTex.h"
 #include "externals/DirectXTex/d3dx12.h"
 #include <vector>
-#include<fstream>
-#include<sstream>
+#include <sstream>
 #include <xaudio2.h>
 #pragma comment (lib,"xaudio2.lib")
 #include "Sound.h"
@@ -38,29 +37,18 @@
 #include "D3DResourceLeakChecker.h"
 #include "SpriteManager.h"
 #include "Sprite.h"
-#include "Matrix4x4.h"
 #include "TextureManager.h"
+#include "Object3DManager.h"
+#include "Object3D.h"
+#include "ModelCommon.h"
+#include "Model.h"
+#include "ModelManager.h"
 
 // クライアント領域のサイズ
 //using float32_t = float;
 
 using namespace Logger;
 using namespace StringUtility;
-
-struct DirectionalLight {
-	Vector4 color;
-	Vector3 direction;
-	float intensity;
-};
-
-struct MaterialData {
-	std::string textureFilePath;
-};
-
-struct ModelData {
-	std::vector<Sprite::VertexData> vertices;
-	MaterialData material;
-};
 
 static LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception) {
 
@@ -86,125 +74,6 @@ static LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception) {
 	MiniDumpWriteDump(GetCurrentProcess(), processId, dumpFileHandle, MiniDumpNormal, &minidumpInformation, nullptr, nullptr);
 
 	return EXCEPTION_EXECUTE_HANDLER;
-}
-
-MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
-
-	// 変数の宣言
-	MaterialData materialData;
-	std::string line;
-
-	// ファイルを開く
-	std::ifstream file(directoryPath + "/" + filename);
-	assert(file.is_open());
-
-	// ファイル読み込み
-	while (std::getline(file, line)) {
-		std::string identifier;
-		std::istringstream s(line);
-		s >> identifier;
-
-		// identifierに応じた処理
-		if (identifier == "map_Kd") {
-			std::string textureFilename;
-			s >> textureFilename;
-			// 連続してファイルパスする
-			materialData.textureFilePath = directoryPath + "/" + textureFilename;
-		}
-	}
-	return materialData;
-}
-
-
-// objファイルを読み込む関数
-ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename) {
-
-	// 変数の宣言
-	ModelData modelData;
-	std::vector<Vector4> positions;
-	std::vector<Vector3> normals;
-	std::vector<Vector2> texcoords;
-	std::string line;
-
-	// ファイルを開く
-	std::ifstream file(directoryPath + "/" + filename);
-	assert(file.is_open());
-
-	// ファイル読み込み
-	while (std::getline(file, line)) {
-		std::string identifier;
-		std::istringstream s(line);
-		s >> identifier;// 先頭の識別子を読む
-
-		// 頂点位置の読み込み
-		if (identifier == "v") {
-
-			Vector4 position;
-			s >> position.x >> position.y >> position.z;
-			position.w = 1.0f; // 同次座標のためwは1.0
-			// 位置のxを反転
-			position.x *= -1.0f;
-			positions.push_back(position);
-		}
-		else if (identifier == "vt") {
-
-			Vector2 texcoord;
-			s >> texcoord.x >> texcoord.y;
-			// テクスチャ座標のyを反転
-			texcoord.y = 1.0f - texcoord.y;
-			texcoords.push_back(texcoord);
-		}
-		else if (identifier == "vn") {
-
-			Vector3 normal;
-			s >> normal.x >> normal.y >> normal.z;
-			// 法線のxを反転
-			normal.x *= -1.0f;
-			normals.push_back(normal);
-		}
-		else if (identifier == "f") {
-
-			Sprite::VertexData triangle[3];
-
-			// 面は三角形限定、その他は未対応
-			for (int32_t faceVertex = 0; faceVertex < 3; ++faceVertex) {
-				std::string vertexDefinition;
-				s >> vertexDefinition;
-
-				// 頂点の要素へのIndexは「位置/UV/法線」で格納されているので、分解してIndexを取得
-				std::istringstream v(vertexDefinition);
-				uint32_t elementIndices[3];
-				for (int32_t element = 0; element < 3; ++element) {
-
-					std::string index;
-					std::getline(v, index, '/');// 区切りでインデックスを読んでいく
-					elementIndices[element] = std::stoi(index);
-				}
-
-				// 要素へのindexから、実際の要素の値を取得して、頂点を構築する
-				Vector4 position = positions[elementIndices[0] - 1];
-				Vector2 texcoord = texcoords[elementIndices[1] - 1];
-				Vector3 normal = normals[elementIndices[2] - 1];
-				//VertexData vetex = { position, texcoord, normal };
-				//modelData.vertices.push_back(vetex);
-				triangle[faceVertex] = { position, texcoord, normal };
-			}
-
-			// 頂点を逆順で登録することで、周り準を逆にする
-			modelData.vertices.push_back(triangle[2]);
-			modelData.vertices.push_back(triangle[1]);
-			modelData.vertices.push_back(triangle[0]);
-		}
-		else if (identifier == "mtllib") {
-
-			// materialTemplateLibraryファイルの名前を取得する
-			std::string materialFilename;
-			s >> materialFilename;
-			// 基本的にobjファイルと同一階層にmtlは存在させるので、ディレクトリ名とファイル名を渡す
-			modelData.material = LoadMaterialTemplateFile(directoryPath, materialFilename);
-		}
-	}
-	return modelData;
 }
 
 // Windowsアプリでのエントリーポイント
@@ -234,6 +103,35 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	TextureManager::GetInstance()->Initialize(graphicsDevice);
 	TextureManager::GetInstance()->LoadTexture("Resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("Resources/monsterBall.png");
+
+	// 3Dモデルマネジャの初期化
+	ModelManager::GetInstance()->Initialize(graphicsDevice);
+	// .objモデルの読み込み
+	ModelManager::GetInstance()->LoadModel("plane.obj");
+
+	//// モデルマネージャの初期化
+	//ModelCommon* modelCommon = new ModelCommon();
+	//modelCommon->Initialize(graphicsDevice);
+
+	//// モデルの生成
+	//Model* model = new Model();
+	//model->Initialize(modelCommon);
+
+	Object3DManager* object3DManager = nullptr;
+	// 3Dオブジェクトマネージャの初期化
+	object3DManager = new Object3DManager();
+	object3DManager->Initialize(graphicsDevice);
+
+	Object3D* object3D = nullptr;
+	object3D = new Object3D();
+	object3D->Initialize(object3DManager);
+	//object3D->SetModel(model);           // モデルをセット
+	// 初期化済みの3Dオブジェクトモデルを紐づける
+	object3D->SetModel("plane.obj");
+
+	Object3D* object3D_2 = new Object3D();      // 2つ目を生成
+	object3D_2->Initialize(object3DManager);
+	object3D_2->SetModel("plane.obj");                // ★同じモデルをセット（使い回し）
 
 	SpriteManager* spriteManager = nullptr;
 	// スプライト共通部の初期化
@@ -311,7 +209,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//);
 
 	// モデル読み込み
-	ModelData modelData = LoadObjFile("resources", "axis.obj");
+	//ModelData modelData = LoadObjFile("resources", "axis.obj");
 
 	/*DirectX::ScratchImage mipImages2 = GraphicsDevice::LoadTexture(modelData.material.textureFilePath);
 	const DirectX::TexMetadata& metadata2 = mipImages2.GetMetadata();
@@ -338,18 +236,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//	textureSrvHandleCPU2
 	//);
 
-	// 平行光源の設定
-	Microsoft::WRL::ComPtr <ID3D12Resource> directionalLightResource = graphicsDevice->CreateBufferResource(sizeof(DirectionalLight));
-	DirectionalLight* directionalLightData = nullptr;
-	directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
-	directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
-	directionalLightData->intensity = 1.0f;
+	//// 平行光源の設定
+	//Microsoft::WRL::ComPtr <ID3D12Resource> directionalLightResource = graphicsDevice->CreateBufferResource(sizeof(DirectionalLight));
+	//DirectionalLight* directionalLightData = nullptr;
+	//directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
+	//directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+	//directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
+	//directionalLightData->intensity = 1.0f;
 
 	// 音声の初期化
 	Sound sound;
 	Sound::SoundData soundData1 = sound.LoadWave("Resources/Alarm01.wav");
-	sound.PlayWave(soundData1);
+	//sound.PlayWave(soundData1);
 
 	// 入力の初期化
 	Input* input = nullptr;
@@ -391,49 +289,38 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		Sprite* s = sprites[selected];
 
-		// 取得（編集用のローカル変数）
+		// sprite
 		Vector2 pos = s->GetPosition();
 		float   rot = s->GetRotation();
 		Vector2 size = s->GetSize();
 		Vector4 col = s->GetColor();
 
-		// 編集
 		if (ImGui::DragFloat2("Position", &pos.x, 1.0f)) s->SetPosition(pos);
 		if (ImGui::DragFloat("Rotation", &rot, 0.01f))   s->SetRotation(rot);
 		if (ImGui::DragFloat2("Size", &size.x, 1.0f))    s->SetSize(size);
 		if (ImGui::ColorEdit4("Color", &col.x))          s->SetColor(col);
 
+		// 3d object
+		static Vector3 pos3D = object3D->GetTranslate();
+
+		if (ImGui::DragFloat3("3D Position", &pos3D.x, 0.01f)) {
+			object3D->SetTranslate(pos3D);
+		}
+
 		ImGui::End();
-
-
-		//// 変数を受け取る
-		//static Vector2 pos = sprite->GetPosition();
-		//static float rot = sprite->GetRotation();
-		//static Vector2 size = sprite->GetSize();
-		//static Vector4 col = sprite->GetColor();
-
-		//ImGui::Begin("Sprite ");
-		//// 位置
-		//ImGui::DragFloat2("Position", &pos.x, 1.0f);
-		//// 回転
-		//ImGui::DragFloat("Rotation", &rot, 0.01f);
-		//// サイズ
-		//ImGui::DragFloat2("Size", &size.x, 1.0f);
-		//// 色
-		//ImGui::ColorEdit4("Color", &col.x);
-
-		//ImGui::End();
-
-		//// 変更を反映
-		//sprite->SetPosition(pos);
-		//sprite->SetRotation(rot);
-		//sprite->SetSize(size);
-		//sprite->SetColor(col);
 
 		ImGui::Render();
 
 		// PreDrawの処理
 		graphicsDevice->PreDraw();
+
+		// 3Dオブジェクト描画前共通設定
+		object3DManager->SetCommonRenderState();
+
+		object3D->Update();
+		object3D->Draw();
+		object3D_2->Update();
+		object3D_2->Draw();
 
 		// sprite描画前共通設定
 		spriteManager->SetCommonRenderState();
@@ -444,7 +331,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			sprite->Draw();
 		}
 
-
 		// ImGuiの描画
 		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), graphicsDevice->GetCommandList().Get());
 
@@ -454,6 +340,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// テクスチャマネージャの終了
 	TextureManager::GetInstance()->Finalize();
+	// 3Dモデルマネージャの終了
+	ModelManager::GetInstance()->Finalize();
 
 	winApp->Finalize();
 	ImGui_ImplDX12_Shutdown();
@@ -463,6 +351,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete input;
 	delete winApp;
 	delete graphicsDevice;
+	delete object3D;
+	delete object3D_2;
+	delete object3DManager;
+	//delete model;
+	//delete modelCommon;
 	for (Sprite* sprite : sprites) {
 		delete sprite;
 	}
