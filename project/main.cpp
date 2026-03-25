@@ -46,6 +46,8 @@
 #include "Camera.h"
 #include "SrvManager.h"
 #include "ImGuiManager.h"
+#include "ParticleManager.h"
+#include "ParticleEmitter.h"
 
 // クライアント領域のサイズ
 //using float32_t = float;
@@ -160,6 +162,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		sprite->SetSize({ 100.0f,100.0f });
 		sprites.push_back(sprite);
 	}
+
+
+	ParticleManager* particleManager = new ParticleManager();
+	particleManager->Initialize(graphicsDevice);
+	particleManager->SetCamera(camera);
+
+	particleManager->CreateParticleGroup("Magic", "Resources/circle.png");
+
+	ParticleEmitter* emitter = new ParticleEmitter();
+	emitter->Initialize(particleManager, "Magic");
 
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> textureUploadBuffers;
 
@@ -336,13 +348,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// カメラの更新
 		camera->Update();
 
+		emitter->Update();
+
+
 		// 3Dオブジェクト描画前共通設定
 		object3DManager->SetCommonRenderState();
 
 		object3D->Update();
-		object3D->Draw();
+		//object3D->Draw();
 		object3D_2->Update();
-		object3D_2->Draw();
+		//object3D_2->Draw();
 
 		// sprite描画前共通設定
 		spriteManager->SetCommonRenderState();
@@ -352,6 +367,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			sprite->Update();
 			sprite->Draw();
 		}
+
+		particleManager->SetCommonRenderState();
+		particleManager->Update();
+		particleManager->Draw();
 
 		// ImGuiの描画
 		ImGuiManager::GetInstance()->Draw();
@@ -382,6 +401,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	}
 	sprites.clear();
 	delete spriteManager;
+	delete particleManager;
 
 	return 0;
 }

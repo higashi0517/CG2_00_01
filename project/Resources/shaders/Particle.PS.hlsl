@@ -29,24 +29,10 @@ PixelShaderOutput main(VertexShaderOutput input)
 {
     PixelShaderOutput output;
 
-    // UV 変換
-    float32_t4 uv4 = float32_t4(input.texcoord, 0.0, 1.0);
-    float32_t2 uv = mul(uv4, gMaterial.uvTransform).xy;
+    float32_t4 transformedUV = mul(float32_t4(input.texcoord, 0.0f, 1.0f), gMaterial.uvTransform);
+    float32_t4 textureColor = gTexture.Sample(gSampler, transformedUV.xy);
 
-    float32_t4 textureColor = gTexture.Sample(gSampler, uv);
-
-    float32_t4 resultColor = gMaterial.color * textureColor;
-
-    // 簡単な平行光ライティング（必要なければ enableLighting=0 にする）
-    if (gMaterial.enableLighting != 0)
-    {
-        float32_t3 n = normalize(input.normal);
-        float32_t3 l = normalize(-gDirectionalLight.direction);
-        float32_t cosTheta = saturate(dot(n, l));
-        resultColor *= gDirectionalLight.color * (cosTheta * gDirectionalLight.intensity);
-    }
-
-    output.color = resultColor;
+    output.color = gMaterial.color * textureColor*input.color;
 
     // アルファ0なら破棄
     if (output.color.a == 0.0)

@@ -134,3 +134,9 @@ void TextureManager::LoadTexture(const std::string& filePath)
 
 	intermediateResource.Reset();
 }
+
+uint32_t TextureManager::GetSrvIndex(const std::string& filePath)
+{
+    assert(textureDatas.contains(filePath));
+    return textureDatas[filePath].srvIndex;
+}

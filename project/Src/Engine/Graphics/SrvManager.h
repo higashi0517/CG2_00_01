@@ -16,19 +16,20 @@ private:
 	// 次に使用するSRVのインデックス
 	uint32_t useIndex = 0;
 	// SRV生成 
-	void CreateSRVforTexture2D(uint32_t srvIndex, ID3D12Resource* pResource,DXGI_FORMAT format,UINT MipLevels);
-	void CreateSRVforStructuredBuffer(uint32_t srvIndex, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride);
-
-	void SetGraphicsRootDescriptorTable(UINT RootParameterIndex, uint32_t srvIndex);
+	void CreateSRVforTexture2D(uint32_t srvIndex, ID3D12Resource* pResource, DXGI_FORMAT format, UINT MipLevels);
 
 public:
 	void Initialize(GraphicsDevice* graphicsDevice_);
 	void PreDraw();
-	uint32_t Allocate(); 
+	uint32_t Allocate();
 	static SrvManager* GetInstance();
 	// 
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(uint32_t index);
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(uint32_t index);
+
+	// SRV生成関数
+	void CreateSRVforStructuredBuffer(uint32_t srvIndex, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride);
+	void SetGraphicsRootDescriptorTable(UINT RootParameterIndex, uint32_t srvIndex);
 
 	ID3D12DescriptorHeap* GetDescriptorHeap() { return DescriptorHeap.Get(); }
 	static const uint32_t kMaxSRVCount;
