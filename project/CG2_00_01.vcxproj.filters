@@ -54,27 +54,6 @@
     <ClCompile Include="main.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="externals\ImGui\imgui.cpp">
-      <Filter>External\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="externals\ImGui\imgui_demo.cpp">
-      <Filter>External\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="externals\ImGui\imgui_draw.cpp">
-      <Filter>External\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="externals\ImGui\imgui_impl_dx12.cpp">
-      <Filter>External\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="externals\ImGui\imgui_impl_win32.cpp">
-      <Filter>External\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="externals\ImGui\imgui_tables.cpp">
-      <Filter>External\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="externals\ImGui\imgui_widgets.cpp">
-      <Filter>External\imgui</Filter>
-    </ClCompile>
     <ClCompile Include="Src\Engine\Sound\Sound.cpp">
       <Filter>ソース ファイル\sound</Filter>
     </ClCompile>
@@ -151,30 +130,6 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="externals\ImGui\imconfig.h">
-      <Filter>External\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="externals\ImGui\imgui.h">
-      <Filter>External\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="externals\ImGui\imgui_impl_dx12.h">
-      <Filter>External\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="externals\ImGui\imgui_impl_win32.h">
-      <Filter>External\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="externals\ImGui\imgui_internal.h">
-      <Filter>External\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="externals\ImGui\imstb_rectpack.h">
-      <Filter>External\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="externals\ImGui\imstb_textedit.h">
-      <Filter>External\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="externals\ImGui\imstb_truetype.h">
-      <Filter>External\imgui</Filter>
-    </ClInclude>
     <ClInclude Include="Src\Engine\DebugCamera\DebugCamera.h">
       <Filter>ヘッダー ファイル\camera</Filter>
     </ClInclude>
@@ -247,9 +202,6 @@
     <ClInclude Include="ParticleEmitter.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="externals\ImGui\LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\shaders\Object3d.hlsli">
