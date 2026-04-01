@@ -268,7 +268,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// 音声の初期化
 	Sound sound;
-	Sound::SoundData soundData1 = sound.LoadWave("Resources/Alarm01.wav");
+	Sound::SoundData soundData1 = sound.LoadFile("Resources/Alarm01.wav");
 	//sound.PlayWave(soundData1);
 
 	// 入力の初期化
@@ -297,6 +297,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		if (input->TriggerKey(DIK_0)) {
 			OutputDebugStringA("Hit 0\n");
 		}
+
+		// soundの再生
+		if (input->TriggerKey(DIK_1)) {
+			sound.PlayWave(soundData1);
+		}
+
 
 		// ゲーム処理
 
