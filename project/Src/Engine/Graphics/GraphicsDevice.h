@@ -46,6 +46,8 @@ public:
 	// テクスチャアップロード
 	Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(const DirectX::ScratchImage& mipImages, const Microsoft::WRL::ComPtr<ID3D12Resource>& texture);
 
+	Microsoft::WRL::ComPtr<ID3D12CommandQueue> GetCommandQueue() const { return commandQueue; }
+
 	// 最大SRV数
 	//static const uint32_t kMaxSRVCount;
 

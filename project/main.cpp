@@ -18,9 +18,9 @@
 #include <dxcapi.h>
 #pragma comment(lib,"dxcompiler.lib")
 #include "Matrix4x4.h"
-#include "externals/imgui/imgui.h"
-#include "externals/imgui/imgui_impl_win32.h"
-#include "externals/imgui/imgui_impl_dx12.h"
+#include "imgui.h"
+#include "imgui_impl_win32.h"
+#include "imgui_impl_dx12.h"
 #include "externals/DirectXTex/DirectXTex.h"
 #include "externals/DirectXTex/d3dx12.h"
 #include <vector>
@@ -300,6 +300,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		// ゲーム処理
 
+#ifdef USE_IMGUI
+
 		// Imguiのフレーム開始
 		ImGuiManager::GetInstance()->Begin();
 
@@ -338,8 +340,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			camera->SetTranslate(cameraPos);
 		}
 
+		// デモウィンドウの表示
+		ImGui::ShowDemoWindow();
+
 		ImGuiManager::GetInstance()->End();
 
+#endif
 		// PreDrawの処理
 		graphicsDevice->PreDraw();
 
