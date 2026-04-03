@@ -160,6 +160,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Framework.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="ImGuiManager.cpp" />
     <ClCompile Include="Model.cpp" />
@@ -207,6 +208,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Framework.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="ImGuiManager.h" />
     <ClInclude Include="Model.h" />
