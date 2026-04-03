@@ -5,8 +5,8 @@
 #include <cassert>
 #include <format>
 #include <vector>
-#include "imgui/imgui_impl_win32.h"
-#include "imgui/imgui_impl_dx12.h"
+//#include "imgui/imgui_impl_win32.h"
+//#include "imgui/imgui_impl_dx12.h"
 #include "DirectXTex/d3dx12.h"
 #include <thread>
 #pragma comment(lib,"d3d12.lib")
@@ -17,7 +17,7 @@ using namespace Microsoft::WRL;
 using namespace Logger;
 using namespace StringUtility;
 
-const uint32_t GraphicsDevice::kMaxSRVCount = 512;
+//const uint32_t GraphicsDevice::kMaxSRVCount = 512;
 
 void GraphicsDevice::Initialize(WinApp* winApp) {
 
@@ -40,7 +40,12 @@ void GraphicsDevice::Initialize(WinApp* winApp) {
 	ViewportRect();
 	ScissorRect();
 	DxcCompiler();
-	InitializeImGui();
+	//InitializeImGui();
+}
+
+GraphicsDevice* GraphicsDevice::GetInstance() {
+	static GraphicsDevice instance;
+	return &instance;
 }
 
 void GraphicsDevice::PreDraw() {
@@ -76,8 +81,8 @@ void GraphicsDevice::PreDraw() {
 	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	// 描画用のDescriptorHeapを設定
-	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap.Get() };
-	commandList->SetDescriptorHeaps(1, descriptorHeaps);
+	//ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap.Get() };
+	//commandList->SetDescriptorHeaps(1, descriptorHeaps);
 
 	// 描画先のRTVを設定
 	commandList->RSSetViewports(1, &viewport);
@@ -316,7 +321,7 @@ ComPtr<ID3D12DescriptorHeap> GraphicsDevice::CreateDescriptorHeap(D3D12_DESCRIPT
 
 void GraphicsDevice::DescriptorHeap() {
 
-	descriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	//descriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	descriptorSizeRTV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
@@ -325,7 +330,7 @@ void GraphicsDevice::DescriptorHeap() {
 	GetCPUDescriptorHandle(rtvDescriptorHeap, descriptorSizeRTV, 0);
 
 	// srv用ディスクリプタヒープの生成
-	srvDescriptorHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);
+	//srvDescriptorHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);
 
 	// dsv用ディスクリプタヒープの生成
 	dsvDescriptorHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
@@ -336,25 +341,22 @@ void GraphicsDevice::RenderTargetView() {
 
 	HRESULT hr;
 
-	// SwapChainからResourceを取得
 	hr = swapChain->GetBuffer(0, IID_PPV_ARGS(&swapChainResources[0]));
 	assert(SUCCEEDED(hr));
 	hr = swapChain->GetBuffer(1, IID_PPV_ARGS(&swapChainResources[1]));
 	assert(SUCCEEDED(hr));
 
-	// RTVの設定
 	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-	// ディスクリプタの先頭を取得
+
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
-	for (uint32_t i = 0; i < 2; ++i) {
+	// ★ループを削除し、正しく2つのRTVを作成
+	rtvHandle[0] = rtvStartHandle;
+	device->CreateRenderTargetView(swapChainResources[0].Get(), &rtvDesc, rtvHandle[0]);
 
-		rtvHandle[0] = rtvStartHandle;
-		device->CreateRenderTargetView(swapChainResources[0].Get(), &rtvDesc, rtvHandle[0]);
-		rtvHandle[1].ptr = rtvHandle[0].ptr + device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-		device->CreateRenderTargetView(swapChainResources[1].Get(), &rtvDesc, rtvHandle[1]);
-	}
+	rtvHandle[1].ptr = rtvHandle[0].ptr + device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	device->CreateRenderTargetView(swapChainResources[1].Get(), &rtvDesc, rtvHandle[1]);
 }
 
 // ディスクリプタハンドルの取得
@@ -380,16 +382,16 @@ D3D12_GPU_DESCRIPTOR_HANDLE GraphicsDevice::GetGPUDescriptorHandle(
 
 // SRVの指定番号のでスクリプタハンドルの取得
 // CPU
-D3D12_CPU_DESCRIPTOR_HANDLE GraphicsDevice::GetSRVCPUDescriptorHandle(uint32_t index) {
-
-	return GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, index);
-}
-// GPU
-D3D12_GPU_DESCRIPTOR_HANDLE GraphicsDevice::GetSRVGPUDescriptorHandle(uint32_t index) {
-
-	return GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, index);
-}
-
+//D3D12_CPU_DESCRIPTOR_HANDLE GraphicsDevice::GetSRVCPUDescriptorHandle(uint32_t index) {
+//
+//	return GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, index);
+//}
+//// GPU
+//D3D12_GPU_DESCRIPTOR_HANDLE GraphicsDevice::GetSRVGPUDescriptorHandle(uint32_t index) {
+//
+//	return GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, index);
+//}
+//
 void GraphicsDevice::DepthStencilView() {
 
 	// DSVの設定
@@ -447,24 +449,6 @@ void GraphicsDevice::DxcCompiler() {
 	// includeに対応するための設定
 	hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
 	assert(SUCCEEDED(hr));
-}
-
-void GraphicsDevice::InitializeImGui() {
-
-	// Imguiの初期化
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGui::StyleColorsDark();
-	ImGui_ImplWin32_Init(winApp_->GetHwnd());
-	ImGui_ImplDX12_Init(
-		device.Get(),
-		swapChainDesc.BufferCount,
-		rtvDesc.Format,
-		srvDescriptorHeap.Get(),
-		srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
-		srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
-	);
-
 }
 
 void GraphicsDevice::InitializeFixFPS(){

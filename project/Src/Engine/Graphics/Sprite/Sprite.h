@@ -74,13 +74,15 @@ private:
 	// テクスチャサイズをイメージの合わせる
 	void AdjustTextureSize();
 
+	std::string textureFilePath;
+
 public:
 	void Initialize(SpriteManager* spriteManager,std::string textureFilePath);
 	void Update();
 	void Draw();
 	// テクスチャ変更
-	void ChangeTexture(std::string textureFilePath);
-	
+	void ChangeTexture(const std::string& textureFilePath);
+
 	// getter
 	const Vector2& GetPosition() const { return position; } 			  // 位置
 	float GetRotation() const { return rotation; } 						  // 回転

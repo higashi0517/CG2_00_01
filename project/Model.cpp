@@ -36,8 +36,8 @@ void Model::Initialize(ModelCommon* modelCommon, const std::string& directorypat
 
 	// .objの参照しているテクスチャを読み込む
 	TextureManager::GetInstance()->LoadTexture(modelData.material.textureFilePath);
-	modelData.material.textureIndex =
-		TextureManager::GetInstance()->GetTextureIndexByFilePath(modelData.material.textureFilePath);
+	//modelData.material.textureIndex =
+		//TextureManager::GetInstance()->GetTextureIndexByFilePath(modelData.material.textureFilePath);
 }
 
 void Model::Draw()
@@ -50,7 +50,7 @@ void Model::Draw()
 	modelCommon->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 	// テクスチャの設定
 	modelCommon->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootDescriptorTable(2,
-		TextureManager::GetInstance()->GetSrvHandleGPU(modelData.material.textureIndex));
+		TextureManager::GetInstance()->GetSrvHandleGPU(modelData.material.textureFilePath));
 	// 描画コマンド
 	modelCommon->GetGraphicsDevice()->GetCommandList()->DrawInstanced(static_cast<uint32_t>(modelData.vertices.size()), 1, 0, 0);
 }

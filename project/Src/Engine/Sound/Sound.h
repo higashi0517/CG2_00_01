@@ -4,6 +4,7 @@
 #pragma comment (lib,"xaudio2.lib")
 #include<fstream>
 #include <cassert>
+#include <vector>
 
 class Sound
 {
@@ -31,21 +32,18 @@ public:
 	// 音声データ
 	struct SoundData {
 		WAVEFORMATEX wfex; // 波形データのフォーマット
-		BYTE* pBuffer;     // バッファの先着アドレス
-		unsigned int bufferSize; // バッファのサイズ
+		std::vector<BYTE> pBuffer;     // バッファの先着アドレス
 		IXAudio2SourceVoice* pSourceVoice; // 再生中のソースボイス
 	};
 
 	Sound();
 	~Sound();
 
-	SoundData LoadWave(const char* filePath);
+	SoundData LoadFile(const char* filePath);
 
 	void Unload(SoundData* soundData);
 
 	void PlayWave(SoundData& soundData);
-
-
 
 private:
 	IXAudio2* xAudio2_ = nullptr;

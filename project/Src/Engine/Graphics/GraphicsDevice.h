@@ -21,10 +21,11 @@ public:
 	void PreDraw();
 	// 描画後処理
 	void PostDraw();
+	static GraphicsDevice* GetInstance();
 
-	// SRVの指定番号のでスクリプタハンドルの取得
-	D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index);  // CPU
-	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index);  // GPU
+	//// SRVの指定番号のでスクリプタハンドルの取得
+	//D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index);  // CPU
+	//D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index);  // GPU
 
 	// デバイスの取得
 	Microsoft::WRL::ComPtr<ID3D12Device> GetDevice() { return device; }
@@ -45,8 +46,13 @@ public:
 	// テクスチャアップロード
 	Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(const DirectX::ScratchImage& mipImages, const Microsoft::WRL::ComPtr<ID3D12Resource>& texture);
 
+	Microsoft::WRL::ComPtr<ID3D12CommandQueue> GetCommandQueue() const { return commandQueue; }
+
 	// 最大SRV数
-	static const uint32_t kMaxSRVCount;
+	//static const uint32_t kMaxSRVCount;
+
+	// デスクリプターヒープの生成
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
 
 	// コマンドリスト関連
 	void CloseCommandList();
@@ -65,8 +71,6 @@ private:
 	void DepthBuffer(int32_t width, int32_t height);
 	// デスクリプターヒープの初期化
 	void DescriptorHeap();
-	// デスクリプターヒープの生成
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
 	// レンダーターゲットビューの初期化
 	void RenderTargetView();
 	// 深度ステンシルビューの初期化
@@ -80,7 +84,7 @@ private:
 	// DXCコンパイラの生成
 	void DxcCompiler();
 	// ImGuiの初期化
-	void InitializeImGui();
+	//void InitializeImGui();
 	// FPS固定初期化
 	void InitializeFixFPS();
 	// FPS固定処理
@@ -111,10 +115,10 @@ private:
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
 	// デスクリプタヒープ
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap; // RTV用
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap; // SRV用
+	//Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap; // SRV用
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap; // DSV用
 	// デスクリプタサイズ
-	uint32_t descriptorSizeSRV = 0;
+	//uint32_t descriptorSizeSRV = 0;
 	uint32_t descriptorSizeRTV = 0;
 	uint32_t descriptorSizeDSV = 0;
 	//	デプスステンシルリソース
