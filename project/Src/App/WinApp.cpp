@@ -1,9 +1,35 @@
 #include "WinApp.h"
 #include <imgui_impl_win32.h>
 #pragma comment(lib,"winmm.lib")
+#include <dbghelp.h>
+#pragma comment(lib,"Dbghelp.lib")
+#include <strsafe.h>
+
+static LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception) {
+	SYSTEMTIME time;
+	GetLocalTime(&time);
+	wchar_t filePath[MAX_PATH] = { 0 };
+	CreateDirectory(L"./Dump", NULL);
+	StringCchPrintfW(filePath, MAX_PATH, L"./Dump/%04d-%02d%02d-%02d%02d.dmp", time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute);
+	HANDLE dumpFileHandle = CreateFile(filePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ, 0, CREATE_ALWAYS, 0, 0);
+
+	DWORD processId = GetCurrentProcessId();
+	DWORD threadId = GetCurrentThreadId();
+
+	MINIDUMP_EXCEPTION_INFORMATION minidumpInformation{ 0 };
+	minidumpInformation.ThreadId = threadId;
+	minidumpInformation.ExceptionPointers = exception;
+	minidumpInformation.ClientPointers = TRUE;
+
+	MiniDumpWriteDump(GetCurrentProcess(), processId, dumpFileHandle, MiniDumpNormal, &minidumpInformation, nullptr, nullptr);
+
+	return EXCEPTION_EXECUTE_HANDLER;
+}
 
 void WinApp::Initialize()
 {
+	// ダンプ出力を有効にする（追加）
+	SetUnhandledExceptionFilter(ExportDump);
 	// ウィンドウプロシージャ
 	wc.lpfnWndProc = WindowProc;
 	// ウィンドウクラス名
