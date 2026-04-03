@@ -27,27 +27,9 @@
 #include <sstream>
 #include <xaudio2.h>
 #pragma comment (lib,"xaudio2.lib")
-#include "Sound.h"
-#include "DebugCamera.h"
-#include "Input.h"
-#include "WinApp.h"
-#include "GraphicsDevice.h"
 #include "Logger.h"
 #include "StringUtility.h"
 #include "D3DResourceLeakChecker.h"
-#include "SpriteManager.h"
-#include "Sprite.h"
-#include "TextureManager.h"
-#include "Object3DManager.h"
-#include "Object3D.h"
-#include "ModelCommon.h"
-#include "Model.h"
-#include "ModelManager.h"
-#include "Camera.h"
-#include "SrvManager.h"
-#include "ImGuiManager.h"
-#include "ParticleManager.h"
-#include "ParticleEmitter.h"
 #include "Game.h"
 #include "Framework.h"
 
