@@ -27,10 +27,6 @@ void Game::Update() {
 
 	// 基盤システムの更新
 	Framework::Update();
-	;
-	if (scene_) {
-		scene_->Update();
-	}
 }
 
 void Game::Draw() {
@@ -39,9 +35,8 @@ void Game::Draw() {
 	graphicsDevice_->PreDraw();
 	srvManager_->PreDraw();
 
-	if (scene_) {
-		scene_->Draw();
-	}
+	Framework::Draw();
+
 	// === ImGui描画 ===
 	ImGuiManager::GetInstance()->Draw();
 
@@ -50,11 +45,6 @@ void Game::Draw() {
 }
 
 void Game::Finalize() {
-
-	if (scene_) {
-		scene_->Finalize();
-		delete scene_;
-	}
 
 	// === ここから下は基盤やマネージャーなので残す ===
 	TextureManager::GetInstance()->Finalize();

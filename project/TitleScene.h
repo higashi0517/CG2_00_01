@@ -17,7 +17,7 @@
 class WinApp;
 class GraphicsDevice;
 
-class GamePlayScene : public BaseScene
+class TitleScene : public BaseScene
 {
 public:
 	void Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)override;

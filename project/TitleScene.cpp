@@ -1,6 +1,6 @@
-#include "GamePlayScene.h"
+#include "TitleScene.h"
 
-void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
+void TitleScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 {
 	winApp_ = winApp;
 	graphicsDevice_ = graphicsDevice;
@@ -67,7 +67,7 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	emitter_->Initialize(particleManager_, "Magic");
 }
 
-void GamePlayScene::Update() {
+void TitleScene::Update() {
 
 	input_->Update();
 	if (input_->TriggerKey(DIK_0)) {
@@ -144,11 +144,11 @@ void GamePlayScene::Update() {
 	particleManager_->Update();
 }
 
-void GamePlayScene::Draw() {
+void TitleScene::Draw() {
 
 	// === 3Dオブジェクト描画 ===
 	object3DManager_->SetCommonRenderState();
-	//object3D_->Draw();
+	// object3D_->Draw();
 	// object3D_2_->Draw();
 
 	// === スプライト描画 ===
@@ -163,7 +163,7 @@ void GamePlayScene::Draw() {
 
 }
 
-void GamePlayScene::Finalize() {
+void TitleScene::Finalize() {
 	sound_->Unload(&bgmData_);
 
 	delete input_;

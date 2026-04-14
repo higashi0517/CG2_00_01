@@ -1,8 +1,8 @@
 #pragma once
+#include "BaseScene.h"
+
 class Framework
 {
-protected:
-	bool endRequst_ = false;
 public:
 
 	virtual void Initialize();
@@ -12,5 +12,9 @@ public:
 	virtual bool IsEndRequst() { return endRequst_; }
 	virtual ~Framework() = default;
 	void Run();
+
+protected:
+	bool endRequst_ = false;
+	BaseScene* scene_ = nullptr;
 };
 

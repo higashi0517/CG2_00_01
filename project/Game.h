@@ -17,7 +17,6 @@
 #include "Framework.h"
 #include "GamePlayScene.h"
 
-
 class Game :public Framework {
 public:
 	Game();
@@ -51,7 +50,4 @@ private:
 
 	// 音声データなど
 	Sound::SoundData bgmData_;
-
-	// シーン
-	GamePlayScene* scene_ = nullptr;
 };

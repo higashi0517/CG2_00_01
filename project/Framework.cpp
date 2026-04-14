@@ -30,6 +30,17 @@ void Framework::Initialize() {
 }
 
 void Framework::Update() {
+
+	if (scene_) {
+		scene_->Update();
+	}
+}
+
+void Framework::Draw() {
+
+	if (scene_) {
+		scene_->Draw();
+	}
 }
 
 void Framework::Finalize() {
@@ -44,4 +55,9 @@ void Framework::Finalize() {
 
 	Log("ログの書き込み");
 	Log("Complete create D3D12Device!!!\n");
+
+	if (scene_) {
+		scene_->Finalize();
+		delete scene_;
+	}
 }
