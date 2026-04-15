@@ -15,9 +15,6 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 
 	sound_ = new Sound();
 
-	// ImGuiの初期化
-	ImGuiManager::GetInstance()->Initialize(winApp_, graphicsDevice_);
-
 	camera_ = new Camera();
 	camera_->SetTranslate({ 0.0f, 0.0f, -10.0f });
 	camera_->SetRotate({ 0.0f, 0.0f, 0.0f });

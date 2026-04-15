@@ -1,5 +1,6 @@
 #pragma once
-#include "BaseScene.h"
+#include "SceneManager.h"
+#include "AbstractSceneFactory.h"
 
 class Framework
 {
@@ -13,8 +14,8 @@ public:
 	virtual ~Framework() = default;
 	void Run();
 
-protected:
+private:
 	bool endRequst_ = false;
-	BaseScene* scene_ = nullptr;
+	AbstractSceneFactory* sceneFactory_ = nullptr;
 };
 

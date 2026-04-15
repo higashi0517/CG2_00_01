@@ -31,16 +31,12 @@ void Framework::Initialize() {
 
 void Framework::Update() {
 
-	if (scene_) {
-		scene_->Update();
-	}
+	SceneManager::GetInstance()->Update();
 }
 
 void Framework::Draw() {
 
-	if (scene_) {
-		scene_->Draw();
-	}
+	SceneManager::GetInstance()->Draw();
 }
 
 void Framework::Finalize() {
@@ -56,8 +52,6 @@ void Framework::Finalize() {
 	Log("ログの書き込み");
 	Log("Complete create D3D12Device!!!\n");
 
-	if (scene_) {
-		scene_->Finalize();
-		delete scene_;
-	}
+	SceneManager::GetInstance()->Finalize();
+	delete sceneFactory_;
 }

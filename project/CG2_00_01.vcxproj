@@ -172,6 +172,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Object3DManager.cpp" />
     <ClCompile Include="ParticleEmitter.cpp" />
     <ClCompile Include="ParticleManager.cpp" />
+    <ClCompile Include="SceneFactory.cpp" />
+    <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="Src\Engine\Core\D3DResourceLeakChecker.cpp" />
     <ClCompile Include="Src\Engine\Graphics\GraphicsDevice.cpp" />
     <ClCompile Include="Src\Engine\Core\Logger.cpp" />
@@ -210,6 +212,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AbstractSceneFactory.h" />
     <ClInclude Include="BaseScene.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Framework.h" />
@@ -223,6 +226,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Object3DManager.h" />
     <ClInclude Include="ParticleEmitter.h" />
     <ClInclude Include="ParticleManager.h" />
+    <ClInclude Include="SceneFactory.h" />
+    <ClInclude Include="SceneManager.h" />
     <ClInclude Include="Src\Engine\Core\D3DResourceLeakChecker.h" />
     <ClInclude Include="Src\Engine\Graphics\GraphicsDevice.h" />
     <ClInclude Include="Src\Engine\Core\Logger.h" />

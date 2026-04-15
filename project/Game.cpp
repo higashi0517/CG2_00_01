@@ -1,4 +1,5 @@
 #include "Game.h"
+#include"SceneFactory.h"
 
 Game::Game() {}
 Game::~Game() {}
@@ -17,10 +18,14 @@ void Game::Initialize() {
 	srvManager_ = SrvManager::GetInstance();
 	srvManager_->Initialize(graphicsDevice_);
 
+	ImGuiManager::GetInstance()->Initialize(winApp_, graphicsDevice_);
+
 	TextureManager::GetInstance()->Initialize(graphicsDevice_, srvManager_);
 
-	scene_ = new GamePlayScene();
-	scene_->Initialize(winApp_, graphicsDevice_);
+	SceneManager::GetInstance()->Initialize(winApp_, graphicsDevice_);
+	SceneFactory* sceneFactory = new SceneFactory();
+	SceneManager::GetInstance()->SetSceneFactory(sceneFactory);
+	SceneManager::GetInstance()->ChangeScene("TITLE");
 }
 
 void Game::Update() {

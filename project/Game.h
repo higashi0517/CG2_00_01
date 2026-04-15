@@ -15,7 +15,7 @@
 #include "ModelManager.h"
 #include "ParticleEmitter.h"
 #include "Framework.h"
-#include "GamePlayScene.h"
+#include "SceneManager.h"
 
 class Game :public Framework {
 public:

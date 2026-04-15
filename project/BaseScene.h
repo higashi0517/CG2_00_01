@@ -1,6 +1,7 @@
 #pragma once
 class WinApp;
 class GraphicsDevice;
+class SceneManager;
 
 class BaseScene
 {

@@ -1,4 +1,6 @@
 #include "TitleScene.h"
+#include "SceneManager.h"
+#include "GamePlayScene.h"
 
 void TitleScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 {
@@ -14,9 +16,6 @@ void TitleScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	input_->Initialize(winApp_);
 
 	sound_ = new Sound();
-
-	// ImGuiの初期化
-	ImGuiManager::GetInstance()->Initialize(winApp_, graphicsDevice_);
 
 	camera_ = new Camera();
 	camera_->SetTranslate({ 0.0f, 0.0f, -10.0f });
@@ -79,6 +78,10 @@ void TitleScene::Update() {
 		sound_->PlayWave(bgmData_);
 	}
 
+	// enterキーでゲームシーンへ
+	if (input_->TriggerKey(DIK_RETURN)) {
+		SceneManager::GetInstance()->ChangeScene("GAMEPLAY");
+	}
 
 	// ゲーム処理
 
@@ -154,7 +157,7 @@ void TitleScene::Draw() {
 	// === スプライト描画 ===
 	spriteManager_->SetCommonRenderState();
 	for (auto& sprite : sprites_) {
-		sprite->Draw();
+		//sprite->Draw();
 	}
 
 	// === パーティクル描画 ===
