@@ -77,11 +77,11 @@ void WinApp::Update()
 
 // ウィンドウプロシージャ
 LRESULT CALLBACK WinApp::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-
+#ifdef USE_IMGUI
 	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
 		return true;
 	}
-
+#endif
 	// メッセージ処理
 	switch (msg) {
 		// ウィンドウが閉じられた
