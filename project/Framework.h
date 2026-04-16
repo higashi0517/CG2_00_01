@@ -1,8 +1,9 @@
 #pragma once
+#include "SceneManager.h"
+#include "AbstractSceneFactory.h"
+
 class Framework
 {
-protected:
-	bool endRequst_ = false;
 public:
 
 	virtual void Initialize();
@@ -12,5 +13,9 @@ public:
 	virtual bool IsEndRequst() { return endRequst_; }
 	virtual ~Framework() = default;
 	void Run();
+
+private:
+	bool endRequst_ = false;
+	AbstractSceneFactory* sceneFactory_ = nullptr;
 };
 

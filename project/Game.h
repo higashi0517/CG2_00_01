@@ -15,6 +15,7 @@
 #include "ModelManager.h"
 #include "ParticleEmitter.h"
 #include "Framework.h"
+#include "SceneManager.h"
 
 class Game :public Framework {
 public:
@@ -49,6 +50,4 @@ private:
 
 	// 音声データなど
 	Sound::SoundData bgmData_;
-
-	int selected_ = 0;
 };
