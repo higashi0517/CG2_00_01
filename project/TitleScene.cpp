@@ -1,6 +1,7 @@
 #include "TitleScene.h"
 #include "SceneManager.h"
 #include "GamePlayScene.h"
+#include "SrvManager.h"
 
 void TitleScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 {
@@ -40,6 +41,11 @@ void TitleScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 
 	TextureManager::GetInstance()->LoadTexture("Resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("Resources/monsterBall.png");
+
+	TextureManager::GetInstance()->LoadTexture("Resources/rostock_laage_airport_4k.dds");
+	
+	skybox_ = new Skybox();
+	skybox_->Initialize(graphicsDevice_, SrvManager::GetInstance(), "Resources/rostock_laage_airport_4k.dds");
 
 	for (uint32_t i = 0; i < 5; ++i) {
 		sprite_ = new Sprite();
@@ -88,7 +94,7 @@ void TitleScene::Update() {
 #ifdef USE_IMGUI
 
 		// Imguiのフレーム開始
-	ImGuiManager::GetInstance()->Begin();
+	//ImGuiManager::GetInstance()->Begin();
 
 	//ImGui::Begin("Sprites");
 
@@ -119,21 +125,29 @@ void TitleScene::Update() {
 	}
 
 	// camera
-	Vector3 cameraPos = camera_->GetTranslate();
+	static Vector3 cameraPos = camera_->GetTranslate();
 
 	if (ImGui::DragFloat3("Camera Position", &cameraPos.x, 0.01f)) {
 		camera_->SetTranslate(cameraPos);
 	}
 
+	static Vector3 cameraRot = camera_->GetRotate();
+
+	if (ImGui::DragFloat3("Camera Rotation", &cameraRot.x, 0.01f)) {
+		camera_->SetRotate(cameraRot);
+	}
+
 	// デモウィンドウの表示
 	ImGui::ShowDemoWindow();
 
-	ImGuiManager::GetInstance()->End();
+	//ImGuiManager::GetInstance()->End();
 
 #endif
 
 	// カメラの更新
 	camera_->Update();
+
+	skybox_->Update(camera_->GetViewMatrix(), camera_->GetProjectionMatrix());
 
 	emitter_->Update();
 
@@ -145,9 +159,12 @@ void TitleScene::Update() {
 	}
 
 	particleManager_->Update();
+
 }
 
 void TitleScene::Draw() {
+
+	skybox_->Draw();
 
 	// === 3Dオブジェクト描画 ===
 	object3DManager_->SetCommonRenderState();
@@ -162,19 +179,22 @@ void TitleScene::Draw() {
 
 	// === パーティクル描画 ===
 	particleManager_->SetCommonRenderState();
-	particleManager_->Draw();
+	//particleManager_->Draw();
 
 }
 
 void TitleScene::Finalize() {
 	sound_->Unload(&bgmData_);
 
-	delete input_;
-	delete sound_;
-	delete camera_;
-	delete object3D_;
-	delete object3D_2_;
-	delete object3DManager_;
+	// 順序よく解放し、nullptrを代入して安全性を高める
+	delete emitter_;
+	emitter_ = nullptr;
+
+	delete particleManager_;
+	particleManager_ = nullptr;
+
+	delete skybox_;
+	skybox_ = nullptr;
 
 	for (Sprite* sprite : sprites_) {
 		delete sprite;
@@ -182,6 +202,21 @@ void TitleScene::Finalize() {
 	sprites_.clear();
 
 	delete spriteManager_;
-	delete emitter_;
-	delete particleManager_;
+	spriteManager_ = nullptr;
+
+	delete object3D_;
+	object3D_ = nullptr;
+	delete object3D_2_;
+	object3D_2_ = nullptr;
+	delete object3DManager_;
+	object3DManager_ = nullptr;
+
+	delete camera_;
+	camera_ = nullptr;
+
+	delete sound_;
+	sound_ = nullptr;
+
+	delete input_;
+	input_ = nullptr;
 }

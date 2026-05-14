@@ -3,6 +3,8 @@
 #include <filesystem>
 #include <fstream>
 #include <chrono>
+#include <TextureManager.h>
+#include "SrvManager.h"
 
 using namespace Logger;
 
@@ -13,6 +15,10 @@ void Framework::Run()
 
 	while (true) 
 	{
+		// メッセージ処理
+		if (ProcessMessage()) {
+			break;
+		}
 		// 毎フレーム更新
 		Update();
 		// 終了リクエストが来たら抜ける
@@ -54,4 +60,7 @@ void Framework::Finalize() {
 
 	SceneManager::GetInstance()->Finalize();
 	delete sceneFactory_;
+
+	TextureManager::GetInstance()->Finalize();
+	SrvManager::GetInstance()->Finalize();
 }

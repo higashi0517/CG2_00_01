@@ -82,7 +82,7 @@ void GamePlayScene::Update() {
 #ifdef USE_IMGUI
 
 		// Imguiのフレーム開始
-	ImGuiManager::GetInstance()->Begin();
+	//ImGuiManager::GetInstance()->Begin();
 
 	//ImGui::Begin("Sprites");
 
@@ -122,7 +122,7 @@ void GamePlayScene::Update() {
 	// デモウィンドウの表示
 	ImGui::ShowDemoWindow();
 
-	ImGuiManager::GetInstance()->End();
+	//ImGuiManager::GetInstance()->End();
 
 #endif
 

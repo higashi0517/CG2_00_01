@@ -11,6 +11,7 @@ public:
 	virtual void Draw() = 0;
 	virtual void Finalize();
 	virtual bool IsEndRequst() { return endRequst_; }
+	virtual bool ProcessMessage() { return false; }
 	virtual ~Framework() = default;
 	void Run();
 

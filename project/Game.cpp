@@ -30,6 +30,8 @@ void Game::Initialize() {
 
 void Game::Update() {
 
+	ImGuiManager::GetInstance()->Begin();
+
 	// 基盤システムの更新
 	Framework::Update();
 }
@@ -41,6 +43,8 @@ void Game::Draw() {
 	srvManager_->PreDraw();
 
 	Framework::Draw();
+
+	ImGuiManager::GetInstance()->End();
 
 	// === ImGui描画 ===
 	ImGuiManager::GetInstance()->Draw();
@@ -62,4 +66,9 @@ void Game::Finalize() {
 	delete graphicsDevice_;
 
 	Framework::Finalize();
+}
+
+bool Game::ProcessMessage() {
+	// WinAppのメッセージループを回す
+	return winApp_->ProcessMessage();
 }

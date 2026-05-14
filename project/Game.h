@@ -26,6 +26,7 @@ public:
 	void Update() override;
 	void Draw() override;
 	void Finalize() override;
+	bool ProcessMessage() override;
 
 private:
 	// ==== 基盤システム群 ====

@@ -1,5 +1,9 @@
 #include "WinApp.h"
+
+#ifdef USE_IMGUI
 #include <imgui_impl_win32.h>
+#endif
+
 #pragma comment(lib,"winmm.lib")
 #include <dbghelp.h>
 #pragma comment(lib,"Dbghelp.lib")
@@ -28,6 +32,9 @@ static LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception) {
 
 void WinApp::Initialize()
 {
+
+	//HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+
 	// ダンプ出力を有効にする（追加）
 	SetUnhandledExceptionFilter(ExportDump);
 	// ウィンドウプロシージャ
@@ -77,11 +84,13 @@ void WinApp::Update()
 
 // ウィンドウプロシージャ
 LRESULT CALLBACK WinApp::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+
 #ifdef USE_IMGUI
 	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
 		return true;
 	}
 #endif
+
 	// メッセージ処理
 	switch (msg) {
 		// ウィンドウが閉じられた
@@ -105,15 +114,16 @@ bool WinApp::ProcessMessage() {
 
 	MSG msg = {};
 
-	if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+	while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
-	}
 
-	if (msg.message == WM_QUIT) {
 
-		return true;
+		if (msg.message == WM_QUIT) {
+
+			return true;
+		}
 	}
 
 	return false;

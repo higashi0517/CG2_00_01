@@ -13,6 +13,7 @@
 #include <vector>
 #include <cstdint>
 #include "BaseScene.h"
+#include "Skybox.h"
 
 class WinApp;
 class GraphicsDevice;
@@ -46,4 +47,6 @@ private:
 
 	WinApp* winApp_ = nullptr;
 	GraphicsDevice* graphicsDevice_ = nullptr;
+
+	Skybox* skybox_ = nullptr;
 };

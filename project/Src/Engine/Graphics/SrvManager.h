@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <wrl.h>
 #include <d3d12.h>
+#include <DirectXTex/DirectXTex.h>
 
 class GraphicsDevice;
 class SrvManager
@@ -16,10 +17,11 @@ private:
 	// 次に使用するSRVのインデックス
 	uint32_t useIndex = 0;
 	// SRV生成 
-	void CreateSRVforTexture2D(uint32_t srvIndex, ID3D12Resource* pResource, DXGI_FORMAT format, UINT MipLevels);
+	void CreateSRVforTexture2D(uint32_t srvIndex, ID3D12Resource* pResource, const DirectX::TexMetadata& metadata);
 
 public:
 	void Initialize(GraphicsDevice* graphicsDevice_);
+	void Finalize();
 	void PreDraw();
 	uint32_t Allocate();
 	static SrvManager* GetInstance();
