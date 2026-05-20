@@ -9,9 +9,8 @@
 void ParticleManager::Initialize(GraphicsDevice* graphicsDevice_) {
 	this->graphicsDevice = graphicsDevice_;
 
-	// --- 【変更】リングの分割数と総頂点数の計算 ---
-	const uint32_t kRingDivide = 32;
-	const uint32_t kVertexCount = kRingDivide * 6; // 1分割あたり三角形2個（6頂点）
+	const uint32_t kCylinderDivide = 32;
+	const uint32_t kVertexCount = kCylinderDivide * 6;
 
 	// バッファサイズを 4 から kVertexCount(192) に変更
 	vertexResource = graphicsDevice->CreateBufferResource(sizeof(VertexData) * kVertexCount);
@@ -22,39 +21,32 @@ void ParticleManager::Initialize(GraphicsDevice* graphicsDevice_) {
 	VertexData* vertexData = nullptr;
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
 
-	// --- 【変更】画像のリング生成ロジックを組み込む ---
-	const float kOuterRadius = 1.0f;
-	const float kInnerRadius = 0.2f;
-	const float radianPerDivide = 2.0f * std::numbers::pi_v<float> / float(kRingDivide);
+	const float kTopRadius = 1.0f;
+	const float kBottomRadius = 1.0f;
+	const float kHeight = 3.0f;
+	const float radianPerDivide = 2.0f * std::numbers::pi_v<float> / float(kCylinderDivide);
 
-	for (uint32_t index = 0; index < kRingDivide; ++index) {
+	for (uint32_t index = 0; index < kCylinderDivide; ++index) {
 		float sin = std::sin(index * radianPerDivide);
 		float cos = std::cos(index * radianPerDivide);
 		float sinNext = std::sin((index + 1) * radianPerDivide);
 		float cosNext = std::cos((index + 1) * radianPerDivide);
 
-		float u = float(index) / float(kRingDivide);
-		float uNext = float(index + 1) / float(kRingDivide);
+		float u = float(index) / float(kCylinderDivide);
+		float uNext = float(index + 1) / float(kCylinderDivide);
 
-		// 画像の ① 〜 ④ の頂点データを一時的に作成
-		VertexData v1{ { -sin * kOuterRadius,     cos * kOuterRadius,     0.0f, 1.0f }, { u,     0.0f }, { 0.0f, 0.0f, -1.0f } };
-		VertexData v2{ { -sinNext * kOuterRadius, cosNext * kOuterRadius, 0.0f, 1.0f }, { uNext, 0.0f }, { 0.0f, 0.0f, -1.0f } };
-		VertexData v3{ { -sin * kInnerRadius,     cos * kInnerRadius,     0.0f, 1.0f }, { u,     1.0f }, { 0.0f, 0.0f, -1.0f } };
-		VertexData v4{ { -sinNext * kInnerRadius, cosNext * kInnerRadius, 0.0f, 1.0f }, { uNext, 1.0f }, { 0.0f, 0.0f, -1.0f } };
-
-		// TRIANGLELIST（三角形リスト）用に、1ループで6頂点ずつ格納していく
+		// TRIANGLELIST（三角形リスト）用に、1ループで6頂点ずつ直接格納していく
 		uint32_t baseIndex = index * 6;
 
-		// 三角形1つ目: ① -> ② -> ③ (時計回り)
-		vertexData[baseIndex + 0] = v1;
-		vertexData[baseIndex + 1] = v2;
-		vertexData[baseIndex + 2] = v3;
+		// 1つ目の三角形
+		vertexData[baseIndex + 0] = { {-sin * kTopRadius, kHeight, cos * kTopRadius, 1.0f}, {u, 0.0f}, {-sin, 0.0f, cos} };
+		vertexData[baseIndex + 1] = { {-sinNext * kTopRadius, kHeight, cosNext * kTopRadius, 1.0f}, {uNext, 0.0f}, {-sinNext, 0.0f, cosNext} };
+		vertexData[baseIndex + 2] = { {-sin * kBottomRadius, 0.0f, cos * kBottomRadius, 1.0f}, {u, 1.0f}, {-sin, 0.0f, cos} };
 
-		// 三角形2つ目: ③ -> ② -> ④ (時計回り)
-		// ※カリング（裏返り）を防ぐため、時計回りになるよう順序を調整しています
-		vertexData[baseIndex + 3] = v3;
-		vertexData[baseIndex + 4] = v2;
-		vertexData[baseIndex + 5] = v4;
+		// 2つ目の三角形
+		vertexData[baseIndex + 3] = { {-sin * kBottomRadius, 0.0f, cos * kBottomRadius, 1.0f}, {u, 1.0f}, {-sin, 0.0f, cos} };
+		vertexData[baseIndex + 4] = { {-sinNext * kTopRadius, kHeight, cosNext * kTopRadius, 1.0f}, {uNext, 0.0f}, {-sinNext, 0.0f, cosNext} };
+		vertexData[baseIndex + 5] = { {-sinNext * kBottomRadius, 0.0f, cosNext * kBottomRadius, 1.0f}, {uNext, 1.0f}, {-sinNext, 0.0f, cosNext} };
 	}
 
 	materialResource = graphicsDevice->CreateBufferResource(sizeof(Material));
@@ -356,7 +348,8 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomE
 
 	//particle.scale = { 0.05f, distScale(randomEngine), 1.0f };
 	particle.scale = { 1.0f,1.0f,1.0f };
-	particle.rotate = { 0.0f, 0.0f, distRotate(randomEngine) };
+	//particle.rotate = { 0.0f, 0.0f, distRotate(randomEngine) };
+	particle.rotate = { 0.0f, 0.0f, 0.0f };
 
 	particle.lifeTime = distTime(randomEngine);
 	particle.currentTime = 0.0f;

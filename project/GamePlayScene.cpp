@@ -121,6 +121,12 @@ void GamePlayScene::Update() {
 		camera_->SetTranslate(cameraPos);
 	}
 
+	Vector3 cameraRotate = camera_->GetRotate();
+
+	if (ImGui::DragFloat3("Camera Rotation", &cameraRotate.x, 0.01f)) {
+		camera_->SetRotate(cameraRotate);
+	}
+
 	// デモウィンドウの表示
 	ImGui::ShowDemoWindow();
 
