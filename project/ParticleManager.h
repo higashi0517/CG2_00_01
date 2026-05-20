@@ -64,7 +64,7 @@ public:
 		ParticleForGPU* mappedData;
 	};
 
-	static const uint32_t kNumMaxInstance = 100;
+	static const uint32_t kNumMaxInstance = 1;
 
 	std::unordered_map<std::string, ParticleGroup> particleGroups;
 	GraphicsDevice* graphicsDevice = nullptr;

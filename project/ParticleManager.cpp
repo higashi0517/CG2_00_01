@@ -9,35 +9,58 @@
 void ParticleManager::Initialize(GraphicsDevice* graphicsDevice_) {
 	this->graphicsDevice = graphicsDevice_;
 
-	vertexResource = graphicsDevice->CreateBufferResource(sizeof(VertexData) * 4);
+	// --- 【変更】リングの分割数と総頂点数の計算 ---
+	const uint32_t kRingDivide = 32;
+	const uint32_t kVertexCount = kRingDivide * 6; // 1分割あたり三角形2個（6頂点）
+
+	// バッファサイズを 4 から kVertexCount(192) に変更
+	vertexResource = graphicsDevice->CreateBufferResource(sizeof(VertexData) * kVertexCount);
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
-	vertexBufferView.SizeInBytes = sizeof(VertexData) * 4;
+	vertexBufferView.SizeInBytes = sizeof(VertexData) * kVertexCount;
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
 
 	VertexData* vertexData = nullptr;
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
 
-	// TriangleStrip用（左下、左上、右下、右上）
-	vertexData[0].position = { -0.5f, -0.5f, 0.0f, 1.0f };
-	vertexData[0].texcoord = { 0.0f, 1.0f };
-	vertexData[0].normal = { 0.0f, 0.0f, -1.0f };
+	// --- 【変更】画像のリング生成ロジックを組み込む ---
+	const float kOuterRadius = 1.0f;
+	const float kInnerRadius = 0.2f;
+	const float radianPerDivide = 2.0f * std::numbers::pi_v<float> / float(kRingDivide);
 
-	vertexData[1].position = { -0.5f,  0.5f, 0.0f, 1.0f };
-	vertexData[1].texcoord = { 0.0f, 0.0f };
-	vertexData[1].normal = { 0.0f, 0.0f, -1.0f };
+	for (uint32_t index = 0; index < kRingDivide; ++index) {
+		float sin = std::sin(index * radianPerDivide);
+		float cos = std::cos(index * radianPerDivide);
+		float sinNext = std::sin((index + 1) * radianPerDivide);
+		float cosNext = std::cos((index + 1) * radianPerDivide);
 
-	vertexData[2].position = { 0.5f, -0.5f, 0.0f, 1.0f };
-	vertexData[2].texcoord = { 1.0f, 1.0f };
-	vertexData[2].normal = { 0.0f, 0.0f, -1.0f };
+		float u = float(index) / float(kRingDivide);
+		float uNext = float(index + 1) / float(kRingDivide);
 
-	vertexData[3].position = { 0.5f,  0.5f, 0.0f, 1.0f };
-	vertexData[3].texcoord = { 1.0f, 0.0f };
-	vertexData[3].normal = { 0.0f, 0.0f, -1.0f };
+		// 画像の ① 〜 ④ の頂点データを一時的に作成
+		VertexData v1{ { -sin * kOuterRadius,     cos * kOuterRadius,     0.0f, 1.0f }, { u,     0.0f }, { 0.0f, 0.0f, -1.0f } };
+		VertexData v2{ { -sinNext * kOuterRadius, cosNext * kOuterRadius, 0.0f, 1.0f }, { uNext, 0.0f }, { 0.0f, 0.0f, -1.0f } };
+		VertexData v3{ { -sin * kInnerRadius,     cos * kInnerRadius,     0.0f, 1.0f }, { u,     1.0f }, { 0.0f, 0.0f, -1.0f } };
+		VertexData v4{ { -sinNext * kInnerRadius, cosNext * kInnerRadius, 0.0f, 1.0f }, { uNext, 1.0f }, { 0.0f, 0.0f, -1.0f } };
+
+		// TRIANGLELIST（三角形リスト）用に、1ループで6頂点ずつ格納していく
+		uint32_t baseIndex = index * 6;
+
+		// 三角形1つ目: ① -> ② -> ③ (時計回り)
+		vertexData[baseIndex + 0] = v1;
+		vertexData[baseIndex + 1] = v2;
+		vertexData[baseIndex + 2] = v3;
+
+		// 三角形2つ目: ③ -> ② -> ④ (時計回り)
+		// ※カリング（裏返り）を防ぐため、時計回りになるよう順序を調整しています
+		vertexData[baseIndex + 3] = v3;
+		vertexData[baseIndex + 4] = v2;
+		vertexData[baseIndex + 5] = v4;
+	}
 
 	materialResource = graphicsDevice->CreateBufferResource(sizeof(Material));
 	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 
-	// デフォルトの設定（白色、ライティングなし、UV変換なし）
+	// デフォルトの設定
 	materialData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	materialData->enableLighting = 0;
 	materialData->uvTransform = MakeIdentity4x4();
@@ -47,12 +70,13 @@ void ParticleManager::Initialize(GraphicsDevice* graphicsDevice_) {
 	CreateRootSignature();
 	CreateGraphicsPipelineState();
 }
+
 void ParticleManager::SetCommonRenderState() {
 	auto commandList = graphicsDevice->GetCommandList();
 	commandList->SetGraphicsRootSignature(rootSignature.Get());
 	commandList->SetPipelineState(graphicsPipelineState.Get());
 	// 頂点バッファを使わず四角形を描画するので TriangleStrip にします
-	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 void ParticleManager::CreateRootSignature() {
@@ -91,7 +115,7 @@ void ParticleManager::CreateRootSignature() {
 	D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
 	staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
 	staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 	staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	staticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
 	staticSamplers[0].MaxLOD = D3D12_FLOAT32_MAX;
@@ -276,7 +300,7 @@ void ParticleManager::Draw()
 
 		SrvManager::GetInstance()->SetGraphicsRootDescriptorTable(0, group.textureSrvIndex);
 		SrvManager::GetInstance()->SetGraphicsRootDescriptorTable(1, group.instancingSrvIndex);
-		graphicsDevice->GetCommandList()->DrawInstanced(4, group.instanceCount, 0, 0);
+		graphicsDevice->GetCommandList()->DrawInstanced(32 * 6, group.instanceCount, 0, 0);
 	}
 }
 
@@ -320,13 +344,18 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomE
 	translate.z
 	};
 
-	particle.color = {
+	/*particle.color = {
 		distColor(randomEngine),
 		distColor(randomEngine),
 		distColor(randomEngine),
 		1.0f
-	};
-	particle.scale = { 0.05f, distScale(randomEngine), 1.0f };
+	};*/
+
+	// 白
+	particle.color = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	//particle.scale = { 0.05f, distScale(randomEngine), 1.0f };
+	particle.scale = { 1.0f,1.0f,1.0f };
 	particle.rotate = { 0.0f, 0.0f, distRotate(randomEngine) };
 
 	particle.lifeTime = distTime(randomEngine);

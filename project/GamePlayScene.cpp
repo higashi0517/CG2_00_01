@@ -58,12 +58,12 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	particleManager_->Initialize(graphicsDevice_);
 	particleManager_->SetCamera(camera_);
 
-	particleManager_->CreateParticleGroup("Magic", "Resources/circle2.png");
+	particleManager_->CreateParticleGroup("Magic", "Resources/gradationLine.png");
 
 	emitter_ = new ParticleEmitter();
 	emitter_->Initialize(particleManager_, "Magic");
-	emitter_->SetEmitCount(3);
-	emitter_->SetScaleYRange(0.5f, 2.0f);
+	emitter_->SetEmitCount(1);
+	emitter_->SetScaleYRange(1.0f, 1.0f);
 }
 
 void GamePlayScene::Update() {
