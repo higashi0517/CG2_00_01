@@ -23,6 +23,11 @@ private:
 		float intensity;
 	};
 
+	struct CameraData {
+		Vector3 worldPosition;
+		float padding;
+	};
+
 	// WVP行列バッファリソース
 	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource;
 	// WVP行列データを指すポインタ
@@ -41,6 +46,11 @@ private:
 	// カメラ
 	Camera* camera = nullptr;
 
+	Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource;
+	CameraData* cameraData = nullptr;
+
+	D3D12_GPU_DESCRIPTOR_HANDLE envMapSrvGpuHandle{};
+
 public:
 	// 初期化
 	void Initialize(Object3DManager* object3DManager);
@@ -55,6 +65,7 @@ public:
 	void SetScale(const Vector3& scale_) { this->transform.scale = scale_; }
 	void SetRotate(const Vector3& rotate_) { this->transform.rotate = rotate_; }
 	void SetCamera(Camera* camera_) { this->camera = camera_; }
+	void SetEnvironmentMap(D3D12_GPU_DESCRIPTOR_HANDLE srvHandle) { this->envMapSrvGpuHandle = srvHandle; }
 
 	// getter
 	const Vector3& GetScale() const { return transform.scale; }

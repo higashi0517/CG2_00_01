@@ -10,6 +10,7 @@ struct Material
 ConstantBuffer<Material> gMaterial : register(b0);
 Texture2D<float32_t4> gTexture : register(t0);
 SamplerState gSampler : register(s0);
+TextureCube<float32_t4> gEnvironmentMap : register(t1);
 
 struct DirectionalLight
 {
@@ -19,6 +20,13 @@ struct DirectionalLight
 };
 
 ConstantBuffer<DirectionalLight> gDirectionalLight : register(b1);
+
+struct CameraData
+{
+    float3 worldPosition;
+};
+
+ConstantBuffer<CameraData> gCamera : register(b2);
 
 struct PixelShaderOutput
 {
@@ -38,6 +46,12 @@ PixelShaderOutput main(VertexShaderOutput input)
         float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
        // float cos = saturate(dot(normalize(input.normal), -gDirectionalLight.direction));
         output.color = gMaterial.color * textureColor * gDirectionalLight.color * cos * gDirectionalLight.intensity;
+        
+        float32_t3 cameraToPosition = normalize(input.worldPosition - gCamera.worldPosition);
+        float32_t3 reflectedVector = reflect(cameraToPosition, normalize(input.normal));
+        float32_t4 environmentColor = gEnvironmentMap.Sample(gSampler, reflectedVector);
+        
+        output.color.rgb += environmentColor.rgb;
     }
     else
     {

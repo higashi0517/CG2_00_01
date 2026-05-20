@@ -42,6 +42,11 @@ void Object3D::Initialize(Object3DManager* object3DManager)
 		.rotate = {0.3f, 0.0f, 0.0f},
 		.translate = {0.0f, 4.0f, -10.0f}
 	};*/
+
+	cameraResource = object3DManager->GetGraphicsDevice()->CreateBufferResource(sizeof(CameraData));
+	cameraResource->Map(0, nullptr, reinterpret_cast<void**>(&cameraData));
+	cameraData->worldPosition = { 0.0f, 0.0f, 0.0f };
+
 	this->camera = object3DManager->GetDefaultCamera();
 }
 
@@ -64,14 +69,26 @@ void Object3D::Update()
 	transformationMatrixData->World = worldMatrix;
 
 	//transform.rotate.y = +1.0f;
+
+	if (camera) {
+		cameraData->worldPosition = camera->GetTranslate();
+	}
 }
 
 void Object3D::Draw()
 {
-	object3DManager->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
-	object3DManager->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-	
-	if(model){
+	auto commandList = object3DManager->GetGraphicsDevice()->GetCommandList();
+
+	// 各定数バッファやディスクリプタテーブルの割り当て
+	commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+	commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+
+	// ★これでエラーが消えます
+	commandList->SetGraphicsRootConstantBufferView(5, cameraResource->GetGPUVirtualAddress());
+	commandList->SetGraphicsRootDescriptorTable(4, envMapSrvGpuHandle);
+
+	// モデルの描画
+	if (model) {
 		model->Draw();
 	}
 }
