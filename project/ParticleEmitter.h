@@ -11,6 +11,11 @@ public:
 		Vector3 velocity;
     };
 
+    void SetScaleYRange(float minScale, float maxScale) {
+        minScaleY_ = minScale;
+        maxScaleY_ = maxScale;
+    }
+
     // 初期化
     void Initialize(ParticleManager* particleManager, const std::string& particleName);
 
@@ -37,4 +42,7 @@ private:
     int frameCounter_ = 0;   // フレーム計測用のタイマー
     uint32_t emitCount_ = 1; // デフォルトは1度に1個
     bool isEmitting_ = true; // 発生中かどうか
+
+    float minScaleY_ = 1.0f;
+    float maxScaleY_ = 1.0f;
 };

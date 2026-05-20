@@ -20,13 +20,13 @@ void ParticleEmitter::Update() {
 	}
 
 	for (uint32_t i = 0; i < 10; i++) {
-		particle[i].velocity = { 0.0f,0.1f,0.0f };
+		//particle[i].velocity = { 0.0f,0.1f,0.0f };
 	}
 }
 
 void ParticleEmitter::Emit() {
 	// マネージャーが設定されていれば発生させる
 	if (particleManager_) {
-		particleManager_->Emit(particleName_, position_, emitCount_);
+		particleManager_->Emit(particleName_, position_, emitCount_, minScaleY_, maxScaleY_);
 	}
 }

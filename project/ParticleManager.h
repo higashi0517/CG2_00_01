@@ -20,6 +20,8 @@ public:
 		Vector4 color;
 		float currentTime;
 		float lifeTime;
+		Vector3 scale;
+		Vector3 rotate;
 	};
 
 	struct ParticleForGPU {
@@ -62,7 +64,7 @@ public:
 		ParticleForGPU* mappedData;
 	};
 
-	static const uint32_t kNumMaxInstance = 10;
+	static const uint32_t kNumMaxInstance = 100;
 
 	std::unordered_map<std::string, ParticleGroup> particleGroups;
 	GraphicsDevice* graphicsDevice = nullptr;
@@ -79,14 +81,14 @@ public:
 	void Update();
 	void Draw();
 	void CreateParticleGroup(const std::string name, const std::string textureFilePath);
-	void Emit(const std::string& name, const Vector3& position, uint32_t count);
+	void Emit(const std::string& name, const Vector3& position, uint32_t count, float minScaleY = 1.0f, float maxScaleY = 1.0f);
 	void SetCamera(Camera* camera_) { camera = camera_; }
 
 	void CreateRootSignature();
 	void SetCommonRenderState();
 	void CreateGraphicsPipelineState();
 
-	Particle MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate);
+	Particle MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate, float minScaleY, float maxScaleY);
 
 	std::random_device seedGenerator_; // シード生成用
 	std::mt19937 randomEngine_;        // メルセンヌ・ツイスタ（エンジン）
