@@ -27,26 +27,7 @@ public:
 	void Finalize()override;
 
 private:
-	Input* input_ = nullptr;
-	Sound* sound_ = nullptr;
-
-	Object3DManager* object3DManager_ = nullptr;
-	SpriteManager* spriteManager_ = nullptr;
-	ParticleManager* particleManager_ = nullptr;
-	ParticleEmitter* emitter_ = nullptr;
-
-	Camera* camera_ = nullptr;
-	Object3D* object3D_ = nullptr;
-	Object3D* object3D_2_ = nullptr;
-	std::vector<Sprite*> sprites_;
-	Sprite* sprite_ = nullptr;
-
-	int selected_ = 0;
-
-	Sound::SoundData bgmData_;
-
+	
 	WinApp* winApp_ = nullptr;
 	GraphicsDevice* graphicsDevice_ = nullptr;
-
-	Skybox* skybox_ = nullptr;
 };
