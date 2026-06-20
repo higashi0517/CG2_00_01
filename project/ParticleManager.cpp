@@ -132,7 +132,7 @@ void ParticleManager::CreateGraphicsPipelineState() {
 	desc.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 	desc.BlendState.RenderTarget[0].BlendEnable = TRUE;
 	desc.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-	desc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	desc.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
 	desc.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
 	desc.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
 	desc.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
@@ -299,7 +299,8 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomE
 	// 乱数の範囲設定
 	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
 	std::uniform_real_distribution<float> distVelocity(0.0f, 0.0f);
-	std::uniform_real_distribution<float> distTime(5.0f, 10.0f);
+	std::uniform_real_distribution<float> distTime(0.15f, 0.3f);
+
 	std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
 
 	std::uniform_real_distribution<float> distRotate(-std::numbers::pi_v<float>, std::numbers::pi_v<float>);
@@ -321,10 +322,10 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomE
 	};
 
 	particle.color = {
-		distColor(randomEngine),
-		distColor(randomEngine),
-		distColor(randomEngine),
-		1.0f
+		1.0f, // R
+		1.0f, // G
+		1.0f, // B
+		1.0f  // A
 	};
 	particle.scale = { 0.05f, distScale(randomEngine), 1.0f };
 	particle.rotate = { 0.0f, 0.0f, distRotate(randomEngine) };

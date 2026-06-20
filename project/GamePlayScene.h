@@ -32,7 +32,8 @@ private:
 	Object3DManager* object3DManager_ = nullptr;
 	SpriteManager* spriteManager_ = nullptr;
 	ParticleManager* particleManager_ = nullptr;
-	ParticleEmitter* emitter_ = nullptr;
+	ParticleEmitter* emitterSmall_ = nullptr;
+	ParticleEmitter* emitterLarge_ = nullptr;
 
 	Camera* camera_ = nullptr;
 	Object3D* object3D_ = nullptr;

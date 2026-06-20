@@ -58,12 +58,21 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	particleManager_->Initialize(graphicsDevice_);
 	particleManager_->SetCamera(camera_);
 
-	particleManager_->CreateParticleGroup("Magic", "Resources/circle2.png");
+	particleManager_->CreateParticleGroup("HitEffect", "Resources/circle2.png");
 
-	emitter_ = new ParticleEmitter();
-	emitter_->Initialize(particleManager_, "Magic");
-	emitter_->SetEmitCount(3);
-	emitter_->SetScaleYRange(0.5f, 2.0f);
+	// 1. 小さいトゲ用エミッターの初期化
+	emitterSmall_ = new ParticleEmitter();
+	emitterSmall_->Initialize(particleManager_, "HitEffect");
+	emitterSmall_->SetEmitCount(15);          // 1回に出すトゲの数
+	emitterSmall_->SetScaleYRange(0.5f, 1.2f); // 小さいトゲのサイズ範囲
+	emitterSmall_->SetIsEmitting(false);       // ★自動生成をOFFにする
+
+	// 2. 大きいトゲ用エミッターの初期化
+	emitterLarge_ = new ParticleEmitter();
+	emitterLarge_->Initialize(particleManager_, "HitEffect");
+	emitterLarge_->SetEmitCount(10);          // 1回に出すトゲの数
+	emitterLarge_->SetScaleYRange(2.0f, 3.5f); // 大きいトゲのサイズ範囲
+	emitterLarge_->SetIsEmitting(false);       // ★自動生成をOFFにする
 }
 
 void GamePlayScene::Update() {
@@ -128,10 +137,26 @@ void GamePlayScene::Update() {
 
 #endif
 
+	if (input_->TriggerKey(DIK_0)) {
+		OutputDebugStringA("Hit 0: Emit HitEffect\n");
+
+		// エフェクトを発生させたい座標（今回は原点にしていますが、本来は敵の座標など）
+		Vector3 hitPosition = { 0.0f, 0.0f, 0.0f };
+
+		// 小さいエミッターから1回だけドバッと出す
+		emitterSmall_->SetPosition(hitPosition);
+		emitterSmall_->Emit();
+
+		// 大きいエミッターから1回だけドバッと出す
+		emitterLarge_->SetPosition(hitPosition);
+		emitterLarge_->Emit();
+	}
+
 	// カメラの更新
 	camera_->Update();
 
-	emitter_->Update();
+	if (emitterSmall_) emitterSmall_->Update();
+	if (emitterLarge_) emitterLarge_->Update();
 
 	object3D_->Update();
 	//object3D_2_->Update();
@@ -178,6 +203,7 @@ void GamePlayScene::Finalize() {
 	sprites_.clear();
 
 	delete spriteManager_;
-	delete emitter_;
+	if (emitterSmall_) delete emitterSmall_;
+	if (emitterLarge_) delete emitterLarge_;
 	delete particleManager_;
 }
