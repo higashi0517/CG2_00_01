@@ -287,7 +287,7 @@ void ParticleManager::Emit(const std::string& name, const Vector3& position, uin
 	ParticleGroup& group = particleGroups[name];
 
 	for (uint32_t i = 0; i < count; ++i) {
-		// [[修正ポイント]] MakeNewParticle を呼び出してランダムな値をセットしたパーティクルを受け取る
+
 		Particle particle = MakeNewParticle(randomEngine_, position, minScaleY, maxScaleY);
 
 		// リストに追加

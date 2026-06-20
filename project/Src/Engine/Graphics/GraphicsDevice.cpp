@@ -128,7 +128,7 @@ void GraphicsDevice::PostDraw() {
 	if (fence->GetCompletedValue() < fenceValue) {
 
 		fence->SetEventOnCompletion(fenceValue, fenceEvent);
-
+		
 		// イベントが発生するまで待機
 		WaitForSingleObject(fenceEvent, INFINITE);
 	}
