@@ -130,7 +130,7 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 
 	// --- 2. PipelineState (PSO) の作成 ---
 	auto vertexShaderBlob = graphicsDevice_->CompileShader(L"Resources/shaders/Fullscreen.VS.hlsl", L"vs_6_0");
-	auto pixelShaderBlob = graphicsDevice_->CompileShader(L"Resources/shaders/CopyImage.PS.hlsl", L"ps_6_0");
+	auto pixelShaderBlob = graphicsDevice_->CompileShader(L"Resources/shaders/Grayscale.PS.hlsl", L"ps_6_0");
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
 	psoDesc.pRootSignature = copyRootSignature_.Get();
