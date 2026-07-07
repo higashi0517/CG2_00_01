@@ -25,7 +25,7 @@ void Game::Initialize() {
 	SceneManager::GetInstance()->Initialize(winApp_, graphicsDevice_);
 	SceneFactory* sceneFactory = new SceneFactory();
 	SceneManager::GetInstance()->SetSceneFactory(sceneFactory);
-	SceneManager::GetInstance()->ChangeScene("TITLE");
+	SceneManager::GetInstance()->ChangeScene("GAMEPLAY");
 }
 
 void Game::Update() {

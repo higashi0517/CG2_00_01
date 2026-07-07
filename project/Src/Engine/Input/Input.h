@@ -27,6 +27,9 @@ public:
 	/// </summary>
 	/// 	<param name="keyNumber">DIK_***の定数</param>
 	bool TriggerKey(BYTE keyNumber);
+
+	const BYTE* GetAllKeys() const { return key; }
+
 private:
 
 	ComPtr<IDirectInputDevice8> keyboard = nullptr;

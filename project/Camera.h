@@ -25,6 +25,9 @@ public:
 	void SetNearClip(float nearClip_) { this->nearClip = nearClip_; }
 	void SetFarClip(float farClip_) { this->farClip = farClip_; }
 
+	void SetViewMatrix(const Matrix4x4& viewMatrix_) { this->viewMatrix = viewMatrix_; }
+	void SetViewProjectionMatrix(const Matrix4x4& viewProjectionMatrix_) { this->viewProjectionMatrix = viewProjectionMatrix_; }
+
 	// getter
 	const Matrix4x4& GetViewMatrix() const { return viewMatrix; }
 	const Matrix4x4& GetProjectionMatrix() const { return projectionMatrix; }

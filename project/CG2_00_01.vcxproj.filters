@@ -160,6 +160,7 @@
     <FxCompile Include="Resources\shaders\Fullscreen.VS.hlsl" />
     <FxCompile Include="Resources\shaders\CopyImage.PS.hlsl" />
     <FxCompile Include="Resources\shaders\Grayscale.PS.hlsl" />
+    <FxCompile Include="Resources\shaders\Vignette.PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\Engine\DebugCamera\DebugCamera.h">

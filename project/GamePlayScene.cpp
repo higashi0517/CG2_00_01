@@ -10,7 +10,7 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	// 3Dモデルマネジャの初期化
 	ModelManager::GetInstance()->Initialize(graphicsDevice_);
 	// .objモデルの読み込み
-	ModelManager::GetInstance()->LoadModel("plane.obj");
+	ModelManager::GetInstance()->LoadModel("terrain.obj");
 
 	input_ = new Input();
 	input_->Initialize(winApp_);
@@ -18,8 +18,8 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	sound_ = new Sound();
 
 	camera_ = new Camera();
-	camera_->SetTranslate({ 0.0f, 0.0f, -10.0f });
-	camera_->SetRotate({ 0.0f, 0.0f, 0.0f });
+	camera_->SetTranslate({ 0.0f, 20.0f, -40.0f });
+	camera_->SetRotate({ 0.42f, 0.0f, 0.0f });
 
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = graphicsDevice_->AllocateRtvHandle();
 
@@ -45,11 +45,11 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 
 	object3D_ = new Object3D();
 	object3D_->Initialize(object3DManager_);
-	object3D_->SetModel("plane.obj");
+	object3D_->SetModel("terrain.obj");
 
 	object3D_2_ = new Object3D();
 	object3D_2_->Initialize(object3DManager_);
-	object3D_2_->SetModel("plane.obj");
+	object3D_2_->SetModel("terrain.obj");
 
 	spriteManager_ = nullptr;
 	// スプライト共通部の初期化
@@ -130,7 +130,7 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 
 	// --- 2. PipelineState (PSO) の作成 ---
 	auto vertexShaderBlob = graphicsDevice_->CompileShader(L"Resources/shaders/Fullscreen.VS.hlsl", L"vs_6_0");
-	auto pixelShaderBlob = graphicsDevice_->CompileShader(L"Resources/shaders/Grayscale.PS.hlsl", L"ps_6_0");
+	auto pixelShaderBlob = graphicsDevice_->CompileShader(L"Resources/shaders/Vignette.PS.hlsl", L"ps_6_0");
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
 	psoDesc.pRootSignature = copyRootSignature_.Get();
@@ -241,7 +241,7 @@ void GamePlayScene::Update() {
 #endif
 
 	// カメラの更新
-	camera_->Update();
+		camera_->Update();
 
 	emitter_->Update();
 
@@ -249,10 +249,10 @@ void GamePlayScene::Update() {
 	//object3D_2_->Update();
 
 	for (auto& sprite : sprites_) {
-		sprite->Update();
+		//sprite->Update();
 	}
 
-	particleManager_->Update();
+	//particleManager_->Update();
 }
 
 void
@@ -272,10 +272,11 @@ GamePlayScene::Draw() {
 	// 3. レンダーテクスチャのクリア（スライド通り、設定した赤色等でクリアされる）
 	float clearColor[4] = { 1.0f, 0.0f, 0.0f, 1.0f }; // 初期化時の色と合わせる
 	cmdList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+	cmdList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	// === 3Dオブジェクト描画 ===
 	object3DManager_->SetCommonRenderState();
-	//object3D_->Draw();
+	object3D_->Draw();
 	// object3D_2_->Draw();
 
 

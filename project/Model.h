@@ -15,16 +15,17 @@ private:
 		uint32_t textureIndex = 0;
 	};
 
-	struct ModelData {
-		std::vector<Sprite::VertexData> vertices;
-		MaterialData material;
-	};
-
 	struct VertexData {
 		Vector4 position;
 		Vector2 texcord;
 		Vector3 normal;
 	};
+
+	struct ModelData {
+		std::vector<VertexData> vertices;
+		MaterialData material;
+	};
+
 
 	struct Material {
 		Vector4 color;
