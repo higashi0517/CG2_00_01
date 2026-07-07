@@ -60,6 +60,13 @@ public:
 	void WaitForGPU();
 	void ResetCommandList();
 
+	D3D12_CPU_DESCRIPTOR_HANDLE AllocateRtvHandle();
+	void SetBackBufferAsRenderTarget();
+
+	D3D12_CPU_DESCRIPTOR_HANDLE GetDsvHandle() {
+		return dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	}
+
 private:
 	// デバイスの初期化
 	void Device();

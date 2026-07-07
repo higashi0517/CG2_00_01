@@ -1,4 +1,6 @@
 #include "GamePlayScene.h"
+#include "SrvManager.h"
+#include "RenderTexture.h"
 
 void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 {
@@ -8,7 +10,7 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	// 3Dモデルマネジャの初期化
 	ModelManager::GetInstance()->Initialize(graphicsDevice_);
 	// .objモデルの読み込み
-	ModelManager::GetInstance()->LoadModel("plane.obj");
+	ModelManager::GetInstance()->LoadModel("terrain.obj");
 
 	input_ = new Input();
 	input_->Initialize(winApp_);
@@ -16,8 +18,26 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	sound_ = new Sound();
 
 	camera_ = new Camera();
-	camera_->SetTranslate({ 0.0f, 0.0f, -10.0f });
-	camera_->SetRotate({ 0.0f, 0.0f, 0.0f });
+	camera_->SetTranslate({ 0.0f, 20.0f, -40.0f });
+	camera_->SetRotate({ 0.42f, 0.0f, 0.0f });
+
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = graphicsDevice_->AllocateRtvHandle();
+
+	// 2. SRVハンドルの確保 (既存のSrvManagerから空き枠を確保)
+	uint32_t srvIndex = SrvManager::GetInstance()->Allocate();
+	D3D12_CPU_DESCRIPTOR_HANDLE srvCPU = SrvManager::GetInstance()->GetCPUDescriptorHandle(srvIndex);
+	D3D12_GPU_DESCRIPTOR_HANDLE srvGPU = SrvManager::GetInstance()->GetGPUDescriptorHandle(srvIndex);
+
+	// 3. RenderTexture のインスタンス化と初期化 (スライドの仕様：1280x720, ClearColorは赤)
+	Vector4 clearColor{ 1.0f, 0.0f, 0.0f, 1.0f };
+	renderTexture_ = std::make_unique<RenderTexture>();
+	renderTexture_->Initialize(
+		graphicsDevice_->GetDevice(),
+		1280, 720,
+		DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
+		clearColor,
+		rtvHandle, srvCPU, srvGPU
+	);
 
 	object3DManager_ = new Object3DManager();
 	object3DManager_->Initialize(graphicsDevice_);
@@ -25,11 +45,11 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 
 	object3D_ = new Object3D();
 	object3D_->Initialize(object3DManager_);
-	object3D_->SetModel("plane.obj");
+	object3D_->SetModel("terrain.obj");
 
 	object3D_2_ = new Object3D();
 	object3D_2_->Initialize(object3DManager_);
-	object3D_2_->SetModel("plane.obj");
+	object3D_2_->SetModel("terrain.obj");
 
 	spriteManager_ = nullptr;
 	// スプライト共通部の初期化
@@ -64,6 +84,92 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	emitter_->Initialize(particleManager_, "Magic");
 	emitter_->SetEmitCount(1);
 	emitter_->SetScaleYRange(1.0f, 1.0f);
+
+	// --- 1. RootSignature の作成 ---
+	D3D12_DESCRIPTOR_RANGE srvRange{};
+	srvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	srvRange.NumDescriptors = 1;
+	srvRange.BaseShaderRegister = 0; // t0
+	srvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+	D3D12_ROOT_PARAMETER rootParameters[1]{};
+	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters[0].DescriptorTable.NumDescriptorRanges = 1;
+	rootParameters[0].DescriptorTable.pDescriptorRanges = &srvRange;
+
+	// サンプラーの設定 (s0)
+	D3D12_STATIC_SAMPLER_DESC staticSampler{};
+	staticSampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	staticSampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	staticSampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	staticSampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	staticSampler.ShaderRegister = 0; // s0
+	staticSampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+	D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc{};
+	rootSignatureDesc.NumParameters = _countof(rootParameters);
+	rootSignatureDesc.pParameters = rootParameters;
+	rootSignatureDesc.NumStaticSamplers = 1;
+	rootSignatureDesc.pStaticSamplers = &staticSampler;
+	rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+	// ★修正: RootSignature のシリアライズと作成を有効化
+	Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob = nullptr;
+	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
+	HRESULT hr = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
+	if (FAILED(hr)) {
+		if (errorBlob) {
+			OutputDebugStringA(reinterpret_cast<const char*>(errorBlob->GetBufferPointer()));
+		}
+		assert(false);
+	}
+	hr = graphicsDevice_->GetDevice()->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&copyRootSignature_));
+	assert(SUCCEEDED(hr));
+
+
+	// --- 2. PipelineState (PSO) の作成 ---
+	auto vertexShaderBlob = graphicsDevice_->CompileShader(L"Resources/shaders/Fullscreen.VS.hlsl", L"vs_6_0");
+	auto pixelShaderBlob = graphicsDevice_->CompileShader(L"Resources/shaders/Vignette.PS.hlsl", L"ps_6_0");
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
+	psoDesc.pRootSignature = copyRootSignature_.Get();
+	psoDesc.VS = { vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize() };
+	psoDesc.PS = { pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize() };
+
+	// ★重要: 頂点バッファを使わないため、InputLayout は空にする
+	psoDesc.InputLayout = { nullptr, 0 };
+
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+
+	// 共通の設定（不透明描画または通常のブレンド）
+	psoDesc.BlendState.RenderTarget[0].BlendEnable = FALSE;
+	psoDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+	// カリングは行わない（三角形が画面より大きいため）
+	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+	psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+
+	// 深度テストは行わない（ただの画面コピーのため）
+	psoDesc.DepthStencilState.DepthEnable = FALSE;
+
+	// 出力先（バックバッファ）のフォーマット（例: R8G8B8A8_UNORM）
+	psoDesc.NumRenderTargets = 1;
+	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	psoDesc.SampleDesc.Count = 1;
+
+	// 【修正1】サンプルマスクを適切に設定する (0 のままだと何も描画されません)
+	psoDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK; // もしくは 0xFFFFFFFF
+
+	// レンダーターゲットの設定
+	psoDesc.NumRenderTargets = 1;
+
+	// 【修正2】フォーマットをバックバッファに合わせて _SRGB に変更する
+	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+
+	// ★修正: コメントアウトを解除し、実際にPipelineStateオブジェクトを生成
+	hr = graphicsDevice_->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&copyPipelineState_));
+	assert(SUCCEEDED(hr));
 }
 
 void GamePlayScene::Update() {
@@ -135,7 +241,7 @@ void GamePlayScene::Update() {
 #endif
 
 	// カメラの更新
-	camera_->Update();
+		camera_->Update();
 
 	emitter_->Update();
 
@@ -143,28 +249,65 @@ void GamePlayScene::Update() {
 	//object3D_2_->Update();
 
 	for (auto& sprite : sprites_) {
-		sprite->Update();
+		//sprite->Update();
 	}
 
-	particleManager_->Update();
+	//particleManager_->Update();
 }
 
-void GamePlayScene::Draw() {
+void
+GamePlayScene::Draw() {
+
+	auto cmdList = graphicsDevice_->GetCommandList();
+
+	// 1. 状態を「レンダーターゲット」へ遷移
+	renderTexture_->TransitionToRenderTarget(cmdList.Get());
+
+	// 2. 描画先をレンダーテクスチャのRTVに切り替える
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = renderTexture_->GetRtvCPUHandle();
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = graphicsDevice_->GetDsvHandle();
+
+	cmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+
+	// 3. レンダーテクスチャのクリア（スライド通り、設定した赤色等でクリアされる）
+	float clearColor[4] = { 1.0f, 0.0f, 0.0f, 1.0f }; // 初期化時の色と合わせる
+	cmdList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+	cmdList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	// === 3Dオブジェクト描画 ===
 	object3DManager_->SetCommonRenderState();
-	//object3D_->Draw();
+	object3D_->Draw();
 	// object3D_2_->Draw();
+
+
+	// === パーティクル描画 ===
+	particleManager_->SetCommonRenderState();
+	particleManager_->Draw();
+
+	// 1. 描き込みが終わったので、状態を「シェーダーリソース（読み込み用）」へ遷移
+	renderTexture_->TransitionToShaderResource(cmdList.Get());
+
+	// 2. 描画先を「いつものバックバッファ」に戻す
+	graphicsDevice_->SetBackBufferAsRenderTarget();
+
+	cmdList->SetGraphicsRootSignature(copyRootSignature_.Get());
+	cmdList->SetPipelineState(copyPipelineState_.Get());
+
+	// プリミティブトポロジーを三角形に設定
+	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// レンダーテクスチャの SRV（GPUハンドル）をシェーダーの register(t0) にバインド [cite: 2]
+	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle = renderTexture_->GetSrvGPUHandle();
+	cmdList->SetGraphicsRootDescriptorTable(0, srvGpuHandle);
+
+	// 頂点3つで全画面に描画 
+	cmdList->DrawInstanced(3, 1, 0, 0);
 
 	// === スプライト描画 ===
 	spriteManager_->SetCommonRenderState();
 	for (auto& sprite : sprites_) {
 		sprite->Draw();
 	}
-
-	// === パーティクル描画 ===
-	particleManager_->SetCommonRenderState();
-	particleManager_->Draw();
 
 }
 
@@ -187,3 +330,7 @@ void GamePlayScene::Finalize() {
 	delete emitter_;
 	delete particleManager_;
 }
+
+GamePlayScene::GamePlayScene() {}
+
+GamePlayScene::~GamePlayScene() {}

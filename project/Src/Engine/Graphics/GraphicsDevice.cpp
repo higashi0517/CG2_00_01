@@ -326,7 +326,7 @@ void GraphicsDevice::DescriptorHeap() {
 	descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
 	// rtv用ディスクリプタヒープの生成
-	rtvDescriptorHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
+	rtvDescriptorHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 3, false);
 	GetCPUDescriptorHandle(rtvDescriptorHeap, descriptorSizeRTV, 0);
 
 	// srv用ディスクリプタヒープの生成
@@ -676,4 +676,26 @@ void GraphicsDevice::ResetCommandList() {
 	assert(SUCCEEDED(hr));
 	hr = commandList->Reset(commandAllocator.Get(), nullptr);
 	assert(SUCCEEDED(hr));
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE GraphicsDevice::AllocateRtvHandle() {
+	// 既存のrtvDescriptorHeapから、新しくレンダーテクスチャ用に使うハンドルを計算して返します
+	// ※ 現在のディスクリプタ割り当て状況に合わせて、次の一枠を返す仕組みを実装してください
+	D3D12_CPU_DESCRIPTOR_HANDLE handle = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+
+	// 例: スワップチェーンバッファ(2個)の次をレンダーテクスチャ用にする場合
+	handle.ptr += (descriptorSizeRTV * 2);
+	return handle;
+}
+
+void GraphicsDevice::SetBackBufferAsRenderTarget() {
+	// 現在アクティブなスワップチェーンのバックバッファを取得し、OMSetRenderTargets を行う処理
+	// 通常 PreDraw() の最初で行っている処理（OMSetRenderTargets）と同様のものをここに記述します。
+	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	rtvHandle.ptr += (descriptorSizeRTV * backBufferIndex);
+
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+
+	commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
 }

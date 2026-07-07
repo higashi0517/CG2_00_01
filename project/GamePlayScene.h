@@ -16,10 +16,14 @@
 
 class WinApp;
 class GraphicsDevice;
+class RenderTexture;
 
 class GamePlayScene : public BaseScene
 {
 public:
+	GamePlayScene();
+	~GamePlayScene() override;
+
 	void Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)override;
 	void Update()override;
 	void Draw()override;
@@ -46,4 +50,10 @@ private:
 
 	WinApp* winApp_ = nullptr;
 	GraphicsDevice* graphicsDevice_ = nullptr;
+
+	std::unique_ptr<RenderTexture> renderTexture_;
+	Sprite* postProcessSprite_ = nullptr;
+
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> copyRootSignature_;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> copyPipelineState_;
 };
