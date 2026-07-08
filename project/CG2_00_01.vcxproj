@@ -83,7 +83,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)externals\;$(ProjectDir)Src\;$(ProjectDir)Src\Engine\;$(ProjectDir)Src\App\;$(ProjectDir)Src\Engine\Sound\;$(ProjectDir)Src\Engine\Math\;$(ProjectDir)Src\Engine\Input\;$(ProjectDir)Src\Engine\DebugCamera\;$(ProjectDir)Src\Engine\Utility\;$(ProjectDir)Src\Engine\Graphics\Sprite\;$(ProjectDir)Src\Engine\Graphics\Texture\;$(ProjectDir)Src\Engine\Graphics\;$(ProjectDir)Src\Engine\Core\;$(ProjectDir)externals\assimp\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Src;$(ProjectDir)externals;$(ProjectDir)Src\App;$(ProjectDir)Src\Engine;$(ProjectDir)Src\Engine\Core;$(ProjectDir)Src\Engine\Camera;$(ProjectDir)Src\Engine\Graphics;$(ProjectDir)Src\Engine\Graphics\Model;$(ProjectDir)Src\Engine\Graphics\Particle;$(ProjectDir)Src\Engine\Graphics\Skybox;$(ProjectDir)Src\Engine\Graphics\Sprite;$(ProjectDir)Src\Engine\Graphics\Texture;$(ProjectDir)Src\Engine\ImGui;$(ProjectDir)Src\Engine\Input;$(ProjectDir)Src\Engine\Math;$(ProjectDir)Src\Engine\Sound;$(ProjectDir)Src\Engine\Utility;$(ProjectDir)Src\Scene;$(ProjectDir)Src\Engine\Object;$(ProjectDir)Src\Scene\Title;$(ProjectDir)Src\Scene\GamePlay;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -110,7 +110,7 @@
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)externals\;$(ProjectDir)Src\;$(ProjectDir)Src\Engine\;$(ProjectDir)Src\App\;$(ProjectDir)Src\Engine\Sound\;$(ProjectDir)Src\Engine\Math\;$(ProjectDir)Src\Engine\Input\;$(ProjectDir)Src\Engine\DebugCamera\;$(ProjectDir)Src\Engine\Utility\;$(ProjectDir)Src\Engine\Graphics\Sprite\;$(ProjectDir)Src\Engine\Graphics\Texture\;$(ProjectDir)Src\Engine\Graphics\;$(ProjectDir)Src\Engine\Core\;$(ProjectDir)externals\assimp\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Src;$(ProjectDir)externals;$(ProjectDir)Src\App;$(ProjectDir)Src\Engine;$(ProjectDir)Src\Engine\Core;$(ProjectDir)Src\Engine\Camera;$(ProjectDir)Src\Engine\Graphics;$(ProjectDir)Src\Engine\Graphics\Model;$(ProjectDir)Src\Engine\Graphics\Particle;$(ProjectDir)Src\Engine\Graphics\Skybox;$(ProjectDir)Src\Engine\Graphics\Sprite;$(ProjectDir)Src\Engine\Graphics\Texture;$(ProjectDir)Src\Engine\ImGui;$(ProjectDir)Src\Engine\Input;$(ProjectDir)Src\Engine\Math;$(ProjectDir)Src\Engine\Sound;$(ProjectDir)Src\Engine\Utility;$(ProjectDir)Src\Scene;$(ProjectDir)Src\Engine\Object;$(ProjectDir)Src\Scene\Title;$(ProjectDir)Src\Scene\GamePlay;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -139,7 +139,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <Optimization>Disabled</Optimization>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)externals\;$(ProjectDir)Src\;$(ProjectDir)Src\Engine\;$(ProjectDir)Src\App\;$(ProjectDir)Src\Engine\Sound\;$(ProjectDir)Src\Engine\Math\;$(ProjectDir)Src\Engine\Input\;$(ProjectDir)Src\Engine\DebugCamera\;$(ProjectDir)Src\Engine\Utility\;$(ProjectDir)Src\Engine\Graphics\Sprite\;$(ProjectDir)Src\Engine\Graphics\Texture\;$(ProjectDir)Src\Engine\Graphics\;$(ProjectDir)Src\Engine\Core\;$(ProjectDir)externals\assimp\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Src;$(ProjectDir)externals;$(ProjectDir)Src\App;$(ProjectDir)Src\Engine;$(ProjectDir)Src\Engine\Core;$(ProjectDir)Src\Engine\Camera;$(ProjectDir)Src\Engine\Graphics;$(ProjectDir)Src\Engine\Graphics\Model;$(ProjectDir)Src\Engine\Graphics\Particle;$(ProjectDir)Src\Engine\Graphics\Skybox;$(ProjectDir)Src\Engine\Graphics\Sprite;$(ProjectDir)Src\Engine\Graphics\Texture;$(ProjectDir)Src\Engine\ImGui;$(ProjectDir)Src\Engine\Input;$(ProjectDir)Src\Engine\Math;$(ProjectDir)Src\Engine\Sound;$(ProjectDir)Src\Engine\Utility;$(ProjectDir)Src\Scene;$(ProjectDir)Src\Engine\Object;$(ProjectDir)Src\Scene\Title;$(ProjectDir)Src\Scene\GamePlay;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -156,29 +156,29 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="BaseScene.cpp" />
-    <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="Framework.cpp" />
-    <ClCompile Include="Game.cpp" />
-    <ClCompile Include="GamePlayScene.cpp" />
-    <ClCompile Include="ImGuiManager.cpp" />
-    <ClCompile Include="Model.cpp" />
-    <ClCompile Include="ModelCommon.cpp" />
-    <ClCompile Include="ModelManager.cpp" />
-    <ClCompile Include="Object3D.cpp" />
-    <ClCompile Include="Object3DManager.cpp" />
-    <ClCompile Include="ParticleEmitter.cpp" />
-    <ClCompile Include="ParticleManager.cpp" />
-    <ClCompile Include="RenderTexture.cpp" />
-    <ClCompile Include="SceneFactory.cpp" />
-    <ClCompile Include="SceneManager.cpp" />
-    <ClCompile Include="Skybox.cpp" />
+    <ClCompile Include="Src\Scene\BaseScene.cpp" />
+    <ClCompile Include="Src\Engine\Camera\Camera.cpp" />
+    <ClCompile Include="Src\Scene\Framework.cpp" />
+    <ClCompile Include="Src\App\Game.cpp" />
+    <ClCompile Include="Src\Scene\GamePlay\GamePlayScene.cpp" />
+    <ClCompile Include="Src\Engine\ImGui\ImGuiManager.cpp" />
+    <ClCompile Include="Src\Engine\Graphics\Model\Model.cpp" />
+    <ClCompile Include="Src\Engine\Graphics\Model\ModelCommon.cpp" />
+    <ClCompile Include="Src\Engine\Graphics\Model\ModelManager.cpp" />
+    <ClCompile Include="Src\Engine\Object\Object3D.cpp" />
+    <ClCompile Include="Src\Engine\Object\Object3DManager.cpp" />
+    <ClCompile Include="Src\Engine\Graphics\Particle\ParticleEmitter.cpp" />
+    <ClCompile Include="Src\Engine\Graphics\Particle\ParticleManager.cpp" />
+    <ClCompile Include="Src\Engine\Graphics\Texture\RenderTexture.cpp" />
+    <ClCompile Include="Src\Scene\SceneFactory.cpp" />
+    <ClCompile Include="Src\Scene\SceneManager.cpp" />
+    <ClCompile Include="Src\Engine\Graphics\Skybox\Skybox.cpp" />
     <ClCompile Include="Src\Engine\Core\D3DResourceLeakChecker.cpp" />
     <ClCompile Include="Src\Engine\Graphics\GraphicsDevice.cpp" />
     <ClCompile Include="Src\Engine\Core\Logger.cpp" />
     <ClCompile Include="Src\Engine\Graphics\Sprite\Sprite.cpp" />
     <ClCompile Include="Src\Engine\Graphics\Sprite\SpriteManager.cpp" />
-    <ClCompile Include="Src\Engine\DebugCamera\DebugCamera.cpp" />
+    <ClCompile Include="Src\Engine\Camera\DebugCamera.cpp" />
     <ClCompile Include="Src\Engine\Input\Input.cpp" />
     <ClCompile Include="main.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Development|x64'">MaxSpeed</Optimization>
@@ -190,7 +190,7 @@
     <ClCompile Include="Src\Engine\Graphics\Texture\TextureManager.cpp" />
     <ClCompile Include="Src\App\WinApp.cpp" />
     <ClCompile Include="Src\Engine\Graphics\SrvManager.cpp" />
-    <ClCompile Include="TitleScene.cpp" />
+    <ClCompile Include="Src\Scene\Title\TitleScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Fullscreen.VS.hlsl">
@@ -259,31 +259,31 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AbstractSceneFactory.h" />
-    <ClInclude Include="BaseScene.h" />
-    <ClInclude Include="Camera.h" />
-    <ClInclude Include="Framework.h" />
-    <ClInclude Include="Game.h" />
-    <ClInclude Include="GamePlayScene.h" />
-    <ClInclude Include="ImGuiManager.h" />
-    <ClInclude Include="Model.h" />
-    <ClInclude Include="ModelCommon.h" />
-    <ClInclude Include="ModelManager.h" />
-    <ClInclude Include="Object3D.h" />
-    <ClInclude Include="Object3DManager.h" />
-    <ClInclude Include="ParticleEmitter.h" />
-    <ClInclude Include="ParticleManager.h" />
-    <ClInclude Include="RenderTexture.h" />
-    <ClInclude Include="SceneFactory.h" />
-    <ClInclude Include="SceneManager.h" />
-    <ClInclude Include="Skybox.h" />
+    <ClInclude Include="Src\Scene\AbstractSceneFactory.h" />
+    <ClInclude Include="Src\Scene\BaseScene.h" />
+    <ClInclude Include="Src\Engine\Camera\Camera.h" />
+    <ClInclude Include="Src\Scene\Framework.h" />
+    <ClInclude Include="Src\App\Game.h" />
+    <ClInclude Include="Src\Scene\GamePlay\GamePlayScene.h" />
+    <ClInclude Include="Src\Engine\ImGui\ImGuiManager.h" />
+    <ClInclude Include="Src\Engine\Graphics\Model\Model.h" />
+    <ClInclude Include="Src\Engine\Graphics\Model\ModelCommon.h" />
+    <ClInclude Include="Src\Engine\Graphics\Model\ModelManager.h" />
+    <ClInclude Include="Src\Engine\Object\Object3D.h" />
+    <ClInclude Include="Src\Engine\Object\Object3DManager.h" />
+    <ClInclude Include="Src\Engine\Graphics\Particle\ParticleEmitter.h" />
+    <ClInclude Include="Src\Engine\Graphics\Particle\ParticleManager.h" />
+    <ClInclude Include="Src\Engine\Graphics\Texture\RenderTexture.h" />
+    <ClInclude Include="Src\Scene\SceneFactory.h" />
+    <ClInclude Include="Src\Scene\SceneManager.h" />
+    <ClInclude Include="Src\Engine\Graphics\Skybox\Skybox.h" />
     <ClInclude Include="Src\Engine\Core\D3DResourceLeakChecker.h" />
     <ClInclude Include="Src\Engine\Graphics\GraphicsDevice.h" />
     <ClInclude Include="Src\Engine\Core\Logger.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Src\Engine\Graphics\Sprite\Sprite.h" />
     <ClInclude Include="Src\Engine\Graphics\Sprite\SpriteManager.h" />
-    <ClInclude Include="Src\Engine\DebugCamera\DebugCamera.h" />
+    <ClInclude Include="Src\Engine\Camera\DebugCamera.h" />
     <ClInclude Include="Src\Engine\Input\Input.h" />
     <ClInclude Include="Src\Engine\Math\Matrix4x4.h" />
     <ClInclude Include="ResourceObject.h" />
@@ -292,7 +292,7 @@
     <ClInclude Include="Src\Engine\Graphics\Texture\TextureManager.h" />
     <ClInclude Include="Src\App\WinApp.h" />
     <ClInclude Include="Src\Engine\Graphics\SrvManager.h" />
-    <ClInclude Include="TitleScene.h" />
+    <ClInclude Include="Src\Scene\Title\TitleScene.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="externals\DirectXTex\DirectXTex_Desktop_2022_Win10.vcxproj">
