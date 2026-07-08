@@ -10,7 +10,7 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	// 3Dモデルマネジャの初期化
 	ModelManager::GetInstance()->Initialize(graphicsDevice_);
 	// .objモデルの読み込み
-	ModelManager::GetInstance()->LoadModel("terrain.obj");
+	ModelManager::GetInstance()->LoadModel("plane.gltf");
 
 	input_ = new Input();
 	input_->Initialize(winApp_);
@@ -45,7 +45,7 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 
 	object3D_ = new Object3D();
 	object3D_->Initialize(object3DManager_);
-	object3D_->SetModel("terrain.obj");
+	object3D_->SetModel("plane.gltf");
 
 	object3D_2_ = new Object3D();
 	object3D_2_->Initialize(object3DManager_);

@@ -17,7 +17,7 @@ void Model::Initialize(ModelCommon* modelCommon, const std::string& directorypat
 	this->modelCommon = modelCommon;
 
 	// モデル読み込み
-	modelData = LoadObjFile(directorypath, filename);
+	modelData = LoadModelFile(directorypath, filename);
 
 	// 頂点バッファの生成
 	vertexResource = modelCommon->GetGraphicsDevice()->CreateBufferResource(sizeof(VertexData) * static_cast<uint32_t>(modelData.vertices.size()));
@@ -86,13 +86,51 @@ void Model::Draw()
 //	return materialData;
 //}
 
+Model::Node Model::ReadNode(aiNode* node) {
+	Node result;
+	// nodeのローカル行列を取得
+	aiMatrix4x4 aiLocalMatrix = node->mTransformation;
+	// 列ベクトルを行ベクトルに転置
+	aiLocalMatrix.Transpose();
+	result.localMatrix.m[0][0] = aiLocalMatrix[0][0];
+	result.localMatrix.m[0][1] = aiLocalMatrix[0][1];
+	result.localMatrix.m[0][2] = aiLocalMatrix[0][2];
+	result.localMatrix.m[0][3] = aiLocalMatrix[0][3];
+
+	result.localMatrix.m[1][0] = aiLocalMatrix[1][0];
+	result.localMatrix.m[1][1] = aiLocalMatrix[1][1];
+	result.localMatrix.m[1][2] = aiLocalMatrix[1][2];
+	result.localMatrix.m[1][3] = aiLocalMatrix[1][3];
+
+	result.localMatrix.m[2][0] = aiLocalMatrix[2][0];
+	result.localMatrix.m[2][1] = aiLocalMatrix[2][1];
+	result.localMatrix.m[2][2] = aiLocalMatrix[2][2];
+	result.localMatrix.m[2][3] = aiLocalMatrix[2][3];
+
+	result.localMatrix.m[3][0] = aiLocalMatrix[3][0];
+	result.localMatrix.m[3][1] = aiLocalMatrix[3][1];
+	result.localMatrix.m[3][2] = aiLocalMatrix[3][2];
+	result.localMatrix.m[3][3] = aiLocalMatrix[3][3];
+
+	// Node名を格納
+	result.name = node->mName.C_Str();
+	// 子供の数だけ確保
+	result.children.resize(node->mNumChildren);
+	for (uint32_t childIndex = 0; childIndex < node->mNumChildren; ++childIndex) {
+		// 再帰的に読んで階層構造を構築
+		result.children[childIndex] = ReadNode(node->mChildren[childIndex]);
+	}
+	return result;
+}
+
 // objファイルを読み込む関数
-Model::ModelData Model::LoadObjFile(const std::string& directoryPath, const std::string& filename) {
+Model::ModelData Model::LoadModelFile(const std::string& directoryPath, const std::string& filename) {
 
 	ModelData modelData;
 	Assimp::Importer importer;
 	std::string filePath = directoryPath + "/" + filename;
 	const aiScene* scene = importer.ReadFile(filePath.c_str(), aiProcess_MakeLeftHanded | aiProcess_FlipUVs);
+	modelData.rootNode = ReadNode(scene->mRootNode);
 	assert(scene->HasMeshes());
 
 	for (uint32_t meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex) {
@@ -133,4 +171,3 @@ Model::ModelData Model::LoadObjFile(const std::string& directoryPath, const std:
 	}
 	return modelData;
 }
-

@@ -5,11 +5,19 @@
 #include <wrl.h>
 #include "Sprite.h"
 
+struct aiNode;
 class ModelCommon;
 
 class Model
 {
 private:
+
+	struct Node {
+		Matrix4x4 localMatrix;
+		std::string name;
+		std::vector<Node> children;
+	};
+
 	struct MaterialData {
 		std::string textureFilePath;
 		uint32_t textureIndex = 0;
@@ -24,8 +32,8 @@ private:
 	struct ModelData {
 		std::vector<VertexData> vertices;
 		MaterialData material;
+		Node rootNode;
 	};
-
 
 	struct Material {
 		Vector4 color;
@@ -49,15 +57,17 @@ private:
 	// マテリアルデータを指すポインタ
 	Material* materialData = nullptr;
 
-	// .mtlファイルの読み取り
-	static MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
-	// .objファイルの読み取り
-	static ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
-
 public:
 	// 初期化
 	void Initialize(ModelCommon* modelCommon, const std::string& directorypath, const std::string& filename);
 	// 描画
 	void Draw();
+	// .mtlファイルの読み取り
+	static MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
+	// .objファイルの読み取り
+	static ModelData LoadModelFile(const std::string& directoryPath, const std::string& filename);
+
+	static Node ReadNode(aiNode* node);
+	Matrix4x4 GetRootNodeMatrix() const { return modelData.rootNode.localMatrix; }
 };
 
