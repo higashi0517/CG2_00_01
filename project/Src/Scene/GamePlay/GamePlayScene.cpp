@@ -43,6 +43,39 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	object3DManager_->Initialize(graphicsDevice_);
 	object3DManager_->SetDefaultCamera(camera_);
 
+	// JSONのレベルデータを読み込む
+	LevelData levelData = JsonLoader::Load("stage01");
+
+	// 読み込めた数を確認
+	std::string message =
+		"LevelObject count: " +
+		std::to_string(levelData.objects.size()) + "\n";
+
+	OutputDebugStringA(message.c_str());
+
+	// JSONから3Dオブジェクトを生成
+	for (const ObjectData& objectData : levelData.objects)
+	{
+		// JSONに書かれたモデルを読み込む
+		ModelManager::GetInstance()->LoadModel(
+			objectData.fileName
+		);
+
+		Object3D* levelObject = new Object3D();
+		levelObject->Initialize(object3DManager_);
+
+		// 使用するモデルを設定
+		levelObject->SetModel(objectData.fileName);
+
+		// JSONから読み込んだトランスフォームを設定
+		levelObject->SetTranslate(objectData.translation);
+		levelObject->SetRotate(objectData.rotation);
+		levelObject->SetScale(objectData.scaling);
+
+		// シーンで保持する
+		levelObjects_.push_back(levelObject);
+	}
+
 	object3D_ = new Object3D();
 	object3D_->Initialize(object3DManager_);
 	object3D_->SetModel("plane.gltf");
@@ -248,6 +281,11 @@ void GamePlayScene::Update() {
 	object3D_->Update();
 	//object3D_2_->Update();
 
+	for (Object3D* levelObject : levelObjects_)
+	{
+		levelObject->Update();
+	}
+
 	for (auto& sprite : sprites_) {
 		//sprite->Update();
 	}
@@ -279,6 +317,10 @@ GamePlayScene::Draw() {
 	object3D_->Draw();
 	// object3D_2_->Draw();
 
+	for (Object3D* levelObject : levelObjects_)
+	{
+		levelObject->Draw();
+	}
 
 	// === パーティクル描画 ===
 	particleManager_->SetCommonRenderState();
@@ -319,6 +361,14 @@ void GamePlayScene::Finalize() {
 	delete camera_;
 	delete object3D_;
 	delete object3D_2_;
+
+	for (Object3D* levelObject : levelObjects_)
+	{
+		delete levelObject;
+	}
+
+	levelObjects_.clear();
+
 	delete object3DManager_;
 
 	for (Sprite* sprite : sprites_) {

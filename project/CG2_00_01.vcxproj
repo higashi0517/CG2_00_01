@@ -156,6 +156,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Src\Engine\Utility\JsonLoader.cpp" />
     <ClCompile Include="Src\Scene\BaseScene.cpp" />
     <ClCompile Include="Src\Engine\Camera\Camera.cpp" />
     <ClCompile Include="Src\Scene\Framework.cpp" />
@@ -259,6 +260,7 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Src\Engine\Utility\JsonLoader.h" />
     <ClInclude Include="Src\Scene\AbstractSceneFactory.h" />
     <ClInclude Include="Src\Scene\BaseScene.h" />
     <ClInclude Include="Src\Engine\Camera\Camera.h" />

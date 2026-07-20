@@ -14,6 +14,7 @@
 #include <cstdint>
 #include "BaseScene.h"
 #include "Skybox.h"
+#include "JsonLoader.h"
 
 class WinApp;
 class GraphicsDevice;
@@ -49,4 +50,6 @@ private:
 	GraphicsDevice* graphicsDevice_ = nullptr;
 
 	Skybox* skybox_ = nullptr;
+
+	std::vector<Object3D*> levelObjects_;
 };

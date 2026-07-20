@@ -13,6 +13,7 @@
 #include <vector>
 #include <cstdint>
 #include "BaseScene.h"
+#include "JsonLoader.h"
 
 class WinApp;
 class GraphicsDevice;
@@ -56,4 +57,6 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> copyRootSignature_;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> copyPipelineState_;
+
+	std::vector<Object3D*> levelObjects_;
 };
