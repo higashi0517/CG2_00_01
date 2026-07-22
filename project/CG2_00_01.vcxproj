@@ -83,7 +83,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)Src;$(ProjectDir)externals;$(ProjectDir)Src\App;$(ProjectDir)Src\Engine;$(ProjectDir)Src\Engine\Core;$(ProjectDir)Src\Engine\Camera;$(ProjectDir)Src\Engine\Graphics;$(ProjectDir)Src\Engine\Graphics\Model;$(ProjectDir)Src\Engine\Graphics\Particle;$(ProjectDir)Src\Engine\Graphics\Skybox;$(ProjectDir)Src\Engine\Graphics\Sprite;$(ProjectDir)Src\Engine\Graphics\Texture;$(ProjectDir)Src\Engine\ImGui;$(ProjectDir)Src\Engine\Input;$(ProjectDir)Src\Engine\Math;$(ProjectDir)Src\Engine\Sound;$(ProjectDir)Src\Engine\Utility;$(ProjectDir)Src\Scene;$(ProjectDir)Src\Engine\Object;$(ProjectDir)Src\Scene\Title;$(ProjectDir)Src\Scene\GamePlay;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Src;$(ProjectDir)externals;$(ProjectDir)Src\App;$(ProjectDir)Src\Engine;$(ProjectDir)Src\Engine\Core;$(ProjectDir)Src\Engine\Camera;$(ProjectDir)Src\Engine\Graphics;$(ProjectDir)Src\Engine\Graphics\Model;$(ProjectDir)Src\Engine\Graphics\Particle;$(ProjectDir)Src\Engine\Graphics\Skybox;$(ProjectDir)Src\Engine\Graphics\Sprite;$(ProjectDir)Src\Engine\Graphics\Texture;$(ProjectDir)Src\Engine\ImGui;$(ProjectDir)Src\Engine\Input;$(ProjectDir)Src\Engine\Math;$(ProjectDir)Src\Engine\Sound;$(ProjectDir)Src\Engine\Utility;$(ProjectDir)Src\Scene;$(ProjectDir)Src\Engine\Object;$(ProjectDir)Src\Scene\Title;$(ProjectDir)Src\Scene\GamePlay;$(ProjectDir)externals\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -156,6 +156,8 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Src\Engine\Graphics\Animation.cpp" />
+    <ClCompile Include="Src\Engine\Math\Quaternion.cpp" />
     <ClCompile Include="Src\Scene\BaseScene.cpp" />
     <ClCompile Include="Src\Engine\Camera\Camera.cpp" />
     <ClCompile Include="Src\Scene\Framework.cpp" />
@@ -259,6 +261,8 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Src\Engine\Graphics\Animation.h" />
+    <ClInclude Include="Src\Engine\Math\Quaternion.h" />
     <ClInclude Include="Src\Scene\AbstractSceneFactory.h" />
     <ClInclude Include="Src\Scene\BaseScene.h" />
     <ClInclude Include="Src\Engine\Camera\Camera.h" />

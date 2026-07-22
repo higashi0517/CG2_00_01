@@ -1,5 +1,6 @@
 #include "Matrix4x4.h"
 #include <cmath>
+#include "Quaternion.h"
 
 // 単位行列の作成
 Matrix4x4 MakeIdentity4x4() {
@@ -250,3 +251,48 @@ Vector2& operator+=(Vector2& v1, const Vector2& v2) {
 	return v1;
 }
 
+Vector3 Normalize(const Vector3& vector) {
+	float length = std::sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z);
+	if (length == 0.0f) {
+		return { 0.0f, 0.0f, 0.0f };
+	}
+	return { vector.x / length, vector.y / length, vector.z / length };
+}
+
+// Vector3の線形補間
+Vector3 Lerp(const Vector3& v1, const Vector3& v2, float t) {
+	return {
+		v1.x + t * (v2.x - v1.x),
+		v1.y + t * (v2.y - v1.y),
+		v1.z + t * (v2.z - v1.z)
+	};
+}
+
+// クォータニオンから回転行列を作成する関数
+Matrix4x4 MakeRotateMatrix(const Quaternion& q) {
+	Matrix4x4 result = MakeIdentity4x4();
+	result.m[0][0] = 1.0f - 2.0f * q.y * q.y - 2.0f * q.z * q.z;
+	result.m[0][1] = 2.0f * q.x * q.y + 2.0f * q.w * q.z;
+	result.m[0][2] = 2.0f * q.x * q.z - 2.0f * q.w * q.y;
+
+	result.m[1][0] = 2.0f * q.x * q.y - 2.0f * q.w * q.z;
+	result.m[1][1] = 1.0f - 2.0f * q.x * q.x - 2.0f * q.z * q.z;
+	result.m[1][2] = 2.0f * q.y * q.z + 2.0f * q.w * q.x;
+
+	result.m[2][0] = 2.0f * q.x * q.z + 2.0f * q.w * q.y;
+	result.m[2][1] = 2.0f * q.y * q.z - 2.0f * q.w * q.x;
+	result.m[2][2] = 1.0f - 2.0f * q.x * q.x - 2.0f * q.y * q.y;
+	return result;
+}
+
+// Quaternionを使った3次元アフィン変換行列
+Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Quaternion& rotate, const Vector3& translate) {
+	Matrix4x4 scaleMatrix = MakeScaleMatrix(scale);
+	Matrix4x4 rotateMatrix = MakeRotateMatrix(rotate);
+	Matrix4x4 translateMatrix = MakeTranslateMatrix(translate);
+
+	// 拡大縮小 × 回転 × 平行移動
+	Matrix4x4 result = Multiply(scaleMatrix, rotateMatrix);
+	result = Multiply(result, translateMatrix);
+	return result;
+}

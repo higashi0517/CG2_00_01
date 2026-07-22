@@ -57,3 +57,10 @@ Vector3 TransformNormal(const Vector3& vector, const Matrix4x4& matrix);
 
 Vector2 operator+(const Vector2& v1, const Vector2& v2);
 Vector2& operator+=(Vector2& v1, const Vector2& v2);
+
+Vector3 Normalize(const Vector3& vector);
+Vector3 Lerp(const Vector3& v1, const Vector3& v2, float t);
+
+struct Quaternion; // 前方宣言
+Matrix4x4 MakeRotateMatrix(const Quaternion& quaternion);
+Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Quaternion& rotate, const Vector3& translate);

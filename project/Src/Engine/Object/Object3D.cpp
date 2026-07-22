@@ -32,7 +32,7 @@ void Object3D::Initialize(Object3DManager* object3DManager)
 	directionalLightData->intensity = 1.0f;
 
 	// transformの初期化
-	transform={
+	transform = {
 		.scale = {1.0f, 1.0f, 1.0f},
 		.rotate = {0.0f, 0.0f, 0.0f},
 		.translate = {0.0f, 0.0f, 0.0f}
@@ -47,12 +47,24 @@ void Object3D::Initialize(Object3DManager* object3DManager)
 
 void Object3D::Update()
 {
+
+	Matrix4x4 localMatrix = MakeIdentity4x4();
+	if (model) {
+		localMatrix = model->GetRootNodeMatrix();
+	}
+
+	if (animation_ && model) {
+		animationTime_ += 1.0f / 60.0f;
+		animationTime_ = std::fmod(animationTime_, animation_->duration);
+		NodeAnimation& rootNodeAnimation = animation_->nodeAnimations[model->GetRootNodeName()];
+		Vector3 translate = CalculateValue(rootNodeAnimation.translate.keyframes, animationTime_);
+		Quaternion rotate = CalculateValue(rootNodeAnimation.rotate.keyframes, animationTime_);
+		Vector3 scale = CalculateValue(rootNodeAnimation.scale.keyframes, animationTime_);
+		localMatrix = MakeAffineMatrix(scale, rotate, translate);
+	}
+
 	// Transformの更新
 	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-	
-	if (model) {
-		worldMatrix = Multiply(model->GetRootNodeMatrix(), worldMatrix);
-	}
 
 	Matrix4x4 worldViewProjectionMatrix;
 
@@ -66,8 +78,8 @@ void Object3D::Update()
 	/*Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 	Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 	Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(WinApp::kClientWidth) / float(WinApp::kClientHeight), 0.1f, 100.0f);*/
-	transformationMatrixData->WVP = worldViewProjectionMatrix;
-	transformationMatrixData->World = worldMatrix;
+	transformationMatrixData->WVP = Multiply(localMatrix, worldViewProjectionMatrix);
+	transformationMatrixData->World = Multiply(localMatrix, worldMatrix);
 
 	//transform.rotate.y = +1.0f;
 }
@@ -76,8 +88,8 @@ void Object3D::Draw()
 {
 	object3DManager->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 	object3DManager->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-	
-	if(model){
+
+	if (model) {
 		model->Draw();
 	}
 }

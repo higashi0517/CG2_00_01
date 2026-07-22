@@ -5,6 +5,7 @@
 #include <d3d12.h>
 #include "Model.h"
 #include "Camera.h"
+#include "Animation.h"
 
 class Object3DManager;
 class Object3D
@@ -41,6 +42,9 @@ private:
 	// カメラ
 	Camera* camera = nullptr;
 
+	Animation* animation_ = nullptr;
+	float animationTime_ = 0.0f;
+
 public:
 	// 初期化
 	void Initialize(Object3DManager* object3DManager);
@@ -55,6 +59,7 @@ public:
 	void SetScale(const Vector3& scale_) { this->transform.scale = scale_; }
 	void SetRotate(const Vector3& rotate_) { this->transform.rotate = rotate_; }
 	void SetCamera(Camera* camera_) { this->camera = camera_; }
+	void SetAnimation(Animation* animation) {animation_ = animation;}
 
 	// getter
 	const Vector3& GetScale() const { return transform.scale; }

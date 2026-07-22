@@ -69,5 +69,7 @@ public:
 
 	static Node ReadNode(aiNode* node);
 	Matrix4x4 GetRootNodeMatrix() const { return modelData.rootNode.localMatrix; }
+
+	std::string GetRootNodeName() const { return modelData.rootNode.name; }
 };
 
