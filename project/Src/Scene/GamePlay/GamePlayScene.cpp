@@ -1,6 +1,7 @@
 #include "GamePlayScene.h"
 #include "SrvManager.h"
 #include "RenderTexture.h"
+#include <cassert>
 
 void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 {
@@ -10,8 +11,13 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	// 3Dモデルマネジャの初期化
 	ModelManager::GetInstance()->Initialize(graphicsDevice_);
 	// .objモデルの読み込み
-	ModelManager::GetInstance()->LoadModel("AnimatedCube.gltf");
-	animation_ = LoadAnimationFile("./Resources", "AnimatedCube.gltf");
+	ModelManager::GetInstance()->LoadModel("Walk.gltf");
+	animation_ = LoadAnimationFile("./Resources", "Walk.gltf");
+	Model* animatedModel =
+		ModelManager::GetInstance()->FindModel("Walk.gltf");
+
+	assert(animatedModel != nullptr);
+	skeleton_ = CreateSkeleton(animatedModel->GetRootNode());
 
 	input_ = new Input();
 	input_->Initialize(winApp_);
@@ -19,7 +25,7 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	sound_ = new Sound();
 
 	camera_ = new Camera();
-	camera_->SetTranslate({ 0.0f, 20.0f, -40.0f });
+	camera_->SetTranslate({ 0.0f, 1.5f, -5.0f });
 	camera_->SetRotate({ 0.42f, 0.0f, 0.0f });
 
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = graphicsDevice_->AllocateRtvHandle();
@@ -46,7 +52,7 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 
 	object3D_ = new Object3D();
 	object3D_->Initialize(object3DManager_);
-	object3D_->SetModel("AnimatedCube.gltf");
+	object3D_->SetModel("Walk.gltf");
 	object3D_->SetAnimation(&animation_);
 
 	object3D_2_ = new Object3D();
@@ -243,12 +249,22 @@ void GamePlayScene::Update() {
 #endif
 
 	// カメラの更新
-		camera_->Update();
+	camera_->Update();
 
 	emitter_->Update();
 
 	object3D_->Update();
 	//object3D_2_->Update();
+
+	animationTime_ += 1.0f / 60.0f;
+
+	if (animation_.duration > 0.0f &&
+		animationTime_ >= animation_.duration) {
+		animationTime_ -= animation_.duration;
+	}
+
+	ApplyAnimation(skeleton_, animation_, animationTime_);
+	UpdateSkeleton(skeleton_);
 
 	for (auto& sprite : sprites_) {
 		//sprite->Update();
@@ -280,6 +296,30 @@ GamePlayScene::Draw() {
 	object3DManager_->SetCommonRenderState();
 	object3D_->Draw();
 	// object3D_2_->Draw();
+
+
+#ifdef _DEBUG
+
+	Matrix4x4 viewProjectionMatrix = Multiply(
+		camera_->GetViewMatrix(),
+		camera_->GetProjectionMatrix()
+	);
+
+	Matrix4x4 objectWorldMatrix = MakeAffineMatrix(
+		Vector3{ 1.0f, 1.0f, 1.0f },
+		object3D_->GetRotate(),
+		object3D_->GetTranslate()
+	);
+
+	DrawSkeletonDebug(
+		skeleton_,
+		objectWorldMatrix,
+		viewProjectionMatrix,
+		1280.0f,
+		720.0f
+	);
+
+#endif
 
 
 	// === パーティクル描画 ===

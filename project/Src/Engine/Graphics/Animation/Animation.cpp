@@ -3,6 +3,8 @@
 #include <assimp/scene.h>
 #include <cmath>
 #include <cassert>
+#include "Skeleton.h"
+#include "Quaternion.h"
 
 Animation LoadAnimationFile(const std::string& directoryPath, const std::string& filename) {
 	Animation animation;
@@ -75,4 +77,43 @@ Quaternion CalculateValue(const std::vector<KeyframeQuaternion>& keyframes, floa
 		}
 	}
 	return (*keyframes.rbegin()).value;
+}
+
+void ApplyAnimation(
+	Skeleton& skeleton,
+	const Animation& animation,
+	float animationTime)
+{
+	for (Joint& joint : skeleton.joints) {
+
+		auto it = animation.nodeAnimations.find(joint.name);
+
+		// このJointに対応するアニメーションがない
+		if (it == animation.nodeAnimations.end()) {
+			continue;
+		}
+
+		const NodeAnimation& nodeAnimation = it->second;
+
+		if (!nodeAnimation.translate.keyframes.empty()) {
+			joint.transform.translate = CalculateValue(
+				nodeAnimation.translate.keyframes,
+				animationTime
+			);
+		}
+
+		if (!nodeAnimation.rotate.keyframes.empty()) {
+			joint.transform.rotate = CalculateValue(
+				nodeAnimation.rotate.keyframes,
+				animationTime
+			);
+		}
+
+		if (!nodeAnimation.scale.keyframes.empty()) {
+			joint.transform.scale = CalculateValue(
+				nodeAnimation.scale.keyframes,
+				animationTime
+			);
+		}
+	}
 }

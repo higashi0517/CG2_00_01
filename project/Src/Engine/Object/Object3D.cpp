@@ -9,6 +9,7 @@
 #include <cassert>
 #include "ModelManager.h"
 #include "Camera.h"
+#include "Model.h"
 
 void Object3D::Initialize(Object3DManager* object3DManager)
 {
@@ -53,7 +54,7 @@ void Object3D::Update()
 		localMatrix = model->GetRootNodeMatrix();
 	}
 
-	if (animation_ && model) {
+	/*if (animation_ && model) {
 		animationTime_ += 1.0f / 60.0f;
 		animationTime_ = std::fmod(animationTime_, animation_->duration);
 		NodeAnimation& rootNodeAnimation = animation_->nodeAnimations[model->GetRootNodeName()];
@@ -61,7 +62,7 @@ void Object3D::Update()
 		Quaternion rotate = CalculateValue(rootNodeAnimation.rotate.keyframes, animationTime_);
 		Vector3 scale = CalculateValue(rootNodeAnimation.scale.keyframes, animationTime_);
 		localMatrix = MakeAffineMatrix(scale, rotate, translate);
-	}
+	}*/
 
 	// Transformの更新
 	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
@@ -83,7 +84,7 @@ void Object3D::Update()
 
 	//transform.rotate.y = +1.0f;
 }
-
+	
 void Object3D::Draw()
 {
 	object3DManager->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
@@ -96,6 +97,5 @@ void Object3D::Draw()
 
 void Object3D::SetModel(const std::string& filePath)
 {
-	// モデルを検索してセット
-	model = ModelManager::GetInstance()->FindModel(filePath);
+			model = ModelManager::GetInstance()->FindModel(filePath);
 }

@@ -29,6 +29,19 @@ void Model::Initialize(ModelCommon* modelCommon, const std::string& directorypat
 	//　頂点データを書き込む
 	std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());
 
+	// インデックスバッファの生成
+	indexResource = modelCommon->GetGraphicsDevice()->CreateBufferResource(sizeof(uint32_t) * modelData.indices.size());
+
+	// インデックスバッファビューを設定
+	indexBufferView.BufferLocation = indexResource->GetGPUVirtualAddress();
+	indexBufferView.SizeInBytes = static_cast<UINT>(sizeof(uint32_t) * modelData.indices.size());
+	indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+
+	// インデックスデータを書き込む
+	indexResource->Map(0, nullptr, reinterpret_cast<void**>(&mappedIndex));
+
+	std::memcpy(mappedIndex, modelData.indices.data(), sizeof(uint32_t) * modelData.indices.size());
+
 	// マテリアルバッファの生成
 	materialResource = modelCommon->GetGraphicsDevice()->CreateBufferResource(sizeof(Material));
 	// データを書き込むためのポインタを取得
@@ -50,76 +63,67 @@ void Model::Draw()
 	modelCommon->GetGraphicsDevice()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// 頂点バッファの設定
 	modelCommon->GetGraphicsDevice()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+	// インデックスバッファの設定
+	modelCommon->GetGraphicsDevice()->GetCommandList()->IASetIndexBuffer(&indexBufferView);
 	// 定数バッファの設定
 	modelCommon->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 	// テクスチャの設定
 	modelCommon->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootDescriptorTable(2,
 		TextureManager::GetInstance()->GetSrvHandleGPU(modelData.material.textureFilePath));
 	// 描画コマンド
-	modelCommon->GetGraphicsDevice()->GetCommandList()->DrawInstanced(static_cast<uint32_t>(modelData.vertices.size()), 1, 0, 0);
+	modelCommon->GetGraphicsDevice()->GetCommandList()->DrawIndexedInstanced(static_cast<uint32_t>(modelData.indices.size()), 1, 0, 0, 0);
 }
 
-//Model::MaterialData Model::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
-//{
-//	// 変数の宣言
-//	MaterialData materialData;
-//	std::string line;
-//
-//	// ファイルを開く
-//	std::ifstream file(directoryPath + "/" + filename);
-//	assert(file.is_open());
-//
-//	// ファイル読み込み
-//	while (std::getline(file, line)) {
-//		std::string identifier;
-//		std::istringstream s(line);
-//		s >> identifier;
-//
-//		// identifierに応じた処理
-//		if (identifier == "map_Kd") {
-//			std::string textureFilename;
-//			s >> textureFilename;
-//			// 連続してファイルパスする
-//			materialData.textureFilePath = directoryPath + "/" + textureFilename;
-//		}
-//	}
-//	return materialData;
-//}
+Node Model::ReadNode(aiNode* node)
+{
+	Node result{};
 
-Model::Node Model::ReadNode(aiNode* node) {
-	Node result;
-	// nodeのローカル行列を取得
-	aiMatrix4x4 aiLocalMatrix = node->mTransformation;
-	// 列ベクトルを行ベクトルに転置
-	aiLocalMatrix.Transpose();
-	result.localMatrix.m[0][0] = aiLocalMatrix[0][0];
-	result.localMatrix.m[0][1] = aiLocalMatrix[0][1];
-	result.localMatrix.m[0][2] = aiLocalMatrix[0][2];
-	result.localMatrix.m[0][3] = aiLocalMatrix[0][3];
+	aiVector3D scale;
+	aiQuaternion rotate;
+	aiVector3D translate;
 
-	result.localMatrix.m[1][0] = aiLocalMatrix[1][0];
-	result.localMatrix.m[1][1] = aiLocalMatrix[1][1];
-	result.localMatrix.m[1][2] = aiLocalMatrix[1][2];
-	result.localMatrix.m[1][3] = aiLocalMatrix[1][3];
+	// Assimpの行列からSRTを取得
+	node->mTransformation.Decompose(scale, rotate, translate);
 
-	result.localMatrix.m[2][0] = aiLocalMatrix[2][0];
-	result.localMatrix.m[2][1] = aiLocalMatrix[2][1];
-	result.localMatrix.m[2][2] = aiLocalMatrix[2][2];
-	result.localMatrix.m[2][3] = aiLocalMatrix[2][3];
+	// 右手座標系から左手座標系に変換
+	result.transform.scale = {
+		scale.x,
+		scale.y,
+		scale.z
+	};
 
-	result.localMatrix.m[3][0] = aiLocalMatrix[3][0];
-	result.localMatrix.m[3][1] = aiLocalMatrix[3][1];
-	result.localMatrix.m[3][2] = aiLocalMatrix[3][2];
-	result.localMatrix.m[3][3] = aiLocalMatrix[3][3];
+	result.transform.rotate = {
+		rotate.x,
+		-rotate.y,
+		-rotate.z,
+		rotate.w
+	};
 
-	// Node名を格納
+	result.transform.translate = {
+		-translate.x,
+		translate.y,
+		translate.z
+	};
+
+	// 取得したSRTからローカル行列を作り直す
+	result.localMatrix = MakeAffineMatrix(
+		result.transform.scale,
+		result.transform.rotate,
+		result.transform.translate
+	);
+
 	result.name = node->mName.C_Str();
-	// 子供の数だけ確保
+
 	result.children.resize(node->mNumChildren);
-	for (uint32_t childIndex = 0; childIndex < node->mNumChildren; ++childIndex) {
-		// 再帰的に読んで階層構造を構築
-		result.children[childIndex] = ReadNode(node->mChildren[childIndex]);
+
+	for (uint32_t childIndex = 0;
+		childIndex < node->mNumChildren;
+		++childIndex) {
+
+		result.children[childIndex] =
+			ReadNode(node->mChildren[childIndex]);
 	}
+
 	return result;
 }
 
@@ -129,7 +133,7 @@ Model::ModelData Model::LoadModelFile(const std::string& directoryPath, const st
 	ModelData modelData;
 	Assimp::Importer importer;
 	std::string filePath = directoryPath + "/" + filename;
-	const aiScene* scene = importer.ReadFile(filePath.c_str(), aiProcess_MakeLeftHanded | aiProcess_FlipUVs);
+	const aiScene* scene = importer.ReadFile(filePath.c_str(), aiProcess_FlipWindingOrder | aiProcess_FlipUVs);
 	modelData.rootNode = ReadNode(scene->mRootNode);
 	assert(scene->HasMeshes());
 
@@ -138,6 +142,39 @@ Model::ModelData Model::LoadModelFile(const std::string& directoryPath, const st
 		assert(mesh->HasNormals());
 		assert(mesh->HasTextureCoords(0));
 
+		const uint32_t vertexOffset = static_cast<uint32_t>(modelData.vertices.size());
+
+		modelData.vertices.resize(vertexOffset + mesh->mNumVertices);
+
+		for (uint32_t vertexIndex = 0; vertexIndex < mesh->mNumVertices; ++vertexIndex) {
+
+			aiVector3D& position = mesh->mVertices[vertexIndex];
+			aiVector3D& normal = mesh->mNormals[vertexIndex];
+			aiVector3D& texcoord = mesh->mTextureCoords[0][vertexIndex];
+			VertexData& vertex = modelData.vertices[vertexOffset + vertexIndex];
+
+			vertex.position = {
+				-position.x,
+				position.y,
+				position.z,
+				1.0f
+			};
+
+			vertex.normal = {
+				-normal.x,
+				normal.y,
+				normal.z
+			};
+
+			vertex.texcord = {
+				texcoord.x,
+				texcoord.y
+			};
+
+			vertex.position.x *= -1.0f;
+			vertex.normal.x *= -1.0f;
+		}
+
 		for (uint32_t faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex) {
 
 			aiFace& face = mesh->mFaces[faceIndex];
@@ -145,18 +182,8 @@ Model::ModelData Model::LoadModelFile(const std::string& directoryPath, const st
 
 			for (uint32_t element = 0; element < face.mNumIndices; ++element) {
 
-				uint32_t vertexIndex = face.mIndices[element];
-				aiVector3D& position = mesh->mVertices[vertexIndex];
-				aiVector3D& normal = mesh->mNormals[vertexIndex];
-				aiVector3D& texcoord = mesh->mTextureCoords[0][vertexIndex];
-				VertexData vertex;
-				vertex.position = { position.x, position.y, position.z, 1.0f };
-				vertex.normal = { normal.x, normal.y, normal.z };
-				vertex.texcord = { texcoord.x, texcoord.y };
-
-				//vertex.position.x *= -1.0f;
-				vertex.normal.x *= -1.0f;
-				modelData.vertices.push_back(vertex);
+				uint32_t vertexIndex = vertexOffset + face.mIndices[element];
+				modelData.indices.push_back(vertexIndex);
 			}
 		}
 	}

@@ -147,10 +147,13 @@
     <ClCompile Include="Src\Engine\Graphics\Texture\RenderTexture.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Src\Engine\Graphics\Animation.cpp">
+    <ClCompile Include="Src\Engine\Graphics\Animation\Animation.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="Src\Engine\Math\Quaternion.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Engine\Graphics\Animation\Skeleton.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -271,10 +274,13 @@
     <ClInclude Include="Src\Engine\Graphics\Texture\RenderTexture.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="Src\Engine\Graphics\Animation.h">
+    <ClInclude Include="Src\Engine\Graphics\Animation\Animation.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="Src\Engine\Math\Quaternion.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Engine\Graphics\Animation\Skeleton.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

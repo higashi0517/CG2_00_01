@@ -14,6 +14,7 @@
 #include <cstdint>
 #include "BaseScene.h"
 #include "Animation.h"
+#include "Skeleton.h"
 
 class WinApp;
 class GraphicsDevice;
@@ -59,4 +60,6 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> copyPipelineState_;
 
 	Animation animation_;
+	Skeleton skeleton_;
+	float animationTime_ = 0.0f;
 };

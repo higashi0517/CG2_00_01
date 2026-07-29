@@ -5,6 +5,8 @@
 #include <map>
 #include <string>
 
+struct Skeleton;
+
 template <typename tValue>
 struct Keyframe
 {
@@ -34,3 +36,5 @@ Animation LoadAnimationFile(const std::string& directoryPath, const std::string&
 
 Vector3 CalculateValue(const std::vector<KeyframeVec3>& keyframes, float time);
 Quaternion CalculateValue(const std::vector<KeyframeQuaternion>& keyframes, float time);
+
+void ApplyAnimation(Skeleton& skeleton, const Animation& animation, float animationTime);

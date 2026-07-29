@@ -1,5 +1,6 @@
 #pragma once
 #include <assert.h>
+#include "Quaternion.h"
 
 using float32_t = float;
 
@@ -33,9 +34,15 @@ struct Vector4
 	float32_t w;
 };
 
-struct Transform {
+struct EulerTransform {
 	Vector3 scale;
 	Vector3 rotate;
+	Vector3 translate;
+};
+
+struct QuaternionTransform {
+	Vector3 scale;
+	Quaternion rotate;
 	Vector3 translate;
 };
 
@@ -61,6 +68,5 @@ Vector2& operator+=(Vector2& v1, const Vector2& v2);
 Vector3 Normalize(const Vector3& vector);
 Vector3 Lerp(const Vector3& v1, const Vector3& v2, float t);
 
-struct Quaternion; // 前方宣言
 Matrix4x4 MakeRotateMatrix(const Quaternion& quaternion);
 Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Quaternion& rotate, const Vector3& translate);

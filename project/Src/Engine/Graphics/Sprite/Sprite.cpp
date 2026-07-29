@@ -90,7 +90,7 @@ void Sprite::Update()
 
 	// ★インデックスデータの書き込みを削除（Initialize に移動済み）
 
-	Transform transform{ {1.0f, 1.0f, 1.0f},{0.0f, 0.0f, 0.0f},{0.0f, 0.0f, 0.0f} };
+	EulerTransform transform{ {1.0f, 1.0f, 1.0f},{0.0f, 0.0f, 0.0f},{0.0f, 0.0f, 0.0f} };
 
 	transform.translate = { position.x, position.y, 0.0f };
 	transform.rotate = { 0.0f, 0.0f, rotation };

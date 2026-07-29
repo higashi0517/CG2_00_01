@@ -8,15 +8,16 @@
 struct aiNode;
 class ModelCommon;
 
+struct Node {
+	QuaternionTransform transform;
+	Matrix4x4 localMatrix;
+	std::string name;
+	std::vector<Node> children;
+};
+
 class Model
 {
 private:
-
-	struct Node {
-		Matrix4x4 localMatrix;
-		std::string name;
-		std::vector<Node> children;
-	};
 
 	struct MaterialData {
 		std::string textureFilePath;
@@ -31,6 +32,7 @@ private:
 
 	struct ModelData {
 		std::vector<VertexData> vertices;
+		std::vector<uint32_t> indices;
 		MaterialData material;
 		Node rootNode;
 	};
@@ -57,6 +59,14 @@ private:
 	// マテリアルデータを指すポインタ
 	Material* materialData = nullptr;
 
+	// インデックスバッファリソース
+	Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;
+	// インデックスデータを指すポインタ
+	uint32_t* mappedIndex = nullptr;
+	// インデックスバッファビュー
+	D3D12_INDEX_BUFFER_VIEW indexBufferView{};
+
+
 public:
 	// 初期化
 	void Initialize(ModelCommon* modelCommon, const std::string& directorypath, const std::string& filename);
@@ -71,5 +81,10 @@ public:
 	Matrix4x4 GetRootNodeMatrix() const { return modelData.rootNode.localMatrix; }
 
 	std::string GetRootNodeName() const { return modelData.rootNode.name; }
+
+	const Node& GetRootNode() const
+	{
+		return modelData.rootNode;
+	}
 };
 

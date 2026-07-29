@@ -34,7 +34,7 @@ private:
 	// 平行光源データを指すポインタ
 	DirectionalLight* directionalLightData = nullptr;
 
-	Transform transform;
+	EulerTransform transform;
 	//Transform cameraTransform;
 
 	Model* model = nullptr;
