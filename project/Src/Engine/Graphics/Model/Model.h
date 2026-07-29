@@ -3,6 +3,7 @@
 #include <vector>
 #include <d3d12.h>
 #include <wrl.h>
+#include <unordered_map>
 #include "Sprite.h"
 
 struct aiNode;
@@ -19,6 +20,16 @@ class Model
 {
 private:
 
+	struct VertexWeightData {
+		float weiight;
+		uint32_t vertexIndex;
+	};
+
+	struct JointWeightData {
+		std::vector<VertexWeightData> vertexWeights;
+		Matrix4x4 inverseBindPoseMatrix;
+	};
+
 	struct MaterialData {
 		std::string textureFilePath;
 		uint32_t textureIndex = 0;
@@ -31,6 +42,7 @@ private:
 	};
 
 	struct ModelData {
+		std::unordered_map<std::string, JointWeightData> skinClusterData;
 		std::vector<VertexData> vertices;
 		std::vector<uint32_t> indices;
 		MaterialData material;
