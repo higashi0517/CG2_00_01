@@ -31,6 +31,12 @@ public:
 	void Finalize()override;
 
 private:
+	enum class PostEffect {
+		Copy,
+		Grayscale,
+		Vignette,
+	};
+
 	Input* input_ = nullptr;
 	Sound* sound_ = nullptr;
 
@@ -57,6 +63,10 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> copyRootSignature_;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> copyPipelineState_;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> grayscalePipelineState_;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> vignettePipelineState_;
+
+	PostEffect postEffect_ = PostEffect::Copy;
 
 	Animation animation_;
 };

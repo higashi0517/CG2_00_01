@@ -130,14 +130,12 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	assert(SUCCEEDED(hr));
 
 
-	// --- 2. PipelineState (PSO) の作成 ---
+	// --- 2. PipelineState (PSO) の共通設定 ---
 	auto vertexShaderBlob = graphicsDevice_->CompileShader(L"Resources/shaders/Fullscreen.VS.hlsl", L"vs_6_0");
-	auto pixelShaderBlob = graphicsDevice_->CompileShader(L"Resources/shaders/Vignette.PS.hlsl", L"ps_6_0");
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
 	psoDesc.pRootSignature = copyRootSignature_.Get();
 	psoDesc.VS = { vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize() };
-	psoDesc.PS = { pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize() };
 
 	// ★重要: 頂点バッファを使わないため、InputLayout は空にする
 	psoDesc.InputLayout = { nullptr, 0 };
@@ -169,20 +167,53 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	// 【修正2】フォーマットをバックバッファに合わせて _SRGB に変更する
 	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 
-	// ★修正: コメントアウトを解除し、実際にPipelineStateオブジェクトを生成
-	hr = graphicsDevice_->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&copyPipelineState_));
-	assert(SUCCEEDED(hr));
+	// 使用するピクセルシェーダーだけを変えて、3種類のPSOを作る
+	auto createPostEffectPipeline = [&](const wchar_t* pixelShaderPath,
+		Microsoft::WRL::ComPtr<ID3D12PipelineState>& pipelineState) {
+			auto pixelShaderBlob = graphicsDevice_->CompileShader(pixelShaderPath, L"ps_6_0");
+			psoDesc.PS = {
+				pixelShaderBlob->GetBufferPointer(),
+				pixelShaderBlob->GetBufferSize()
+			};
+
+			HRESULT result = graphicsDevice_->GetDevice()->CreateGraphicsPipelineState(
+				&psoDesc,
+				IID_PPV_ARGS(pipelineState.ReleaseAndGetAddressOf())
+			);
+			assert(SUCCEEDED(result));
+		};
+
+	createPostEffectPipeline(
+		L"Resources/shaders/CopyImage.PS.hlsl",
+		copyPipelineState_
+	);
+	createPostEffectPipeline(
+		L"Resources/shaders/Grayscale.PS.hlsl",
+		grayscalePipelineState_
+	);
+	createPostEffectPipeline(
+		L"Resources/shaders/Vignette.PS.hlsl",
+		vignettePipelineState_
+	);
 }
 
 void GamePlayScene::Update() {
 
 	input_->Update();
-	if (input_->TriggerKey(DIK_0)) {
-		OutputDebugStringA("Hit 0\n");
+
+	// 数字キーでポストエフェクトを切り替える
+	if (input_->TriggerKey(DIK_1)) {
+		postEffect_ = PostEffect::Copy;
+	}
+	if (input_->TriggerKey(DIK_2)) {
+		postEffect_ = PostEffect::Grayscale;
+	}
+	if (input_->TriggerKey(DIK_3)) {
+		postEffect_ = PostEffect::Vignette;
 	}
 
 	// soundの再生
-	if (input_->TriggerKey(DIK_1)) {
+	if (input_->TriggerKey(DIK_0)) {
 		sound_->PlayWave(bgmData_);
 	}
 
@@ -243,7 +274,7 @@ void GamePlayScene::Update() {
 #endif
 
 	// カメラの更新
-		camera_->Update();
+	camera_->Update();
 
 	emitter_->Update();
 
@@ -293,7 +324,18 @@ GamePlayScene::Draw() {
 	graphicsDevice_->SetBackBufferAsRenderTarget();
 
 	cmdList->SetGraphicsRootSignature(copyRootSignature_.Get());
-	cmdList->SetPipelineState(copyPipelineState_.Get());
+
+	switch (postEffect_) {
+	case PostEffect::Copy:
+		cmdList->SetPipelineState(copyPipelineState_.Get());
+		break;
+	case PostEffect::Grayscale:
+		cmdList->SetPipelineState(grayscalePipelineState_.Get());
+		break;
+	case PostEffect::Vignette:
+		cmdList->SetPipelineState(vignettePipelineState_.Get());
+		break;
+	}
 
 	// プリミティブトポロジーを三角形に設定
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
