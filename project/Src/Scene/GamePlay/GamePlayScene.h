@@ -15,6 +15,7 @@
 #include "BaseScene.h"
 #include "Animation.h"
 #include "Skeleton.h"
+#include "SkinningCompute.h"
 
 class WinApp;
 class GraphicsDevice;
@@ -60,6 +61,10 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> copyPipelineState_;
 
 	Animation animation_;
+	SkinCluster skinCluster_;
 	Skeleton skeleton_;
 	float animationTime_ = 0.0f;
+
+	std::unique_ptr<SkinningCompute> skinningCompute_;
+	uint32_t skinningVertexCount_ = 0;
 };

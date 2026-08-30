@@ -11,13 +11,50 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	// 3Dモデルマネジャの初期化
 	ModelManager::GetInstance()->Initialize(graphicsDevice_);
 	// .objモデルの読み込み
-	ModelManager::GetInstance()->LoadModel("Walk.gltf");
-	animation_ = LoadAnimationFile("./Resources", "Walk.gltf");
+	ModelManager::GetInstance()->LoadModel("walk.gltf");
+	animation_ = LoadAnimationFile("./Resources", "walk.gltf");
 	Model* animatedModel =
-		ModelManager::GetInstance()->FindModel("Walk.gltf");
+		ModelManager::GetInstance()->FindModel("walk.gltf");
 
 	assert(animatedModel != nullptr);
 	skeleton_ = CreateSkeleton(animatedModel->GetRootNode());
+
+	SrvManager* srvManager =
+		SrvManager::GetInstance();
+
+	uint32_t descriptorSize =
+		graphicsDevice_->GetDevice()
+		->GetDescriptorHandleIncrementSize(
+			D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
+		);
+
+	// Skeletonと同じ関節数のSkinClusterを作成
+	skinCluster_ = CreateSkinCluster(
+		graphicsDevice_,
+		skeleton_,
+		animatedModel->GetModelData(),
+		srvManager->GetDescriptorHeap(),
+		descriptorSize
+	);
+
+	// 初期状態の行列を反映
+	UpdateSkeleton(skeleton_);
+	UpdateSkinCluster(skinCluster_, skeleton_);
+
+	// Compute Shaderの初期化
+	skinningCompute_ =
+		std::make_unique<SkinningCompute>();
+
+	skinningCompute_->Initialize(
+		graphicsDevice_
+	);
+
+	// Dispatchで使用する頂点数
+	skinningVertexCount_ =
+		static_cast<uint32_t>(
+			animatedModel->GetModelData()
+			.vertices.size()
+			);
 
 	input_ = new Input();
 	input_->Initialize(winApp_);
@@ -25,7 +62,7 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	sound_ = new Sound();
 
 	camera_ = new Camera();
-	camera_->SetTranslate({ 0.0f, 1.5f, -5.0f });
+	camera_->SetTranslate({ 0.0f, 3.0f, -5.0f });
 	camera_->SetRotate({ 0.42f, 0.0f, 0.0f });
 
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = graphicsDevice_->AllocateRtvHandle();
@@ -52,8 +89,8 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 
 	object3D_ = new Object3D();
 	object3D_->Initialize(object3DManager_);
-	object3D_->SetModel("Walk.gltf");
-	object3D_->SetAnimation(&animation_);
+	object3D_->SetModel("walk.gltf");
+	//object3D_->SetAnimation(&animation_);
 
 	object3D_2_ = new Object3D();
 	object3D_2_->Initialize(object3DManager_);
@@ -145,7 +182,7 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	psoDesc.VS = { vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize() };
 	psoDesc.PS = { pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize() };
 
-	// ★重要: 頂点バッファを使わないため、InputLayout は空にする
+	// 頂点バッファを使わないため、InputLayout は空にする
 	psoDesc.InputLayout = { nullptr, 0 };
 
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
@@ -166,16 +203,16 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 	psoDesc.SampleDesc.Count = 1;
 
-	// 【修正1】サンプルマスクを適切に設定する (0 のままだと何も描画されません)
+	// サンプルマスクを適切に設定する (0 のままだと何も描画されません)
 	psoDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK; // もしくは 0xFFFFFFFF
 
 	// レンダーターゲットの設定
 	psoDesc.NumRenderTargets = 1;
 
-	// 【修正2】フォーマットをバックバッファに合わせて _SRGB に変更する
+	// フォーマットをバックバッファに合わせて _SRGB に変更する
 	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 
-	// ★修正: コメントアウトを解除し、実際にPipelineStateオブジェクトを生成
+	// コメントアウトを解除し、実際にPipelineStateオブジェクトを生成
 	hr = graphicsDevice_->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&copyPipelineState_));
 	assert(SUCCEEDED(hr));
 }
@@ -265,16 +302,16 @@ void GamePlayScene::Update() {
 
 	ApplyAnimation(skeleton_, animation_, animationTime_);
 	UpdateSkeleton(skeleton_);
+	UpdateSkinCluster(skinCluster_, skeleton_);
 
 	for (auto& sprite : sprites_) {
 		//sprite->Update();
 	}
 
-	//particleManager_->Update();
+	particleManager_->Update();
 }
 
-void
-GamePlayScene::Draw() {
+void GamePlayScene::Draw() {
 
 	auto cmdList = graphicsDevice_->GetCommandList();
 
@@ -292,9 +329,15 @@ GamePlayScene::Draw() {
 	cmdList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 	cmdList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
+	// Compute Shaderで頂点を作る
+	skinningCompute_->Dispatch(
+		skinCluster_,
+		skinningVertexCount_
+	);
+
 	// === 3Dオブジェクト描画 ===
 	object3DManager_->SetCommonRenderState();
-	object3D_->Draw();
+	object3D_->Draw(skinCluster_);
 	// object3D_2_->Draw();
 
 
@@ -321,8 +364,9 @@ GamePlayScene::Draw() {
 
 #endif
 
-
 	// === パーティクル描画 ===
+	SrvManager::GetInstance()->PreDraw();
+
 	particleManager_->SetCommonRenderState();
 	particleManager_->Draw();
 

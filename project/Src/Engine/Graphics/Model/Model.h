@@ -3,10 +3,12 @@
 #include <vector>
 #include <d3d12.h>
 #include <wrl.h>
+#include <map>
 #include <unordered_map>
 #include "Sprite.h"
 
 struct aiNode;
+struct SkinCluster;
 class ModelCommon;
 
 struct Node {
@@ -18,16 +20,16 @@ struct Node {
 
 class Model
 {
-private:
+public:
 
 	struct VertexWeightData {
-		float weiight;
+		float weight;
 		uint32_t vertexIndex;
 	};
 
 	struct JointWeightData {
-		std::vector<VertexWeightData> vertexWeights;
 		Matrix4x4 inverseBindPoseMatrix;
+		std::vector<VertexWeightData> vertexWeights;
 	};
 
 	struct MaterialData {
@@ -42,7 +44,7 @@ private:
 	};
 
 	struct ModelData {
-		std::unordered_map<std::string, JointWeightData> skinClusterData;
+		std::map<std::string, JointWeightData> skinClusterData;
 		std::vector<VertexData> vertices;
 		std::vector<uint32_t> indices;
 		MaterialData material;
@@ -56,6 +58,7 @@ private:
 		Matrix4x4 uvTransform;
 	};
 
+private:
 	// modelManagerのポインタ
 	ModelCommon* modelCommon = nullptr;
 	// objファイルのデータ
@@ -83,7 +86,7 @@ public:
 	// 初期化
 	void Initialize(ModelCommon* modelCommon, const std::string& directorypath, const std::string& filename);
 	// 描画
-	void Draw();
+	void Draw(const SkinCluster& skinCluster);
 	// .mtlファイルの読み取り
 	static MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
 	// .objファイルの読み取り
@@ -97,6 +100,11 @@ public:
 	const Node& GetRootNode() const
 	{
 		return modelData.rootNode;
+	}
+
+	const ModelData& GetModelData() const
+	{
+		return modelData;
 	}
 };
 

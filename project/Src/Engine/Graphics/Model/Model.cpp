@@ -5,6 +5,7 @@
 #include "Model.h"
 #include "TextureManager.h"
 #include "ModelCommon.h"
+#include "Skeleton.h"
 #include <vector>
 #include <string>
 #include <fstream>
@@ -57,19 +58,29 @@ void Model::Initialize(ModelCommon* modelCommon, const std::string& directorypat
 		//TextureManager::GetInstance()->GetTextureIndexByFilePath(modelData.material.textureFilePath);
 }
 
-void Model::Draw()
+void Model::Draw(const SkinCluster& skinCluster)
 {
 	// プリミティブトポロジーの設定
 	modelCommon->GetGraphicsDevice()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferViews[2] = {
+		  skinCluster.outputVertexBufferView,
+		skinCluster.influenceBufferView
+	};
 	// 頂点バッファの設定
-	modelCommon->GetGraphicsDevice()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+	modelCommon->GetGraphicsDevice()->GetCommandList()->IASetVertexBuffers(0, 2, vertexBufferViews);
 	// インデックスバッファの設定
 	modelCommon->GetGraphicsDevice()->GetCommandList()->IASetIndexBuffer(&indexBufferView);
 	// 定数バッファの設定
 	modelCommon->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 	// テクスチャの設定
-	modelCommon->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootDescriptorTable(2,
-		TextureManager::GetInstance()->GetSrvHandleGPU(modelData.material.textureFilePath));
+	modelCommon->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootDescriptorTable(
+		2,TextureManager::GetInstance()->GetSrvHandleGPU(modelData.material.textureFilePath));
+	
+	modelCommon->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootDescriptorTable(
+		4,
+		skinCluster.paletteSrvHandle.second
+	);
+
 	// 描画コマンド
 	modelCommon->GetGraphicsDevice()->GetCommandList()->DrawIndexedInstanced(static_cast<uint32_t>(modelData.indices.size()), 1, 0, 0, 0);
 }
@@ -214,8 +225,8 @@ Model::ModelData Model::LoadModelFile(const std::string& directoryPath, const st
 
 				jointWeightData.vertexWeights.push_back({
 					bone->mWeights[weightIndex].mWeight,
-					bone->mWeights[weightIndex].mVertexId
-					});
+					vertexOffset + bone->mWeights[weightIndex].mVertexId
+				});
 			}
 		}
 	}

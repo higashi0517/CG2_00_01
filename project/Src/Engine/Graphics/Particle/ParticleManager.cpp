@@ -59,8 +59,31 @@ void ParticleManager::Initialize(GraphicsDevice* graphicsDevice_) {
 
 	randomEngine_ = std::mt19937(seedGenerator_());
 
+	// PerView用ConstantBuffer
+	perViewResource =
+		graphicsDevice->CreateBufferResource(
+			sizeof(PerView)
+		);
+
+	perViewResource->Map(
+		0,
+		nullptr,
+		reinterpret_cast<void**>(&perViewData)
+	);
+
+	perViewData->viewProjection =
+		MakeIdentity4x4();
+
+	perViewData->billboardMatrix =
+		MakeIdentity4x4();
+
+	// Graphics
 	CreateRootSignature();
 	CreateGraphicsPipelineState();
+
+	// Compute
+	CreateInitializeRootSignature();
+	CreateInitializePipelineState();
 }
 
 void ParticleManager::SetCommonRenderState() {
@@ -88,7 +111,7 @@ void ParticleManager::CreateRootSignature() {
 	descriptorRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	descriptorRange[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	D3D12_ROOT_PARAMETER rootParameters[3] = {};
+	D3D12_ROOT_PARAMETER rootParameters[4] = {};
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rootParameters[0].DescriptorTable.pDescriptorRanges = &descriptorRange[0];
@@ -103,6 +126,12 @@ void ParticleManager::CreateRootSignature() {
 	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // 定数バッファ(CBV)を指定
 	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // ピクセルシェーダーからアクセス
 	rootParameters[2].Descriptor.ShaderRegister = 0; // レジスタ番号 b0
+
+	// RootParameter 3：PerView（Vertex Shaderのb0）
+	rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	rootParameters[3].Descriptor.ShaderRegister = 0;
+	rootParameters[3].Descriptor.RegisterSpace = 0;
 
 	D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
 	staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
@@ -212,6 +241,8 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
 		kNumMaxInstance,
 		sizeof(ParticleForGPU)
 	);
+
+	InitializeParticleResource(newGroup);
 }
 
 void ParticleManager::Update()
@@ -234,6 +265,8 @@ void ParticleManager::Update()
 	Matrix4x4 viewMatrix = camera->GetViewMatrix();
 	Matrix4x4 projectionMatrix = camera->GetProjectionMatrix();
 	Matrix4x4 viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
+	perViewData->viewProjection = viewProjectionMatrix;
+	perViewData->billboardMatrix = billboardMatrix;
 
 	for (auto& [name, group] : particleGroups)
 	{
@@ -280,19 +313,50 @@ void ParticleManager::Update()
 
 	}
 }
+
 void ParticleManager::Draw()
 {
-	graphicsDevice->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+	auto commandList =
+		graphicsDevice->GetCommandList();
 
-	graphicsDevice->GetCommandList()->SetGraphicsRootConstantBufferView(2, materialResource->GetGPUVirtualAddress());
+	commandList->IASetVertexBuffers(
+		0,
+		1,
+		&vertexBufferView
+	);
+
+	// RootParameter 2：Pixel Shader用Material
+	commandList->SetGraphicsRootConstantBufferView(
+		2,
+		materialResource->GetGPUVirtualAddress()
+	);
+
+	// RootParameter 3：Vertex Shader用PerView
+	commandList->SetGraphicsRootConstantBufferView(
+		3,
+		perViewResource->GetGPUVirtualAddress()
+	);
 
 	for (auto& [name, group] : particleGroups)
 	{
-		if (group.instanceCount == 0) continue;
+		SrvManager::GetInstance()
+			->SetGraphicsRootDescriptorTable(
+				0,
+				group.textureSrvIndex
+			);
 
-		SrvManager::GetInstance()->SetGraphicsRootDescriptorTable(0, group.textureSrvIndex);
-		SrvManager::GetInstance()->SetGraphicsRootDescriptorTable(1, group.instancingSrvIndex);
-		graphicsDevice->GetCommandList()->DrawInstanced(32 * 6, group.instanceCount, 0, 0);
+		SrvManager::GetInstance()
+			->SetGraphicsRootDescriptorTable(
+				1,
+				group.particleSrvIndex
+			);
+
+		commandList->DrawInstanced(
+			32 * 6,
+			kNumMaxInstance,
+			0,
+			0
+		);
 	}
 }
 
@@ -355,4 +419,194 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomE
 	particle.currentTime = 0.0f;
 
 	return particle;
+}
+
+void ParticleManager::CreateInitializeRootSignature()
+{
+	// u0
+	D3D12_DESCRIPTOR_RANGE descriptorRange{};
+	descriptorRange.RangeType =
+		D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+	descriptorRange.NumDescriptors = 1;
+	descriptorRange.BaseShaderRegister = 0;
+	descriptorRange.RegisterSpace = 0;
+	descriptorRange.OffsetInDescriptorsFromTableStart =
+		D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+	D3D12_ROOT_PARAMETER rootParameter{};
+	rootParameter.ParameterType =
+		D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParameter.ShaderVisibility =
+		D3D12_SHADER_VISIBILITY_ALL;
+	rootParameter.DescriptorTable.NumDescriptorRanges = 1;
+	rootParameter.DescriptorTable.pDescriptorRanges =
+		&descriptorRange;
+
+	D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc{};
+	rootSignatureDesc.Flags =
+		D3D12_ROOT_SIGNATURE_FLAG_NONE;
+	rootSignatureDesc.NumParameters = 1;
+	rootSignatureDesc.pParameters = &rootParameter;
+
+	Microsoft::WRL::ComPtr<ID3DBlob>
+		signatureBlob;
+
+	Microsoft::WRL::ComPtr<ID3DBlob>
+		errorBlob;
+
+	HRESULT hr = D3D12SerializeRootSignature(
+		&rootSignatureDesc,
+		D3D_ROOT_SIGNATURE_VERSION_1,
+		&signatureBlob,
+		&errorBlob
+	);
+
+	if (FAILED(hr)) {
+		if (errorBlob) {
+			OutputDebugStringA(
+				static_cast<char*>(
+					errorBlob->GetBufferPointer()
+					)
+			);
+		}
+		assert(false);
+	}
+
+	hr = graphicsDevice->GetDevice()
+		->CreateRootSignature(
+			0,
+			signatureBlob->GetBufferPointer(),
+			signatureBlob->GetBufferSize(),
+			IID_PPV_ARGS(
+				&initializeRootSignature
+			)
+		);
+
+	assert(SUCCEEDED(hr));
+}
+
+void ParticleManager::CreateInitializePipelineState()
+{
+	auto computeShaderBlob =
+		graphicsDevice->CompileShader(
+			L"Resources/shaders/InitializeParticle.CS.hlsl",
+			L"cs_6_0"
+		);
+
+	D3D12_COMPUTE_PIPELINE_STATE_DESC desc{};
+	desc.pRootSignature =
+		initializeRootSignature.Get();
+
+	desc.CS = {
+		computeShaderBlob->GetBufferPointer(),
+		computeShaderBlob->GetBufferSize()
+	};
+
+	HRESULT hr =
+		graphicsDevice->GetDevice()
+		->CreateComputePipelineState(
+			&desc,
+			IID_PPV_ARGS(
+				&initializePipelineState
+			)
+		);
+
+	assert(SUCCEEDED(hr));
+}
+
+void ParticleManager::InitializeParticleResource(
+	ParticleGroup& particleGroup)
+{
+	const size_t resourceSize =
+		sizeof(ParticleCS) *
+		kNumMaxInstance;
+
+	particleGroup.particleResource =
+		graphicsDevice->CreateUAVBufferResource(
+			resourceSize
+		);
+
+	// Vertex Shader用SRV
+	particleGroup.particleSrvIndex =
+		SrvManager::GetInstance()->Allocate();
+
+	SrvManager::GetInstance()
+		->CreateSRVforStructuredBuffer(
+			particleGroup.particleSrvIndex,
+			particleGroup.particleResource.Get(),
+			kNumMaxInstance,
+			sizeof(ParticleCS)
+		);
+
+	// Compute Shader用UAV
+	particleGroup.particleUavIndex =
+		SrvManager::GetInstance()->Allocate();
+
+	SrvManager::GetInstance()
+		->CreateUAVforStructuredBuffer(
+			particleGroup.particleUavIndex,
+			particleGroup.particleResource.Get(),
+			kNumMaxInstance,
+			sizeof(ParticleCS)
+		);
+
+	auto commandList =
+		graphicsDevice->GetCommandList();
+
+	// COMMON → UAV
+	D3D12_RESOURCE_BARRIER toUav{};
+	toUav.Type =
+		D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+
+	toUav.Transition.pResource =
+		particleGroup.particleResource.Get();
+
+	toUav.Transition.Subresource =
+		D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+	toUav.Transition.StateBefore =
+		D3D12_RESOURCE_STATE_COMMON;
+
+	toUav.Transition.StateAfter =
+		D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+
+	commandList->ResourceBarrier(1, &toUav);
+
+	SrvManager::GetInstance()->PreDraw();
+
+	commandList->SetComputeRootSignature(
+		initializeRootSignature.Get()
+	);
+
+	commandList->SetPipelineState(
+		initializePipelineState.Get()
+	);
+
+	SrvManager::GetInstance()
+		->SetComputeRootDescriptorTable(
+			0,
+			particleGroup.particleUavIndex
+		);
+
+	// numthreads(1024, 1, 1)
+	commandList->Dispatch(1, 1, 1);
+
+	// UAV → Vertex Shaderで読める状態
+	D3D12_RESOURCE_BARRIER toSrv{};
+	toSrv.Type =
+		D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+
+	toSrv.Transition.pResource =
+		particleGroup.particleResource.Get();
+
+	toSrv.Transition.Subresource =
+		D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+	toSrv.Transition.StateBefore =
+		D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+
+	toSrv.Transition.StateAfter =
+		D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+
+	commandList->ResourceBarrier(1, &toSrv);
 }

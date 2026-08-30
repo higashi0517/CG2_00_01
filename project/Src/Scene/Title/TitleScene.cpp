@@ -168,7 +168,7 @@ void TitleScene::Draw() {
 
 	// === 3Dオブジェクト描画 ===
 	object3DManager_->SetCommonRenderState();
-	object3D_->Draw();
+	//object3D_->Draw();
 	// object3D_2_->Draw();
 
 	// === スプライト描画 ===

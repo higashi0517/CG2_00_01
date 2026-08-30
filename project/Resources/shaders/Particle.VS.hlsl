@@ -1,13 +1,26 @@
 #include "Particle.hlsli"
 
-struct ParticleForGPU
+struct Particle
 {
-    float32_t4x4 WVP;
-    float32_t4x4 World;
+    float32_t3 translate;
+    float32_t3 scale;
+    float32_t lifeTime;
+    float32_t3 velocity;
+    float32_t currentTime;
     float32_t4 color;
 };
 
-StructuredBuffer<ParticleForGPU> gParticle : register(t0);
+struct PerView
+{
+    float32_t4x4 viewProjection;
+    float32_t4x4 billboardMatrix;
+};
+
+StructuredBuffer<Particle>
+    gParticles : register(t0);
+
+ConstantBuffer<PerView>
+    gPerView : register(b0);
 
 struct VertexShaderInput
 {
@@ -16,29 +29,35 @@ struct VertexShaderInput
     float32_t3 normal : NORMAL0;
 };
 
-struct DirectionalLight
-{
-    float32_t4 color;
-    float32_t3 direction;
-    float32_t intensity;
-};
-
-ConstantBuffer<DirectionalLight> gDirectionalLight : register(b1);
-
-VertexShaderOutput main(VertexShaderInput input, uint32_t instanceId : SV_InstanceID)
+VertexShaderOutput main(
+    VertexShaderInput input,
+    uint32_t instanceId : SV_InstanceID)
 {
     VertexShaderOutput output;
 
-    float32_t4x4 wvp = gParticle[instanceId].WVP;
-    float32_t4x4 world = gParticle[instanceId].World;
+    Particle particle =
+        gParticles[instanceId];
 
-    // 位置を WVP で変換
-    output.position = mul(input.position, wvp);
+    float32_t4x4 worldMatrix =
+        gPerView.billboardMatrix;
+
+    worldMatrix[0] *= particle.scale.x;
+    worldMatrix[1] *= particle.scale.y;
+    worldMatrix[2] *= particle.scale.z;
+
+    worldMatrix[3].xyz =
+        particle.translate;
+
+    output.position = mul(
+        input.position,
+        mul(
+            worldMatrix,
+            gPerView.viewProjection
+        )
+    );
+
     output.texcoord = input.texcoord;
-    output.color = gParticle[instanceId].color;
-
-    // 法線を World 行列で変換（平行移動は無視）
-    //output.normal = normalize(mul(input.normal, (float32_t3x3)world));
+    output.color = particle.color;
 
     return output;
 }

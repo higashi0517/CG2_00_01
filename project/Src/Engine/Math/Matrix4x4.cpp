@@ -296,3 +296,17 @@ Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Quaternion& rotate, const
 	result = Multiply(result, translateMatrix);
 	return result;
 }
+
+Matrix4x4 Transpose(const Matrix4x4& matrix)
+{
+	Matrix4x4 result{};
+
+	for (int row = 0; row < 4; ++row) {
+		for (int column = 0; column < 4; ++column) {
+			result.m[row][column] =
+				matrix.m[column][row];
+		}
+	}
+
+	return result;
+}

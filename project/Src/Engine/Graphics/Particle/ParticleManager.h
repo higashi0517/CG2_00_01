@@ -42,6 +42,21 @@ public:
 		float padding[3];
 		Matrix4x4 uvTransform;
 	};
+	// GPU Particle用
+	struct ParticleCS {
+		Vector3 translate;
+		Vector3 scale;
+		float lifeTime;
+		Vector3 velocity;
+		float currentTime;
+		Vector4 color;
+	};
+
+	// カメラごとの情報
+	struct PerView {
+		Matrix4x4 viewProjection;
+		Matrix4x4 billboardMatrix;
+	};
 
 	struct ParticleGroup {
 		// マテリアルデータ (テクスチャファイルパスとテクスチャ用SRVインデックス)
@@ -62,15 +77,31 @@ public:
 
 		// インスタンシングデータを書き込むためのポインタ
 		ParticleForGPU* mappedData;
+
+		// GPU Particle本体
+		Microsoft::WRL::ComPtr<ID3D12Resource>
+			particleResource;
+
+		// Vertex Shader用SRV
+		uint32_t particleSrvIndex = 0;
+
+		// Compute Shader用UAV
+		uint32_t particleUavIndex = 0;
 	};
 
-	static const uint32_t kNumMaxInstance = 1;
+	static const uint32_t kNumMaxInstance = 1024;
 
 	std::unordered_map<std::string, ParticleGroup> particleGroups;
 	GraphicsDevice* graphicsDevice = nullptr;
 	Camera* camera = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState;
+	// 初期化用Compute Shader
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> initializeRootSignature;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> initializePipelineState;
+	// ViewProjection・BillboardMatrix
+	Microsoft::WRL::ComPtr<ID3D12Resource> perViewResource;
+	PerView* perViewData = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
 
@@ -87,6 +118,10 @@ public:
 	void CreateRootSignature();
 	void SetCommonRenderState();
 	void CreateGraphicsPipelineState();
+
+	void CreateInitializeRootSignature();
+	void CreateInitializePipelineState();
+	void InitializeParticleResource(ParticleGroup& particleGroup);
 
 	Particle MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate, float minScaleY, float maxScaleY);
 

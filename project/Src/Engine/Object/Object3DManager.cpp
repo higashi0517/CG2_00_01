@@ -1,4 +1,5 @@
 #include "Object3DManager.h"
+#include <array>
 
 void Object3DManager::Initialize(GraphicsDevice* graphicsDevice) {
     // 引数で受け取ってメンバ変数に記録する
@@ -26,13 +27,18 @@ void Object3DManager::CreateRootSignature() {
     descriptionRootSignature.Flags =
         D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
-    D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+    D3D12_DESCRIPTOR_RANGE descriptorRange[2] = {};
     descriptorRange[0].BaseShaderRegister = 0;
     descriptorRange[0].NumDescriptors = 1;
     descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    D3D12_ROOT_PARAMETER rootParameters[4] = {};
+    descriptorRange[1].BaseShaderRegister = 0;
+    descriptorRange[1].NumDescriptors = 1;
+    descriptorRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    descriptorRange[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+    D3D12_ROOT_PARAMETER rootParameters[5] = {};
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[0].Descriptor.ShaderRegister = 0;
@@ -43,12 +49,17 @@ void Object3DManager::CreateRootSignature() {
 
     rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-    rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;
-    rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+    rootParameters[2].DescriptorTable.pDescriptorRanges = &descriptorRange[0];
+    rootParameters[2].DescriptorTable.NumDescriptorRanges = 1;
 
     rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[3].Descriptor.ShaderRegister = 1;
+
+    rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+    rootParameters[4].DescriptorTable.pDescriptorRanges = &descriptorRange[1];
+    rootParameters[4].DescriptorTable.NumDescriptorRanges = 1;
 
     descriptionRootSignature.pParameters = rootParameters;
     descriptionRootSignature.NumParameters = _countof(rootParameters);
@@ -91,7 +102,8 @@ void Object3DManager::CreateRootSignature() {
 
 void Object3DManager::CreateGraphicsPipelineState() {
     // InputLayout
-    D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
+    std::array<D3D12_INPUT_ELEMENT_DESC, 5> inputElementDescs{};
+
     inputElementDescs[0].SemanticName = "POSITION";
     inputElementDescs[0].SemanticIndex = 0;
     inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -107,9 +119,24 @@ void Object3DManager::CreateGraphicsPipelineState() {
     inputElementDescs[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
     inputElementDescs[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 
+    // WEIGHT
+    inputElementDescs[3].SemanticName = "WEIGHT";
+    inputElementDescs[3].SemanticIndex = 0;
+    inputElementDescs[3].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    inputElementDescs[3].InputSlot = 1;
+    inputElementDescs[3].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+
+    // INDEX
+    inputElementDescs[4].SemanticName = "INDEX";
+    inputElementDescs[4].SemanticIndex = 0;
+    inputElementDescs[4].Format = DXGI_FORMAT_R32G32B32A32_UINT;
+    inputElementDescs[4].InputSlot = 1;
+    inputElementDescs[4].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+
     D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
-    inputLayoutDesc.pInputElementDescs = inputElementDescs;
-    inputLayoutDesc.NumElements = _countof(inputElementDescs);
+    inputLayoutDesc.pInputElementDescs = inputElementDescs.data();
+    inputLayoutDesc.NumElements =
+        static_cast<UINT>(inputElementDescs.size());
 
     D3D12_BLEND_DESC blendDesc{};
     blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
@@ -119,7 +146,7 @@ void Object3DManager::CreateGraphicsPipelineState() {
     rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 
     // Shaderのコンパイル（※今は main.cpp と同じ Object3d を使ってる）
-    auto vertexShaderBlob = graphicsDevice_->CompileShader(L"Resources/shaders/Object3d.VS.hlsl", L"vs_6_0");
+    auto vertexShaderBlob = graphicsDevice_->CompileShader(L"Resources/shaders/SkinningObject3d.VS.hlsl", L"vs_6_0");
     auto pixelShaderBlob = graphicsDevice_->CompileShader(L"Resources/shaders/Object3d.PS.hlsl", L"ps_6_0");
     assert(vertexShaderBlob);
     assert(pixelShaderBlob);

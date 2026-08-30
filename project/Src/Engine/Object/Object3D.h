@@ -7,6 +7,8 @@
 #include "Camera.h"
 #include "Animation.h"
 
+struct SkinCluster;
+
 class Object3DManager;
 class Object3D
 {
@@ -51,7 +53,8 @@ public:
 	// 更新
 	void Update();
 	// 描画
-	void Draw();
+	void Draw(const SkinCluster& skinCluster);
+
 	// setter
 	void SetModel(const std::string& filePath);
 	//void SetModel(Model* model_) { this->model = model_; }

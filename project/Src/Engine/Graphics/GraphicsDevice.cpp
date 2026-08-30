@@ -451,13 +451,13 @@ void GraphicsDevice::DxcCompiler() {
 	assert(SUCCEEDED(hr));
 }
 
-void GraphicsDevice::InitializeFixFPS(){
+void GraphicsDevice::InitializeFixFPS() {
 
 	// 現在時間を記録する
 	reference_ = std::chrono::steady_clock::now();
 }
 
-void GraphicsDevice::UpdateFixFPS(){
+void GraphicsDevice::UpdateFixFPS() {
 
 	// 1/60秒ぴったりの時間
 	const std::chrono::microseconds kMinTime(uint64_t(1000000.0f / 60.0f));
@@ -481,7 +481,7 @@ void GraphicsDevice::UpdateFixFPS(){
 	reference_ = std::chrono::steady_clock::now();
 }
 
-ComPtr<IDxcBlob> GraphicsDevice::CompileShader(const std::wstring& filePath, const wchar_t* profile){
+ComPtr<IDxcBlob> GraphicsDevice::CompileShader(const std::wstring& filePath, const wchar_t* profile) {
 
 	// シェーダーのコンパイル
 	Log(ConvertString(std::format(L"Begin CompileShader,path:{},profile:{}\n", filePath, profile)));
@@ -518,14 +518,32 @@ ComPtr<IDxcBlob> GraphicsDevice::CompileShader(const std::wstring& filePath, con
 
 	assert(SUCCEEDED(hr));
 
-	// 警告、エラーが出たらログに出力
-	IDxcBlobUtf8* shaderError = nullptr;
+	// 警告・エラーを出力
+	Microsoft::WRL::ComPtr<IDxcBlobUtf8> shaderError;
 
-	shaderResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&shaderError), nullptr);
+	shaderResult->GetOutput(
+		DXC_OUT_ERRORS,
+		IID_PPV_ARGS(&shaderError),
+		nullptr
+	);
 
-	if (shaderError != nullptr && shaderError->GetStringLength() != 0) {
+	if (shaderError != nullptr &&
+		shaderError->GetStringLength() != 0) {
 
-		Log(shaderError->GetStringPointer());
+		OutputDebugStringA(
+			shaderError->GetStringPointer()
+		);
+	}
+
+	// 実際のコンパイル結果を確認
+	HRESULT compileStatus{};
+
+	shaderResult->GetStatus(
+		&compileStatus
+	);
+
+	// 本当にコンパイルに失敗したときだけ停止
+	if (FAILED(compileStatus)) {
 		assert(false);
 	}
 
@@ -544,7 +562,7 @@ ComPtr<IDxcBlob> GraphicsDevice::CompileShader(const std::wstring& filePath, con
 	return shaderBlob;
 }
 
-ComPtr<ID3D12Resource> GraphicsDevice::CreateBufferResource(size_t sizeInBytes){
+ComPtr<ID3D12Resource> GraphicsDevice::CreateBufferResource(size_t sizeInBytes) {
 
 	ComPtr <ID3D12Resource> vertexResource = nullptr;
 
@@ -576,7 +594,42 @@ ComPtr<ID3D12Resource> GraphicsDevice::CreateBufferResource(size_t sizeInBytes){
 	return vertexResource;
 }
 
-ComPtr<ID3D12Resource> GraphicsDevice::CreateTextureResource(const DirectX::TexMetadata& metadata){
+Microsoft::WRL::ComPtr<ID3D12Resource>
+GraphicsDevice::CreateUAVBufferResource(
+	size_t sizeInBytes)
+{
+	D3D12_HEAP_PROPERTIES heapProperties{};
+	heapProperties.Type =
+		D3D12_HEAP_TYPE_DEFAULT;
+
+	D3D12_RESOURCE_DESC resourceDesc{};
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	resourceDesc.Width = sizeInBytes;
+	resourceDesc.Height = 1;
+	resourceDesc.DepthOrArraySize = 1;
+	resourceDesc.MipLevels = 1;
+	resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
+	resourceDesc.SampleDesc.Count = 1;
+	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> resource;
+
+	HRESULT hr = device->CreateCommittedResource(
+		&heapProperties,
+		D3D12_HEAP_FLAG_NONE,
+		&resourceDesc,
+		D3D12_RESOURCE_STATE_COMMON,
+		nullptr,
+		IID_PPV_ARGS(&resource)
+	);
+
+	assert(SUCCEEDED(hr));
+
+	return resource;
+}
+
+ComPtr<ID3D12Resource> GraphicsDevice::CreateTextureResource(const DirectX::TexMetadata& metadata) {
 
 	// Metadataを基にResourceの設定
 	D3D12_RESOURCE_DESC resourceDesc{};
@@ -610,7 +663,7 @@ ComPtr<ID3D12Resource> GraphicsDevice::CreateTextureResource(const DirectX::TexM
 }
 
 [[nodiscard]]
-ComPtr<ID3D12Resource> GraphicsDevice::UploadTextureData(const DirectX::ScratchImage& mipImages, const ComPtr<ID3D12Resource>& texture){
+ComPtr<ID3D12Resource> GraphicsDevice::UploadTextureData(const DirectX::ScratchImage& mipImages, const ComPtr<ID3D12Resource>& texture) {
 
 	std::vector<D3D12_SUBRESOURCE_DATA> subresources;
 	DirectX::PrepareUpload(
