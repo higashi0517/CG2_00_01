@@ -83,7 +83,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)Src;$(ProjectDir)externals;$(ProjectDir)Src\App;$(ProjectDir)Src\Engine;$(ProjectDir)Src\Engine\Core;$(ProjectDir)Src\Engine\Camera;$(ProjectDir)Src\Engine\Graphics;$(ProjectDir)Src\Engine\Graphics\Model;$(ProjectDir)Src\Engine\Graphics\Particle;$(ProjectDir)Src\Engine\Graphics\Skybox;$(ProjectDir)Src\Engine\Graphics\Sprite;$(ProjectDir)Src\Engine\Graphics\Texture;$(ProjectDir)Src\Engine\ImGui;$(ProjectDir)Src\Engine\Input;$(ProjectDir)Src\Engine\Math;$(ProjectDir)Src\Engine\Sound;$(ProjectDir)Src\Engine\Utility;$(ProjectDir)Src\Scene;$(ProjectDir)Src\Engine\Object;$(ProjectDir)Src\Scene\Title;$(ProjectDir)Src\Scene\GamePlay;$(ProjectDir)externals\assimp\include;%(AdditionalIncludeDirectories);$(ProjectDir)Src\Engine\Graphics\Animation;$(ProjectDir)externals\assimp\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Src\Game\Player;$(ProjectDir)Src\Game\Enemy;$(ProjectDir)Src\Game\Projectile;$(ProjectDir)Src\Game\UI;$(ProjectDir)Src\Engine\Collision;$(ProjectDir)Src;$(ProjectDir)externals;$(ProjectDir)Src\App;$(ProjectDir)Src\Engine;$(ProjectDir)Src\Engine\Core;$(ProjectDir)Src\Engine\Camera;$(ProjectDir)Src\Engine\Graphics;$(ProjectDir)Src\Engine\Graphics\Model;$(ProjectDir)Src\Engine\Graphics\Particle;$(ProjectDir)Src\Engine\Graphics\Skybox;$(ProjectDir)Src\Engine\Graphics\Sprite;$(ProjectDir)Src\Engine\Graphics\Texture;$(ProjectDir)Src\Engine\ImGui;$(ProjectDir)Src\Engine\Input;$(ProjectDir)Src\Engine\Math;$(ProjectDir)Src\Engine\Sound;$(ProjectDir)Src\Engine\Utility;$(ProjectDir)Src\Scene;$(ProjectDir)Src\Engine\Object;$(ProjectDir)Src\Scene\Title;$(ProjectDir)Src\Scene\GamePlay;$(ProjectDir)Src\Engine\Graphics\Animation;$(ProjectDir)Src\Engine\Graphics\Skydome;$(ProjectDir)externals\assimp\include;%(AdditionalIncludeDirectories);$(ProjectDir)Src\Engine\Graphics\Animation;$(ProjectDir)externals\assimp\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -110,7 +110,7 @@
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)Src;$(ProjectDir)externals;$(ProjectDir)Src\App;$(ProjectDir)Src\Engine;$(ProjectDir)Src\Engine\Core;$(ProjectDir)Src\Engine\Camera;$(ProjectDir)Src\Engine\Graphics;$(ProjectDir)Src\Engine\Graphics\Model;$(ProjectDir)Src\Engine\Graphics\Particle;$(ProjectDir)Src\Engine\Graphics\Skybox;$(ProjectDir)Src\Engine\Graphics\Sprite;$(ProjectDir)Src\Engine\Graphics\Texture;$(ProjectDir)Src\Engine\ImGui;$(ProjectDir)Src\Engine\Input;$(ProjectDir)Src\Engine\Math;$(ProjectDir)Src\Engine\Sound;$(ProjectDir)Src\Engine\Utility;$(ProjectDir)Src\Scene;$(ProjectDir)Src\Engine\Object;$(ProjectDir)Src\Scene\Title;$(ProjectDir)Src\Scene\GamePlay;%(AdditionalIncludeDirectories);$(ProjectDir)Src\Engine\Graphics\Animation;$(ProjectDir)externals\assimp\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Src\Game\Player;$(ProjectDir)Src\Game\Enemy;$(ProjectDir)Src\Game\Projectile;$(ProjectDir)Src\Game\UI;$(ProjectDir)Src\Engine\Collision;$(ProjectDir)Src;$(ProjectDir)externals;$(ProjectDir)Src\App;$(ProjectDir)Src\Engine;$(ProjectDir)Src\Engine\Core;$(ProjectDir)Src\Engine\Camera;$(ProjectDir)Src\Engine\Graphics;$(ProjectDir)Src\Engine\Graphics\Model;$(ProjectDir)Src\Engine\Graphics\Particle;$(ProjectDir)Src\Engine\Graphics\Skybox;$(ProjectDir)Src\Engine\Graphics\Sprite;$(ProjectDir)Src\Engine\Graphics\Texture;$(ProjectDir)Src\Engine\ImGui;$(ProjectDir)Src\Engine\Input;$(ProjectDir)Src\Engine\Math;$(ProjectDir)Src\Engine\Sound;$(ProjectDir)Src\Engine\Utility;$(ProjectDir)Src\Scene;$(ProjectDir)Src\Engine\Object;$(ProjectDir)Src\Scene\Title;$(ProjectDir)Src\Scene\GamePlay;$(ProjectDir)Src\Engine\Graphics\Animation;$(ProjectDir)Src\Engine\Graphics\Skydome;%(AdditionalIncludeDirectories);$(ProjectDir)Src\Engine\Graphics\Animation;$(ProjectDir)externals\assimp\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -139,7 +139,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <Optimization>Disabled</Optimization>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)Src;$(ProjectDir)externals;$(ProjectDir)Src\App;$(ProjectDir)Src\Engine;$(ProjectDir)Src\Engine\Core;$(ProjectDir)Src\Engine\Camera;$(ProjectDir)Src\Engine\Graphics;$(ProjectDir)Src\Engine\Graphics\Model;$(ProjectDir)Src\Engine\Graphics\Particle;$(ProjectDir)Src\Engine\Graphics\Skybox;$(ProjectDir)Src\Engine\Graphics\Sprite;$(ProjectDir)Src\Engine\Graphics\Texture;$(ProjectDir)Src\Engine\ImGui;$(ProjectDir)Src\Engine\Input;$(ProjectDir)Src\Engine\Math;$(ProjectDir)Src\Engine\Sound;$(ProjectDir)Src\Engine\Utility;$(ProjectDir)Src\Scene;$(ProjectDir)Src\Engine\Object;$(ProjectDir)Src\Scene\Title;$(ProjectDir)Src\Scene\GamePlay;%(AdditionalIncludeDirectories);$(ProjectDir)Src\Engine\Graphics\Animation;$(ProjectDir)externals\assimp\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Src\Game\Player;$(ProjectDir)Src\Game\Enemy;$(ProjectDir)Src\Game\Projectile;$(ProjectDir)Src\Game\UI;$(ProjectDir)Src\Engine\Collision;$(ProjectDir)Src;$(ProjectDir)externals;$(ProjectDir)Src\App;$(ProjectDir)Src\Engine;$(ProjectDir)Src\Engine\Core;$(ProjectDir)Src\Engine\Camera;$(ProjectDir)Src\Engine\Graphics;$(ProjectDir)Src\Engine\Graphics\Model;$(ProjectDir)Src\Engine\Graphics\Particle;$(ProjectDir)Src\Engine\Graphics\Skybox;$(ProjectDir)Src\Engine\Graphics\Sprite;$(ProjectDir)Src\Engine\Graphics\Texture;$(ProjectDir)Src\Engine\ImGui;$(ProjectDir)Src\Engine\Input;$(ProjectDir)Src\Engine\Math;$(ProjectDir)Src\Engine\Sound;$(ProjectDir)Src\Engine\Utility;$(ProjectDir)Src\Scene;$(ProjectDir)Src\Engine\Object;$(ProjectDir)Src\Scene\Title;$(ProjectDir)Src\Scene\GamePlay;$(ProjectDir)Src\Engine\Graphics\Animation;$(ProjectDir)Src\Engine\Graphics\Skydome;%(AdditionalIncludeDirectories);$(ProjectDir)Src\Engine\Graphics\Animation;$(ProjectDir)externals\assimp\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -156,6 +156,15 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Src\Game\Projectile\HomingProjectile.cpp" />
+    <ClCompile Include="Src\Game\Projectile\NormalProjectile.cpp" />
+    <ClCompile Include="Src\Game\UI\Reticle3D.cpp" />
+    <ClCompile Include="Src\Game\Enemy\EnemySpawnController.cpp" />
+    <ClCompile Include="Src\Game\Projectile\Projectile.cpp" />
+    <ClCompile Include="Src\Engine\Camera\RailCamera.cpp" />
+    <ClCompile Include="Src\Engine\Graphics\Skydome\Skydome.cpp" />
+    <ClCompile Include="Src\Game\Enemy\Enemy.cpp" />
+    <ClCompile Include="Src\Game\Player\Player.cpp" />
     <ClCompile Include="Src\Engine\Graphics\Animation\SkinningCompute.cpp" />
     <ClCompile Include="Src\Engine\Graphics\Animation\Skeleton.cpp" />
     <ClCompile Include="Src\Engine\Graphics\Animation\Animation.cpp" />
@@ -293,6 +302,16 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Src\Game\Projectile\HomingProjectile.h" />
+    <ClInclude Include="Src\Game\Projectile\NormalProjectile.h" />
+    <ClInclude Include="Src\Game\UI\Reticle3D.h" />
+    <ClInclude Include="Src\Game\Enemy\EnemySpawnController.h" />
+    <ClInclude Include="Src\Game\Projectile\Projectile.h" />
+    <ClInclude Include="Src\Engine\Camera\RailCamera.h" />
+    <ClInclude Include="Src\Engine\Graphics\Skydome\Skydome.h" />
+    <ClInclude Include="Src\Engine\Collision\Collider.h" />
+    <ClInclude Include="Src\Game\Enemy\Enemy.h" />
+    <ClInclude Include="Src\Game\Player\Player.h" />
     <ClInclude Include="Src\Engine\Graphics\Animation\SkinningCompute.h" />
     <ClInclude Include="Src\Engine\Graphics\Animation\Skeleton.h" />
     <ClInclude Include="Src\Engine\Graphics\Animation\Animation.h" />
@@ -303,6 +322,8 @@
     <ClInclude Include="Src\Scene\Framework.h" />
     <ClInclude Include="Src\App\Game.h" />
     <ClInclude Include="Src\Scene\GamePlay\GamePlayScene.h" />
+    <ClInclude Include="Src\Scene\GamePlay\MissionState.h" />
+    <ClInclude Include="Src\Engine\Graphics\Sprite\GameUi.h" />
     <ClInclude Include="Src\Engine\ImGui\ImGuiManager.h" />
     <ClInclude Include="Src\Engine\Graphics\Model\Model.h" />
     <ClInclude Include="Src\Engine\Graphics\Model\ModelCommon.h" />
@@ -355,4 +376,18 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <ItemGroup>
+    <Image Include="Resources\UI\title.png" />
+    <Image Include="Resources\UI\clear.png" />
+    <Image Include="Resources\UI\game-over.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\shaders\Skydome.VS.hlsl" />
+    <None Include="Resources\shaders\Skydome.PS.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\aircraft\player.obj" />
+    <None Include="Resources\aircraft\player.mtl" />
+    <Image Include="Resources\aircraft\player.png" />
+  </ItemGroup>
 </Project>

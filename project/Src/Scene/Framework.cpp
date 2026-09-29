@@ -55,7 +55,7 @@ void Framework::Finalize() {
 	std::string logFilePath = std::string("logs/") + dataString + ".log";
 	std::ofstream logStream(logFilePath);
 
-	Log("ログの書き込み");
+	Log("ログの書き込み\n");
 	Log("Complete create D3D12Device!!!\n");
 
 	SceneManager::GetInstance()->Finalize();

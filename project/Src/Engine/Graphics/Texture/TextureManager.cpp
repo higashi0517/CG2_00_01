@@ -69,6 +69,8 @@ void TextureManager::Initialize(GraphicsDevice* graphicsDevice, SrvManager* srvM
 
 void TextureManager::LoadTexture(const std::string& filePath)
 {
+	// UIとゲームで共有する画像は、SRVやGPUリソースを再作成しない。
+	if (textureDatas.contains(filePath)) { return; }
 	TextureData& textureData = textureDatas[filePath];
 
 	// SRV確保
@@ -78,11 +80,6 @@ void TextureManager::LoadTexture(const std::string& filePath)
 
 	textureData.srvHandleCPU = srvManager_->GetCPUDescriptorHandle(textureData.srvIndex);
 	textureData.srvHandleGPU = srvManager_->GetGPUDescriptorHandle(textureData.srvIndex);
-
-	// 読み込み済みテクスチャを検索
-	if (textureDatas.contains(filePath)) {
-
-	}
 
 	// テクスチャ枚数上限
 	assert(srvManager_->Check());
@@ -97,14 +94,28 @@ void TextureManager::LoadTexture(const std::string& filePath)
 		hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
 	}
 	assert(SUCCEEDED(hr));
-	// ミニマップの作成
+	// ミップマップの作成
 
 	DirectX::ScratchImage mipImages{};
 	if (DirectX::IsCompressed(image.GetMetadata().format)) {
 		mipImages = std::move(image);
 	}
 	else {
-		hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 4, mipImages);
+		// 最大4段階。ただし1x1などの小さい画像では作成可能な段階数までにする。
+		const auto& metadata = image.GetMetadata();
+		size_t mipLevels = 1;
+		size_t dimension = metadata.width > metadata.height ? metadata.width : metadata.height;
+		while (dimension > 1 && mipLevels < 4) {
+			dimension >>= 1;
+			++mipLevels;
+		}
+		if (mipLevels == 1) {
+			// 1x1画像には縮小段階がないため、元画像をそのまま使用する。
+			mipImages = std::move(image);
+		}
+		else {
+			hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), metadata, DirectX::TEX_FILTER_SRGB, mipLevels, mipImages);
+		}
 	}
 	assert(SUCCEEDED(hr));
 

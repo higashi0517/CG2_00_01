@@ -28,7 +28,7 @@ struct NodeAnimation {
 };
 
 struct Animation {
-	float duration;
+	float duration = 0.0f;
 	std::map<std::string, NodeAnimation> nodeAnimations;
 };
 

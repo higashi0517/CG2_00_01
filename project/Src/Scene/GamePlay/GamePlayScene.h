@@ -10,12 +10,23 @@
 #include "ParticleManager.h"
 #include "ParticleEmitter.h"
 #include "Camera.h"
+#include "RailCamera.h"
 #include <vector>
 #include <cstdint>
 #include "BaseScene.h"
 #include "Animation.h"
 #include "Skeleton.h"
 #include "SkinningCompute.h"
+#include "Player.h"
+#include "EnemySpawnController.h"
+#include "Skydome.h"
+#include "Projectile.h"
+#include "NormalProjectile.h"
+#include "HomingProjectile.h"
+#include "Reticle3D.h"
+#include "GameUi.h"
+#include "MissionState.h"
+#include <array>
 
 class WinApp;
 class GraphicsDevice;
@@ -33,6 +44,14 @@ public:
 	void Finalize()override;
 
 private:
+	MissionState mission_;
+	std::unique_ptr<GameUi> gameUi_;
+	std::array<std::unique_ptr<Sprite>, 3> screenImages_;
+	bool showDebug_ = false;
+	int shotCooldown_ = 0;
+	int uiFrames_ = 0;
+	void StartMission();
+	void DrawGameUi();
 	Input* input_ = nullptr;
 	Sound* sound_ = nullptr;
 
@@ -40,14 +59,25 @@ private:
 	SpriteManager* spriteManager_ = nullptr;
 	ParticleManager* particleManager_ = nullptr;
 	ParticleEmitter* emitter_ = nullptr;
+	std::unique_ptr<Player> player_;
+	std::unique_ptr<EnemySpawnController> enemySpawnController_;
 
 	Camera* camera_ = nullptr;
-	Object3D* object3D_ = nullptr;
-	Object3D* object3D_2_ = nullptr;
+	std::unique_ptr<RailCamera> railCamera_;
+	Vector2 railPlayerOffset_ = { 0.0f, 0.0f };
+	std::unique_ptr<Skydome> skydome_;
+	std::vector<std::unique_ptr<Projectile>> playerBullets_;
+	std::vector<std::unique_ptr<Projectile>> enemyBullets_;
+	std::unique_ptr<Reticle3D> reticle3D_;
+	Enemy* lockOnTarget_ = nullptr;
+	int enemyBulletTimer_ = 0;
+	/*Object3D* object3D_ = nullptr;
+	Object3D* object3D_2_ = nullptr;*/
 	std::vector<Sprite*> sprites_;
 	Sprite* sprite_ = nullptr;
 
 	int selected_ = 0;
+	bool isPlayerEnemyColliding_ = false;
 
 	Sound::SoundData bgmData_;
 
@@ -67,4 +97,10 @@ private:
 
 	std::unique_ptr<SkinningCompute> skinningCompute_;
 	uint32_t skinningVertexCount_ = 0;
+
+	void UpdateFollowCamera();
+	void SpawnPlayerBullet();
+	void SpawnEnemyBullet();
+	void UpdateProjectiles();
+	void CheckProjectileCollisions();
 };

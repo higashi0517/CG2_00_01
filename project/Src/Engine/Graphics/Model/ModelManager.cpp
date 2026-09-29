@@ -1,5 +1,6 @@
 #include "ModelManager.h"
 #include "ModelCommon.h"
+#include <filesystem>
 
 ModelManager* ModelManager::instance = nullptr;
 
@@ -38,7 +39,8 @@ void ModelManager::LoadModel(const std::string& filePath)
 
 	// モデルの生成とファイル読み込み初期化
 	std::unique_ptr<Model> model = std::make_unique<Model>();
-	model->Initialize(modelCommon, "Resources", filePath);
+	const auto path = std::filesystem::path("Resources") / filePath;
+	model->Initialize(modelCommon, path.parent_path().generic_string(), path.filename().generic_string());
 
 	// モデルをmapに登録
 	models.insert(std::make_pair(filePath, std::move(model)));

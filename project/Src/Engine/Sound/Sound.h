@@ -31,9 +31,9 @@ public:
 
 	// 音声データ
 	struct SoundData {
-		WAVEFORMATEX wfex; // 波形データのフォーマット
+		WAVEFORMATEX wfex{}; // 波形データのフォーマット
 		std::vector<BYTE> pBuffer;     // バッファの先着アドレス
-		IXAudio2SourceVoice* pSourceVoice; // 再生中のソースボイス
+		IXAudio2SourceVoice* pSourceVoice = nullptr; // 再生中のソースボイス
 	};
 
 	Sound();

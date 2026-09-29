@@ -11,6 +11,7 @@
 #include <fstream>
 #include <sstream>
 #include <cassert>
+#include <stdexcept>
 
 void Model::Initialize(ModelCommon* modelCommon, const std::string& directorypath, const std::string& filename)
 {
@@ -62,12 +63,18 @@ void Model::Draw(const SkinCluster& skinCluster)
 {
 	// プリミティブトポロジーの設定
 	modelCommon->GetGraphicsDevice()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	if (modelData.skinClusterData.empty()) {
+		// OBJなど骨を持たないモデルは、元の頂点をそのまま描画する。
+		modelCommon->GetGraphicsDevice()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+	}
+	else {
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferViews[2] = {
 		  skinCluster.outputVertexBufferView,
 		skinCluster.influenceBufferView
 	};
 	// 頂点バッファの設定
 	modelCommon->GetGraphicsDevice()->GetCommandList()->IASetVertexBuffers(0, 2, vertexBufferViews);
+	}
 	// インデックスバッファの設定
 	modelCommon->GetGraphicsDevice()->GetCommandList()->IASetIndexBuffer(&indexBufferView);
 	// 定数バッファの設定
@@ -76,10 +83,9 @@ void Model::Draw(const SkinCluster& skinCluster)
 	modelCommon->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootDescriptorTable(
 		2,TextureManager::GetInstance()->GetSrvHandleGPU(modelData.material.textureFilePath));
 	
-	modelCommon->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootDescriptorTable(
-		4,
-		skinCluster.paletteSrvHandle.second
-	);
+	if (!modelData.skinClusterData.empty()) {
+		modelCommon->GetGraphicsDevice()->GetCommandList()->SetGraphicsRootDescriptorTable(4, skinCluster.paletteSrvHandle.second);
+	}
 
 	// 描画コマンド
 	modelCommon->GetGraphicsDevice()->GetCommandList()->DrawIndexedInstanced(static_cast<uint32_t>(modelData.indices.size()), 1, 0, 0, 0);
@@ -144,7 +150,10 @@ Model::ModelData Model::LoadModelFile(const std::string& directoryPath, const st
 	ModelData modelData;
 	Assimp::Importer importer;
 	std::string filePath = directoryPath + "/" + filename;
-	const aiScene* scene = importer.ReadFile(filePath.c_str(), aiProcess_FlipWindingOrder | aiProcess_FlipUVs);
+	const aiScene* scene = importer.ReadFile(filePath.c_str(), aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_FlipWindingOrder | aiProcess_FlipUVs);
+	if (!scene || !scene->mRootNode || !scene->HasMeshes()) {
+		throw std::runtime_error("Failed to load model: " + filePath + ": " + importer.GetErrorString());
+	}
 	modelData.rootNode = ReadNode(scene->mRootNode);
 	assert(scene->HasMeshes());
 

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="ソース ファイル">
@@ -48,6 +48,27 @@
     </Filter>
     <Filter Include="ソース ファイル\input">
       <UniqueIdentifier>{e1368323-1b24-4068-98d8-49732e6d8db2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game">
+      <UniqueIdentifier>{4E60AEF3-6782-432B-A526-534BA42F4C56}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Player">
+      <UniqueIdentifier>{66A70867-27E2-4EA0-9060-D81A95B6C1C2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Enemy">
+      <UniqueIdentifier>{BD462F37-1E80-4306-B43B-CADD69D57812}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Projectile">
+      <UniqueIdentifier>{A164642A-4687-41FB-B1DB-E0F9F4681D32}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\UI">
+      <UniqueIdentifier>{503EAAD8-DDD6-4226-AD3E-EA5230CC40B9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine">
+      <UniqueIdentifier>{8BFAF025-2331-4288-9E3F-1BA3A9EE8BD1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Collision">
+      <UniqueIdentifier>{0E943F10-7FA3-49D9-8AA6-B85DB674F68C}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -159,6 +180,33 @@
     <ClCompile Include="Src\Engine\Graphics\Animation\SkinningCompute.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="Src\Game\Player\Player.cpp">
+      <Filter>Game\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Game\Enemy\Enemy.cpp">
+      <Filter>Game\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Engine\Camera\RailCamera.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Engine\Graphics\Skydome\Skydome.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Game\Projectile\Projectile.cpp">
+      <Filter>Game\Projectile</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Game\Enemy\EnemySpawnController.cpp">
+      <Filter>Game\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Game\UI\Reticle3D.cpp">
+      <Filter>Game\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Game\Projectile\NormalProjectile.cpp">
+      <Filter>Game\Projectile</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Game\Projectile\HomingProjectile.cpp">
+      <Filter>Game\Projectile</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Object3d.PS.hlsl">
@@ -259,6 +307,12 @@
     <ClInclude Include="Src\Scene\GamePlay\GamePlayScene.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Scene\GamePlay\MissionState.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Engine\Graphics\Sprite\GameUi.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="Src\Scene\Title\TitleScene.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -292,6 +346,36 @@
     <ClInclude Include="Src\Engine\Graphics\Animation\SkinningCompute.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Game\Player\Player.h">
+      <Filter>Game\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Game\Enemy\Enemy.h">
+      <Filter>Game\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Engine\Collision\Collider.h">
+      <Filter>Engine\Collision</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Engine\Camera\RailCamera.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Engine\Graphics\Skydome\Skydome.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Game\Projectile\Projectile.h">
+      <Filter>Game\Projectile</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Game\Enemy\EnemySpawnController.h">
+      <Filter>Game\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Game\UI\Reticle3D.h">
+      <Filter>Game\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Game\Projectile\NormalProjectile.h">
+      <Filter>Game\Projectile</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Game\Projectile\HomingProjectile.h">
+      <Filter>Game\Projectile</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\shaders\Object3d.hlsli">
@@ -303,5 +387,19 @@
     <ResourceCompile Include="CG2_00_01.rc">
       <Filter>リソース ファイル</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Resources\UI\title.png"><Filter>リソース ファイル</Filter></Image>
+    <Image Include="Resources\UI\clear.png"><Filter>リソース ファイル</Filter></Image>
+    <Image Include="Resources\UI\game-over.png"><Filter>リソース ファイル</Filter></Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\shaders\Skydome.VS.hlsl"><Filter>リソース ファイル\shaders</Filter></None>
+    <None Include="Resources\shaders\Skydome.PS.hlsl"><Filter>リソース ファイル\shaders</Filter></None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\aircraft\player.obj"><Filter>リソース ファイル</Filter></None>
+    <None Include="Resources\aircraft\player.mtl"><Filter>リソース ファイル</Filter></None>
+    <Image Include="Resources\aircraft\player.png"><Filter>リソース ファイル</Filter></Image>
   </ItemGroup>
 </Project>

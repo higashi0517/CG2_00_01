@@ -54,20 +54,16 @@ void Game::Draw() {
 }
 
 void Game::Finalize() {
-
-	// === ここから下は基盤やマネージャーなので残す ===
-	TextureManager::GetInstance()->Finalize();
-	ModelManager::GetInstance()->Finalize();
-
-	winApp_->Finalize();
+	// シーンが所有する描画リソースを、基盤より先に解放する。
+	graphicsDevice_->WaitForGPU();
+	SceneManager::GetInstance()->Finalize();
 	ImGuiManager::GetInstance()->Finalize();
-
+	ModelManager::GetInstance()->Finalize();
+	Framework::Finalize();
+	winApp_->Finalize();
 	delete winApp_;
 	delete graphicsDevice_;
-
-	Framework::Finalize();
 }
-
 bool Game::ProcessMessage() {
 	// WinAppのメッセージループを回す
 	return winApp_->ProcessMessage();

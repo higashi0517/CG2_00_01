@@ -1,6 +1,6 @@
 # Blender 4.4.3
 # www.blender.org
-mtllib player.mtl
+mtllib enemy.mtl
 o Cube
 v 0.287763 0.555007 -1.488569
 v 0.287763 0.012703 -1.488569

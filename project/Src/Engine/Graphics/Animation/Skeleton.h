@@ -22,7 +22,7 @@ struct Joint {
 };
 
 struct Skeleton {
-	int32_t root;
+	int32_t root = 0;
 	std::map<std::string, int32_t> jointMap;
 	std::vector<Joint> joints;
 };

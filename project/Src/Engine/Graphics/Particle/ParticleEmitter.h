@@ -36,7 +36,7 @@ private:
     std::string particleName_;
 
     Vector3 position_ = { 0.0f, 0.0f, 0.0f }; // エラーになっていた position_
-    Particle particle[10];
+    Particle particle[10]{};
 
     int emitFrequency_ = 10; // デフォルトは10フレームに1回
     int frameCounter_ = 0;   // フレーム計測用のタイマー
