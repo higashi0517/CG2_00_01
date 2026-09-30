@@ -44,7 +44,7 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	object3DManager_->SetDefaultCamera(camera_);
 
 	// JSONのレベルデータを読み込む
-	LevelData levelData = JsonLoader::Load("stage01");
+	LevelData levelData = JsonLoader::Load("stage02");
 
 	// 読み込めた数を確認
 	std::string message =
@@ -314,7 +314,7 @@ GamePlayScene::Draw() {
 
 	// === 3Dオブジェクト描画 ===
 	object3DManager_->SetCommonRenderState();
-	object3D_->Draw();
+	//object3D_->Draw();
 	// object3D_2_->Draw();
 
 	for (Object3D* levelObject : levelObjects_)
