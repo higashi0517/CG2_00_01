@@ -3,7 +3,6 @@
 #include "WinApp.h"
 #include "GraphicsDevice.h"
 #include "Input.h"
-#include "Sound.h"
 #include "SrvManager.h"
 #include "ImGuiManager.h"
 #include "DebugCamera.h"
@@ -33,7 +32,6 @@ private:
 	WinApp* winApp_ = nullptr;
 	GraphicsDevice* graphicsDevice_ = nullptr;
 	Input* input_ = nullptr;
-	Sound* sound_ = nullptr;
 
 	// ==== マネージャー群 ====
 	SrvManager* srvManager_ = nullptr;
@@ -50,5 +48,4 @@ private:
 	Sprite* sprite_ = nullptr;
 
 	// 音声データなど
-	Sound::SoundData bgmData_;
 };

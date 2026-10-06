@@ -1,4 +1,7 @@
 #include "GamePlayScene.h"
+#include "SceneManager.h"
+#include "ClearScene.h"
+#include "GameOverScene.h"
 #include "SrvManager.h"
 #include "RenderTexture.h"
 #include <algorithm>
@@ -11,14 +14,13 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	graphicsDevice_ = graphicsDevice;
 
 	// 3Dモデルマネジャの初期化
-	ModelManager::GetInstance()->Initialize(graphicsDevice_);
 	ModelManager::GetInstance()->LoadModel("player/player.obj");
 	ModelManager::GetInstance()->LoadModel("enemy/enemy.obj");
 
 	input_ = new Input();
 	input_->Initialize(winApp_);
+	input_->Update();
 
-	sound_ = new Sound();
 
 	camera_ = new Camera();
 	camera_->SetTranslate({ 0.0f, 3.0f, -7.0f });
@@ -50,7 +52,8 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = graphicsDevice_->AllocateRtvHandle();
 
 	// 2. SRVハンドルの確保 (既存のSrvManagerから空き枠を確保)
-	uint32_t srvIndex = SrvManager::GetInstance()->Allocate();
+	// 再入場でも同時に存在するゲームシーンは1つなので、このSRV枠を再利用する。
+	static const uint32_t srvIndex = SrvManager::GetInstance()->Allocate();
 	D3D12_CPU_DESCRIPTOR_HANDLE srvCPU = SrvManager::GetInstance()->GetCPUDescriptorHandle(srvIndex);
 	D3D12_GPU_DESCRIPTOR_HANDLE srvGPU = SrvManager::GetInstance()->GetGPUDescriptorHandle(srvIndex);
 
@@ -76,6 +79,7 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	player_->Initialize(object3DManager_, "player/player.obj");
 	player_->SetScale({ 0.5f, 0.5f, 0.5f });
 	player_->SetTranslate({ -1.0f, 0.0f, 0.0f });
+
 
 	enemySpawnController_ = std::make_unique<EnemySpawnController>();
 	enemySpawnController_->Initialize(object3DManager_, "enemy/enemy.obj");
@@ -113,20 +117,6 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 		"Resources/circle2.png");
 	gameUi_ = std::make_unique<GameUi>();
 	gameUi_->Initialize(spriteManager_);
-	const std::array<const char*, 3> screenPaths = {
-		"Resources/UI/title.png", "Resources/UI/clear.png", "Resources/UI/game-over.png"
-	};
-	for (size_t i = 0; i < screenImages_.size(); ++i) {
-		TextureManager::GetInstance()->LoadTexture(screenPaths[i]);
-		const auto& metadata = TextureManager::GetInstance()->GetMetaData(screenPaths[i]);
-		auto& screen = screenImages_[i];
-		screen = std::make_unique<Sprite>();
-		screen->Initialize(spriteManager_, screenPaths[i]);
-		screen->SetTextureSize({ float(metadata.width), float(metadata.height) });
-		screen->SetSize({ 1280.0f, 720.0f });
-		screen->SetPosition({ 0.0f, 0.0f });
-		screen->Update();
-	}
 
 	for (uint32_t i = 0; i < 5; ++i) {
 		sprite_ = new Sprite();
@@ -140,19 +130,6 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 		sprites_.push_back(sprite_);
 	}
 
-	// 音声の読み込み
-	bgmData_ = sound_->LoadFile("Resources/mokugyo.wav");
-
-	particleManager_ = new ParticleManager();
-	particleManager_->Initialize(graphicsDevice_);
-	particleManager_->SetCamera(camera_);
-
-	particleManager_->CreateParticleGroup("Magic", "Resources/gradationLine.png");
-
-	emitter_ = new ParticleEmitter();
-	emitter_->Initialize(particleManager_, "Magic");
-	emitter_->SetEmitCount(1);
-	emitter_->SetScaleYRange(1.0f, 1.0f);
 
 	// --- 1. RootSignature の作成 ---
 	D3D12_DESCRIPTOR_RANGE srvRange{};
@@ -239,6 +216,7 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	// コメントアウトを解除し、実際にPipelineStateオブジェクトを生成
 	hr = graphicsDevice_->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&copyPipelineState_));
 	assert(SUCCEEDED(hr));
+	StartMission();
 }
 
 void GamePlayScene::Update() {
@@ -246,21 +224,12 @@ void GamePlayScene::Update() {
 	input_->Update();
 	++uiFrames_;
 	if (input_->TriggerKey(DIK_F1)) { showDebug_ = !showDebug_; }
-	if (mission_.GetPhase() != MissionState::Phase::Playing) {
-		if (input_->TriggerKey(DIK_RETURN)) {
-			StartMission();
-		}
-		else if (input_->TriggerKey(DIK_ESCAPE)) {
-			if (mission_.GetPhase() == MissionState::Phase::Title) { PostQuitMessage(0); }
-			else { mission_.ReturnToTitle(); }
-		}
-		return;
-	}
 	if (input_->TriggerKey(DIK_ESCAPE)) {
-		mission_.ReturnToTitle();
+		SceneManager::GetInstance()->ChangeScene("TITLE");
 		return;
 	}
 	mission_.Tick();
+	if (gameFadeFrames_ > 0) { --gameFadeFrames_; }
 	if (shotCooldown_ > 0) { --shotCooldown_; }
 	if (showDebug_ && input_->TriggerKey(DIK_R)) {
 		railCamera_->ToggleActive();
@@ -269,10 +238,6 @@ void GamePlayScene::Update() {
 		OutputDebugStringA("Hit 0\n");
 	}
 
-	// soundの再生
-	if (input_->TriggerKey(DIK_1)) {
-		sound_->PlayWave(bgmData_);
-	}
 
 	// ゲーム処理
 
@@ -345,7 +310,6 @@ void GamePlayScene::Update() {
 
 #endif
 
-	emitter_->Update();
 
 	if (railCamera_->IsActive()) {
 		constexpr float kRailMoveSpeed = 0.08f;
@@ -430,6 +394,14 @@ void GamePlayScene::Update() {
 
 	if (isPlayerEnemyColliding_) { mission_.Damage(); }
 	mission_.Resolve();
+	if (mission_.GetPhase() == MissionState::Phase::Clear) {
+		SceneManager::GetInstance()->ChangeScene(std::make_unique<ClearScene>(mission_));
+		return;
+	}
+	if (mission_.GetPhase() == MissionState::Phase::GameOver) {
+		SceneManager::GetInstance()->ChangeScene(std::make_unique<GameOverScene>(mission_));
+		return;
+	}
 
 #ifdef USE_IMGUI
 	if (showDebug_) {
@@ -464,16 +436,9 @@ void GamePlayScene::Update() {
 		//sprite->Update();
 	}
 
-	particleManager_->Update();
 }
 
 void GamePlayScene::Draw() {
-	if (mission_.GetPhase() != MissionState::Phase::Playing) {
-		spriteManager_->SetCommonRenderState();
-		DrawGameUi();
-		return;
-	}
-
 	auto cmdList = graphicsDevice_->GetCommandList();
 
 	// 1. 状態を「レンダーターゲット」へ遷移
@@ -500,7 +465,6 @@ void GamePlayScene::Draw() {
 		player_->Draw(skinCluster_);
 	}
 	enemySpawnController_->Draw(skinCluster_);
-
 
 #ifdef _DEBUG
 	if (showDebug_) {
@@ -566,12 +530,6 @@ void GamePlayScene::Draw() {
 	}
 #endif
 
-	// === パーティクル描画 ===
-	SrvManager::GetInstance()->PreDraw();
-
-	particleManager_->SetCommonRenderState();
-	particleManager_->Draw();
-
 	// 1. 描き込みが終わったので、状態を「シェーダーリソース（読み込み用）」へ遷移
 	renderTexture_->TransitionToShaderResource(cmdList.Get());
 
@@ -605,12 +563,9 @@ void GamePlayScene::Draw() {
 }
 
 void GamePlayScene::Finalize() {
-	for (auto& screen : screenImages_) { screen.reset(); }
 	gameUi_.reset();
-	sound_->Unload(&bgmData_);
 
 	delete input_;
-	delete sound_;
 	railCamera_.reset();
 	delete camera_;
 	camera_ = nullptr;
@@ -628,8 +583,6 @@ void GamePlayScene::Finalize() {
 	sprites_.clear();
 
 	delete spriteManager_;
-	delete emitter_;
-	delete particleManager_;
 }
 
 GamePlayScene::GamePlayScene() {}
@@ -638,7 +591,7 @@ GamePlayScene::~GamePlayScene() {}
 
 void GamePlayScene::StartMission()
 {
-	// GPUオブジェクトや画像は共有し、再挑戦では進行データだけを初期化する。
+	// このシーンに入場した時点で、新しいミッションを開始する。
 	mission_.Start();
 	playerBullets_.clear();
 	enemyBullets_.clear();
@@ -646,6 +599,7 @@ void GamePlayScene::StartMission()
 	enemySpawnController_->Reset();
 	enemyBulletTimer_ = 0;
 	shotCooldown_ = 0;
+	gameFadeFrames_ = 18;
 	isPlayerEnemyColliding_ = false;
 	showDebug_ = false;
 	railCamera_->Reset();
@@ -705,22 +659,12 @@ void GamePlayScene::DrawGameUi()
 			gameUi_->Rect(0, 0, 1280, 6, orange);
 			gameUi_->Rect(0, 714, 1280, 6, orange);
 		}
+		if (gameFadeFrames_ > 0) {
+			gameUi_->Rect(0, 0, 1280, 720, {0.0f, 0.0f, 0.0f, float(gameFadeFrames_) / 18.0f});
+		}
 		return;
 	}
 
-	const auto phase = mission_.GetPhase();
-	const size_t screenIndex = phase == MissionState::Phase::Title ? 0 :
-		(phase == MissionState::Phase::Clear ? 1 : 2);
-	screenImages_[screenIndex]->Draw();
-	// 結果は画像内の操作説明と重ならない下端に表示する。
-	if (phase != MissionState::Phase::Title) {
-		gameUi_->CenteredText("TARGETS " + std::to_string(mission_.GetDefeated()) +
-			" / 5    HP " + std::to_string(mission_.GetHealth()) + " / 3    TIME " +
-			std::to_string(mission_.GetRemainingSeconds()) + "s", 652, 1.3f, white);
-		if (phase == MissionState::Phase::GameOver) {
-			gameUi_->CenteredText(mission_.GetHealth() == 0 ? "HP ZERO" : "TIME UP", 682, 1.0f, white);
-		}
-	}
 }
 void GamePlayScene::UpdateFollowCamera()
 {

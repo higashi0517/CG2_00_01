@@ -2,6 +2,7 @@
 
 #include "AbstractSceneFactory.h"
 #include <string>
+#include <memory>
 
 class BaseScene;
 class WinApp;           
@@ -19,6 +20,8 @@ private:
 public:
 	void Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice);
 	void ChangeScene(const std::string& sceneName);
+	// 結果データをコンストラクタで渡したシーンも予約できる。
+	void ChangeScene(std::unique_ptr<BaseScene> nextScene);
 	void Update();
 	void Draw();
 	static SceneManager* GetInstance();

@@ -3,12 +3,9 @@
 #include "ImGuiManager.h"
 #include "TextureManager.h"
 #include "Input.h"
-#include "Sound.h"
 #include "Object3DManager.h"
 #include "Object3D.h"
 #include "SpriteManager.h"
-#include "ParticleManager.h"
-#include "ParticleEmitter.h"
 #include "Camera.h"
 #include "RailCamera.h"
 #include <vector>
@@ -26,7 +23,6 @@
 #include "Reticle3D.h"
 #include "GameUi.h"
 #include "MissionState.h"
-#include <array>
 
 class WinApp;
 class GraphicsDevice;
@@ -46,19 +42,16 @@ public:
 private:
 	MissionState mission_;
 	std::unique_ptr<GameUi> gameUi_;
-	std::array<std::unique_ptr<Sprite>, 3> screenImages_;
 	bool showDebug_ = false;
 	int shotCooldown_ = 0;
 	int uiFrames_ = 0;
+	int gameFadeFrames_ = 0;
 	void StartMission();
 	void DrawGameUi();
 	Input* input_ = nullptr;
-	Sound* sound_ = nullptr;
 
 	Object3DManager* object3DManager_ = nullptr;
 	SpriteManager* spriteManager_ = nullptr;
-	ParticleManager* particleManager_ = nullptr;
-	ParticleEmitter* emitter_ = nullptr;
 	std::unique_ptr<Player> player_;
 	std::unique_ptr<EnemySpawnController> enemySpawnController_;
 
@@ -79,7 +72,6 @@ private:
 	int selected_ = 0;
 	bool isPlayerEnemyColliding_ = false;
 
-	Sound::SoundData bgmData_;
 
 	WinApp* winApp_ = nullptr;
 	GraphicsDevice* graphicsDevice_ = nullptr;

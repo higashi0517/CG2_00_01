@@ -21,11 +21,13 @@ void Game::Initialize() {
 	ImGuiManager::GetInstance()->Initialize(winApp_, graphicsDevice_);
 
 	TextureManager::GetInstance()->Initialize(graphicsDevice_, srvManager_);
+	// モデルはシーンをまたいで共有するため、アプリ起動時に一度だけ初期化する。
+	ModelManager::GetInstance()->Initialize(graphicsDevice_);
 
 	SceneManager::GetInstance()->Initialize(winApp_, graphicsDevice_);
 	SceneFactory* sceneFactory = new SceneFactory();
 	SceneManager::GetInstance()->SetSceneFactory(sceneFactory);
-	SceneManager::GetInstance()->ChangeScene("GAMEPLAY");
+	SceneManager::GetInstance()->ChangeScene("TITLE");
 }
 
 void Game::Update() {

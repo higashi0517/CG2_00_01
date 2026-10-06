@@ -37,6 +37,14 @@ void SceneManager::ChangeScene(const std::string& sceneName)
 	assert(sceneFactory_);
 	assert(nextScene_ == nullptr);
 	nextScene_ = sceneFactory_->CreateScene(sceneName);
+	assert(nextScene_);
+}
+
+void SceneManager::ChangeScene(std::unique_ptr<BaseScene> nextScene)
+{
+	assert(nextScene_ == nullptr);
+	assert(nextScene);
+	nextScene_ = nextScene.release();
 }
 
 void SceneManager::Draw()
@@ -48,6 +56,8 @@ void SceneManager::Draw()
 
 void SceneManager::Finalize()
 {
+	delete nextScene_;
+	nextScene_ = nullptr;
 	if (scene_) {
 		scene_->Finalize();
 		delete scene_;

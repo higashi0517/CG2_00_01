@@ -1,52 +1,42 @@
 #pragma once
-#include "ModelManager.h"
-#include "ImGuiManager.h"
-#include "TextureManager.h"
+#include "BaseScene.h"
 #include "Input.h"
-#include "Sound.h"
+#include "Camera.h"
+#include "RailCamera.h"
 #include "Object3DManager.h"
 #include "Object3D.h"
+#include "Player.h"
+#include "Skydome.h"
 #include "SpriteManager.h"
-#include "ParticleManager.h"
-#include "ParticleEmitter.h"
-#include "Camera.h"
-#include <vector>
-#include <cstdint>
-#include "BaseScene.h"
-#include "Skybox.h"
+#include "GameUi.h"
+#include "Skeleton.h"
+#include <array>
+#include <memory>
 
-class WinApp;
-class GraphicsDevice;
-
+// タイトルだけの描画・入力・開始演出を所有する。
 class TitleScene : public BaseScene
 {
 public:
-	void Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)override;
-	void Update()override;
-	void Draw()override;
-	void Finalize()override;
+	void Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice) override;
+	void Update() override;
+	void Draw() override;
+	void Finalize() override;
 
 private:
-	Input* input_ = nullptr;
-	Sound* sound_ = nullptr;
-
-	Object3DManager* object3DManager_ = nullptr;
-	SpriteManager* spriteManager_ = nullptr;
-	ParticleManager* particleManager_ = nullptr;
-	ParticleEmitter* emitter_ = nullptr;
-
-	Camera* camera_ = nullptr;
-	Object3D* object3D_ = nullptr;
-	Object3D* object3D_2_ = nullptr;
-	std::vector<Sprite*> sprites_;
-	Sprite* sprite_ = nullptr;
-
-	int selected_ = 0;
-
-	Sound::SoundData bgmData_;
-
-	WinApp* winApp_ = nullptr;
-	GraphicsDevice* graphicsDevice_ = nullptr;
-
-	Skybox* skybox_ = nullptr;
+	void UpdateAnimation();
+	std::unique_ptr<Input> input_;
+	std::unique_ptr<Camera> camera_;
+	std::unique_ptr<Object3DManager> object3DManager_;
+	std::unique_ptr<SpriteManager> spriteManager_;
+	std::unique_ptr<GameUi> gameUi_;
+	std::unique_ptr<Player> player_;
+	std::unique_ptr<Skydome> skydome_;
+	std::unique_ptr<RailCamera> titleRailCamera_;
+	std::array<std::unique_ptr<Object3D>, 2> titleEnemies_;
+	std::unique_ptr<Sprite> titleSprite_;
+	SkinCluster skinCluster_;
+	float titleTime_ = 0.0f;
+	int titleLaunchFrames_ = 0;
+	bool titleLaunching_ = false;
+	static constexpr int kTitleLaunchFrames = 48;
 };

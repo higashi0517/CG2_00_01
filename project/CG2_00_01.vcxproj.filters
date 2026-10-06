@@ -75,9 +75,7 @@
     <ClCompile Include="main.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Src\Engine\Sound\Sound.cpp">
-      <Filter>ソース ファイル\sound</Filter>
-    </ClCompile>
+
     <ClCompile Include="Src\Engine\Math\Matrix4x4.cpp">
       <Filter>ソース ファイル\math</Filter>
     </ClCompile>
@@ -151,6 +149,12 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="Src\Scene\Title\TitleScene.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Scene\ClearScene.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Scene\GameOverScene.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="Src\Scene\BaseScene.cpp">
@@ -229,9 +233,7 @@
     <ClInclude Include="Src\Engine\Camera\DebugCamera.h">
       <Filter>ヘッダー ファイル\camera</Filter>
     </ClInclude>
-    <ClInclude Include="Src\Engine\Sound\Sound.h">
-      <Filter>ヘッダー ファイル\sound</Filter>
-    </ClInclude>
+
     <ClInclude Include="ResourceObject.h">
       <Filter>ヘッダー ファイル\resource</Filter>
     </ClInclude>
@@ -254,9 +256,6 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="Src\Engine\Core\D3DResourceLeakChecker.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="resource.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="Src\Engine\Graphics\Sprite\Sprite.h">
@@ -314,6 +313,12 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="Src\Scene\Title\TitleScene.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Scene\ClearScene.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Scene\GameOverScene.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="Src\Scene\BaseScene.h">
@@ -384,11 +389,6 @@
     <None Include="Resources\shaders\Fullscreen.hlsli" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="CG2_00_01.rc">
-      <Filter>リソース ファイル</Filter>
-    </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
     <Image Include="Resources\UI\title.png"><Filter>リソース ファイル</Filter></Image>
     <Image Include="Resources\UI\clear.png"><Filter>リソース ファイル</Filter></Image>
     <Image Include="Resources\UI\game-over.png"><Filter>リソース ファイル</Filter></Image>
@@ -398,8 +398,8 @@
     <None Include="Resources\shaders\Skydome.PS.hlsl"><Filter>リソース ファイル\shaders</Filter></None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\aircraft\player.obj"><Filter>リソース ファイル</Filter></None>
-    <None Include="Resources\aircraft\player.mtl"><Filter>リソース ファイル</Filter></None>
-    <Image Include="Resources\aircraft\player.png"><Filter>リソース ファイル</Filter></Image>
+
+
+
   </ItemGroup>
 </Project>
