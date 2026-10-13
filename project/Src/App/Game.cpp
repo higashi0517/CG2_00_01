@@ -9,24 +9,23 @@ void Game::Initialize() {
 	// 基盤システムの初期化
 	Framework::Initialize();
 
-	winApp_ = new WinApp();
+	winApp_ = std::make_unique<WinApp>();
 	winApp_->Initialize();
 
-	graphicsDevice_ = new GraphicsDevice();
-	graphicsDevice_->Initialize(winApp_);
+	graphicsDevice_ = std::make_unique<GraphicsDevice>();
+	graphicsDevice_->Initialize(winApp_.get());
 
 	srvManager_ = SrvManager::GetInstance();
-	srvManager_->Initialize(graphicsDevice_);
+	srvManager_->Initialize(graphicsDevice_.get());
 
-	ImGuiManager::GetInstance()->Initialize(winApp_, graphicsDevice_);
+	ImGuiManager::GetInstance()->Initialize(winApp_.get(), graphicsDevice_.get());
 
-	TextureManager::GetInstance()->Initialize(graphicsDevice_, srvManager_);
+	TextureManager::GetInstance()->Initialize(graphicsDevice_.get(), srvManager_);
 	// モデルはシーンをまたいで共有するため、アプリ起動時に一度だけ初期化する。
-	ModelManager::GetInstance()->Initialize(graphicsDevice_);
+	ModelManager::GetInstance()->Initialize(graphicsDevice_.get());
 
-	SceneManager::GetInstance()->Initialize(winApp_, graphicsDevice_);
-	SceneFactory* sceneFactory = new SceneFactory();
-	SceneManager::GetInstance()->SetSceneFactory(sceneFactory);
+	SceneManager::GetInstance()->Initialize(winApp_.get(), graphicsDevice_.get());
+	SceneManager::GetInstance()->SetSceneFactory(std::make_unique<SceneFactory>());
 	SceneManager::GetInstance()->ChangeScene("TITLE");
 }
 
@@ -63,8 +62,8 @@ void Game::Finalize() {
 	ModelManager::GetInstance()->Finalize();
 	Framework::Finalize();
 	winApp_->Finalize();
-	delete winApp_;
-	delete graphicsDevice_;
+	winApp_.reset();
+	graphicsDevice_.reset();
 }
 bool Game::ProcessMessage() {
 	// WinAppのメッセージループを回す

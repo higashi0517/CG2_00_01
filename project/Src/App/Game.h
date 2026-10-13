@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 
 #include "WinApp.h"
 #include "GraphicsDevice.h"
@@ -29,8 +30,8 @@ public:
 
 private:
 	// ==== 基盤システム群 ====
-	WinApp* winApp_ = nullptr;
-	GraphicsDevice* graphicsDevice_ = nullptr;
+	std::unique_ptr<WinApp> winApp_ = nullptr;
+	std::unique_ptr<GraphicsDevice> graphicsDevice_ = nullptr;
 	Input* input_ = nullptr;
 
 	// ==== マネージャー群 ====

@@ -17,6 +17,5 @@ public:
 
 private:
 	bool endRequst_ = false;
-	AbstractSceneFactory* sceneFactory_ = nullptr;
 };
 

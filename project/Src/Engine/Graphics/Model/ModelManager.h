@@ -18,10 +18,10 @@ private:
 	ModelManager(const ModelManager&) = delete;
 	// コピー代入演算子
 	ModelManager& operator=(const ModelManager&) = delete;
+	// モデルより後に解放されるよう、先に宣言する。
+	std::unique_ptr<ModelCommon> modelCommon = nullptr;
 	// モデルデータ
 	std::map<std::string, std::unique_ptr<Model>> models;
-	// 
-	ModelCommon* modelCommon = nullptr;
 
 public:
 	// シングルトンインスタンスの取得

@@ -17,12 +17,12 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	ModelManager::GetInstance()->LoadModel("player/player.obj");
 	ModelManager::GetInstance()->LoadModel("enemy/enemy.obj");
 
-	input_ = new Input();
+	input_ = std::make_unique<Input>();
 	input_->Initialize(winApp_);
 	input_->Update();
 
 
-	camera_ = new Camera();
+	camera_ = std::make_unique<Camera>();
 	camera_->SetTranslate({ 0.0f, 3.0f, -7.0f });
 	camera_->SetRotate({ 0.35f, 0.0f, 0.0f });
 	camera_->SetFovY(0.75f);
@@ -34,7 +34,7 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	railCamera_ = std::make_unique<RailCamera>();
 	// 約180のコースを75秒で進む。緩やかなカーブで前方を見通しやすくする。
 	constexpr float kRailSpeed = 1.0f / (75.0f * 60.0f);
-	railCamera_->Initialize(camera_, {
+	railCamera_->Initialize(camera_.get(), {
 		{ 0.0f, 0.0f, -30.0f },
 		{ 0.0f, 0.0f,   0.0f },
 		{ 2.0f, 0.5f,  30.0f },
@@ -68,21 +68,21 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 		rtvHandle, srvCPU, srvGPU
 	);
 
-	object3DManager_ = new Object3DManager();
+	object3DManager_ = std::make_unique<Object3DManager>();
 	object3DManager_->Initialize(graphicsDevice_);
-	object3DManager_->SetDefaultCamera(camera_);
+	object3DManager_->SetDefaultCamera(camera_.get());
 
 	skydome_ = std::make_unique<Skydome>();
-	skydome_->Initialize(graphicsDevice_, camera_);
+	skydome_->Initialize(graphicsDevice_, camera_.get());
 
 	player_ = std::make_unique<Player>();
-	player_->Initialize(object3DManager_, "player/player.obj");
+	player_->Initialize(object3DManager_.get(), "player/player.obj");
 	player_->SetScale({ 0.5f, 0.5f, 0.5f });
 	player_->SetTranslate({ -1.0f, 0.0f, 0.0f });
 
 
 	enemySpawnController_ = std::make_unique<EnemySpawnController>();
-	enemySpawnController_->Initialize(object3DManager_, "enemy/enemy.obj");
+	enemySpawnController_->Initialize(object3DManager_.get(), "enemy/enemy.obj");
 	enemySpawnController_->SetDespawnDistance(1000.0f);
 	// 15秒おきに、出現時のレール位置から18ほど前方へ配置する。
 	// 固定のワールド座標ではなく、コース変更に追従する配置。
@@ -100,9 +100,8 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 			railPosition.z + forward.z * 18.0f + right.z * side
 		});
 	}
-	spriteManager_ = nullptr;
 	// スプライト共通部の初期化
-	spriteManager_ = new SpriteManager();
+	spriteManager_ = std::make_unique<SpriteManager>();
 	spriteManager_->Initialize(graphicsDevice_);
 
 	TextureManager::GetInstance()->LoadTexture("Resources/uvChecker.png");
@@ -112,22 +111,22 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 
 	reticle3D_ = std::make_unique<Reticle3D>();
 	reticle3D_->Initialize(
-		spriteManager_,
+		spriteManager_.get(),
 		winApp_,
 		"Resources/circle2.png");
 	gameUi_ = std::make_unique<GameUi>();
-	gameUi_->Initialize(spriteManager_);
+	gameUi_->Initialize(spriteManager_.get());
 
 	for (uint32_t i = 0; i < 5; ++i) {
-		sprite_ = new Sprite();
-		sprite_->Initialize(spriteManager_, "Resources/uvChecker.png");
+		auto sprite = std::make_unique<Sprite>();
+		sprite->Initialize(spriteManager_.get(), "Resources/uvChecker.png");
 		if (i % 2 == 1)
 		{
-			sprite_->ChangeTexture("Resources/monsterBall.png");
+			sprite->ChangeTexture("Resources/monsterBall.png");
 		}
-		sprite_->SetPosition({ 100.0f + i * 120.0f, 50.0f });
-		sprite_->SetSize({ 100.0f,100.0f });
-		sprites_.push_back(sprite_);
+		sprite->SetPosition({ 100.0f + i * 120.0f, 50.0f });
+		sprite->SetSize({ 100.0f,100.0f });
+		sprites_.push_back(std::move(sprite));
 	}
 
 
@@ -229,7 +228,6 @@ void GamePlayScene::Update() {
 		return;
 	}
 	mission_.Tick();
-	if (gameFadeFrames_ > 0) { --gameFadeFrames_; }
 	if (shotCooldown_ > 0) { --shotCooldown_; }
 	if (showDebug_ && input_->TriggerKey(DIK_R)) {
 		railCamera_->ToggleActive();
@@ -251,7 +249,7 @@ void GamePlayScene::Update() {
 
 	ImGui::SliderInt("Selected", &selected_, 0, (int)sprites_.size() - 1);
 
-	Sprite* s = sprites_[selected_];
+	Sprite* s = sprites_[selected_].get();
 
 	// sprite
 	Vector2 pos = s->GetPosition();
@@ -342,7 +340,7 @@ void GamePlayScene::Update() {
 		player_->UpdateTransform();
 	}
 	else {
-		player_->Update(input_);
+		player_->Update(input_.get());
 		Vector3 position = player_->GetTranslate();
 		position.x = std::clamp(position.x, -12.0f, 12.0f);
 		position.z = std::clamp(position.z, -4.0f, 30.0f);
@@ -565,24 +563,20 @@ void GamePlayScene::Draw() {
 void GamePlayScene::Finalize() {
 	gameUi_.reset();
 
-	delete input_;
+	input_.reset();
 	railCamera_.reset();
-	delete camera_;
-	camera_ = nullptr;
+	camera_.reset();
 	skydome_.reset();
 	playerBullets_.clear();
 	enemyBullets_.clear();
 	reticle3D_.reset();
 	player_.reset();
 	enemySpawnController_.reset();
-	delete object3DManager_;
+	object3DManager_.reset();
 
-	for (Sprite* sprite : sprites_) {
-		delete sprite;
-	}
 	sprites_.clear();
 
-	delete spriteManager_;
+	spriteManager_.reset();
 }
 
 GamePlayScene::GamePlayScene() {}
@@ -599,7 +593,6 @@ void GamePlayScene::StartMission()
 	enemySpawnController_->Reset();
 	enemyBulletTimer_ = 0;
 	shotCooldown_ = 0;
-	gameFadeFrames_ = 18;
 	isPlayerEnemyColliding_ = false;
 	showDebug_ = false;
 	railCamera_->Reset();
@@ -659,9 +652,6 @@ void GamePlayScene::DrawGameUi()
 			gameUi_->Rect(0, 0, 1280, 6, orange);
 			gameUi_->Rect(0, 714, 1280, 6, orange);
 		}
-		if (gameFadeFrames_ > 0) {
-			gameUi_->Rect(0, 0, 1280, 720, {0.0f, 0.0f, 0.0f, float(gameFadeFrames_) / 18.0f});
-		}
 		return;
 	}
 
@@ -711,7 +701,7 @@ void GamePlayScene::SpawnPlayerBullet()
 		enemySpawnController_->ContainsEnemy(lockOnTarget_)) {
 		auto bullet = std::make_unique<HomingProjectile>();
 		bullet->Initialize(
-			spriteManager_,
+			spriteManager_.get(),
 			enemySpawnController_.get(),
 			lockOnTarget_,
 			start,
@@ -727,7 +717,7 @@ void GamePlayScene::SpawnPlayerBullet()
 
 	auto bullet = std::make_unique<NormalProjectile>();
 	bullet->Initialize(
-		spriteManager_,
+		spriteManager_.get(),
 		start,
 		{
 			direction.x * 0.15f,
@@ -764,7 +754,7 @@ void GamePlayScene::SpawnEnemyBullet()
 
 	auto bullet = std::make_unique<Projectile>();
 	bullet->Initialize(
-		spriteManager_,
+		spriteManager_.get(),
 		"Resources/circle2.png",
 		ProjectileOwner::Enemy,
 		start,

@@ -9,6 +9,7 @@
 #include "Camera.h"
 #include "RailCamera.h"
 #include <vector>
+#include <memory>
 #include <cstdint>
 #include "BaseScene.h"
 #include "Animation.h"
@@ -45,17 +46,16 @@ private:
 	bool showDebug_ = false;
 	int shotCooldown_ = 0;
 	int uiFrames_ = 0;
-	int gameFadeFrames_ = 0;
 	void StartMission();
 	void DrawGameUi();
-	Input* input_ = nullptr;
+	std::unique_ptr<Input> input_ = nullptr;
 
-	Object3DManager* object3DManager_ = nullptr;
-	SpriteManager* spriteManager_ = nullptr;
+	std::unique_ptr<Object3DManager> object3DManager_ = nullptr;
+	std::unique_ptr<SpriteManager> spriteManager_ = nullptr;
 	std::unique_ptr<Player> player_;
 	std::unique_ptr<EnemySpawnController> enemySpawnController_;
 
-	Camera* camera_ = nullptr;
+	std::unique_ptr<Camera> camera_ = nullptr;
 	std::unique_ptr<RailCamera> railCamera_;
 	Vector2 railPlayerOffset_ = { 0.0f, 0.0f };
 	std::unique_ptr<Skydome> skydome_;
@@ -66,8 +66,7 @@ private:
 	int enemyBulletTimer_ = 0;
 	/*Object3D* object3D_ = nullptr;
 	Object3D* object3D_2_ = nullptr;*/
-	std::vector<Sprite*> sprites_;
-	Sprite* sprite_ = nullptr;
+	std::vector<std::unique_ptr<Sprite>> sprites_;
 
 	int selected_ = 0;
 	bool isPlayerEnemyColliding_ = false;

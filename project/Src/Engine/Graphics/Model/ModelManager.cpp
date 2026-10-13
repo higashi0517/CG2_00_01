@@ -25,7 +25,7 @@ void ModelManager::Finalize()
 void  ModelManager::Initialize(GraphicsDevice* graphicsDevice) 
 {
 	// モデルマネージャの初期化
-	modelCommon = new ModelCommon;
+	modelCommon = std::make_unique<ModelCommon>();
 	modelCommon->Initialize(graphicsDevice);
 }
 
@@ -40,7 +40,7 @@ void ModelManager::LoadModel(const std::string& filePath)
 	// モデルの生成とファイル読み込み初期化
 	std::unique_ptr<Model> model = std::make_unique<Model>();
 	const auto path = std::filesystem::path("Resources") / filePath;
-	model->Initialize(modelCommon, path.parent_path().generic_string(), path.filename().generic_string());
+	model->Initialize(modelCommon.get(), path.parent_path().generic_string(), path.filename().generic_string());
 
 	// モデルをmapに登録
 	models.insert(std::make_pair(filePath, std::move(model)));

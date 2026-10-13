@@ -1,4 +1,5 @@
 #include <Windows.h>
+#include <memory>
 #include "Game.h"
 #include "D3DResourceLeakChecker.h"
 
@@ -7,9 +8,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	D3DResourceLeakChecker leakChecker;
 
-	Framework* game = new Game();
+	std::unique_ptr<Framework> game = std::make_unique<Game>();
 	game->Run();
 
-	delete game;
 	return 0;
 }

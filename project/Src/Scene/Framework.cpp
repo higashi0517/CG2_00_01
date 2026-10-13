@@ -59,7 +59,6 @@ void Framework::Finalize() {
 	Log("Complete create D3D12Device!!!\n");
 
 	SceneManager::GetInstance()->Finalize();
-	delete sceneFactory_;
 
 	TextureManager::GetInstance()->Finalize();
 	SrvManager::GetInstance()->Finalize();

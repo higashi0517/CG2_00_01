@@ -2,7 +2,6 @@
 #include "SceneManager.h"
 #include "ModelManager.h"
 #include "SrvManager.h"
-#include <algorithm>
 #include <cmath>
 
 void TitleScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
@@ -23,7 +22,6 @@ void TitleScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	player_->SetScale({0.5f, 0.5f, 0.5f});
 	skydome_ = std::make_unique<Skydome>();
 	skydome_->Initialize(graphicsDevice, camera_.get());
-	// タイトル専用の閉じたレール。長時間待機しても終端で止まらない。
 	titleRailCamera_ = std::make_unique<RailCamera>();
 	titleRailCamera_->Initialize(camera_.get(), {
 		{0.0f, 0.0f, 0.0f}, {17.6f, 0.5f, 42.4f},
@@ -49,7 +47,6 @@ void TitleScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	const auto& metadata = TextureManager::GetInstance()->GetMetaData(path);
 	titleSprite_ = std::make_unique<Sprite>();
 	titleSprite_->Initialize(spriteManager_.get(), path);
-	// 背景付き画像のロゴ領域だけを使用する。
 	titleSprite_->SetTextureLeftTop({float(metadata.width) * 0.275f, float(metadata.height) * 0.44f});
 	titleSprite_->SetTextureSize({float(metadata.width) * 0.45f, float(metadata.height) * 0.11f});
 	titleSprite_->SetAnchorPoint({0.5f, 0.5f});
@@ -90,9 +87,6 @@ void TitleScene::Draw()
 	gameUi_->Rect(360, 590, 560, 60, {0.025f, 0.045f, 0.08f, 0.8f * alpha});
 	gameUi_->CenteredText(titleLaunching_ ? "LAUNCHING" : "PRESS SPACE TO START", 606, 1.8f, {0.92f, 0.96f, 1.0f, blink});
 	gameUi_->CenteredText("WASD MOVE   MOUSE AIM   HOLD SPACE FIRE", 674, 1.2f, {0.92f, 0.96f, 1.0f, alpha});
-	// 最後の0.25秒で暗転し、レール始点への切り替えを隠す。
-	const float black = std::clamp((launch - 0.6875f) / 0.3125f, 0.0f, 1.0f);
-	gameUi_->Rect(0, 0, 1280, 720, {0.0f, 0.0f, 0.0f, black});
 }
 
 void TitleScene::UpdateAnimation()
@@ -100,8 +94,9 @@ void TitleScene::UpdateAnimation()
 	constexpr float kDeltaTime = 1.0f / 60.0f;
 	titleTime_ += kDeltaTime;
 	if (titleLaunching_) {
-		// 48フレーム目を真っ黒で描画してからゲームへ切り替える。
+		// 出撃アニメーションの後、SceneManagerの共通フェードへ進む。
 		if (titleLaunchFrames_ >= kTitleLaunchFrames) {
+			// 遷移演出の確認用。通常動作に戻すときは "GAMEPLAY" に変更する。
 			SceneManager::GetInstance()->ChangeScene("GAMEPLAY");
 			return;
 		}
