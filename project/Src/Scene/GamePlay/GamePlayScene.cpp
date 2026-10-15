@@ -84,7 +84,7 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 	enemySpawnController_ = std::make_unique<EnemySpawnController>();
 	enemySpawnController_->Initialize(object3DManager_.get(), "enemy/enemy.obj");
 	enemySpawnController_->SetDespawnDistance(1000.0f);
-	// 15秒おきに、出現時のレール位置から18ほど前方へ配置する。
+	// 15秒おきに左右の画面外から進入し、3秒かけて前方の戦闘位置へ向かう。
 	// 固定のワールド座標ではなく、コース変更に追従する配置。
 	for (int i = 0; i < MissionState::kTargetCount; ++i) {
 		const int frame = i * 15 * 60;
@@ -94,11 +94,17 @@ void GamePlayScene::Initialize(WinApp* winApp, GraphicsDevice* graphicsDevice)
 		const Vector3 forward = Normalize(Vector3{ ahead.x - railPosition.x, ahead.y - railPosition.y, ahead.z - railPosition.z });
 		const Vector3 right = Normalize(Vector3{ forward.z, 0.0f, -forward.x });
 		const float side = i % 2 == 0 ? -2.5f : 2.5f;
+		const float entranceSide = i % 2 == 0 ? -60.0f : 60.0f;
+		const Vector3 entranceStart = {
+			railPosition.x + forward.x * 45.0f + right.x * entranceSide,
+			railPosition.y + forward.y * 45.0f + 5.0f,
+			railPosition.z + forward.z * 45.0f + right.z * entranceSide
+		};
 		enemySpawnController_->AddSpawnEvent(frame, {
 			railPosition.x + forward.x * 18.0f + right.x * side,
 			railPosition.y + forward.y * 18.0f,
 			railPosition.z + forward.z * 18.0f + right.z * side
-		});
+		}, entranceStart, 3 * 60);
 	}
 	// スプライト共通部の初期化
 	spriteManager_ = std::make_unique<SpriteManager>();
@@ -311,6 +317,7 @@ void GamePlayScene::Update() {
 
 	if (railCamera_->IsActive()) {
 		constexpr float kRailMoveSpeed = 0.08f;
+		const Vector2 previousOffset = railPlayerOffset_;
 		if (input_->PushKey(DIK_A)) {
 			railPlayerOffset_.x -= kRailMoveSpeed;
 		}
@@ -337,6 +344,9 @@ void GamePlayScene::Update() {
 		};
 		player_->SetTranslate(playerPosition);
 		player_->SetRotate(railCamera_->GetRailRotation());
+		player_->UpdateMovementTilt(
+			(railPlayerOffset_.x - previousOffset.x) / kRailMoveSpeed,
+			(railPlayerOffset_.y - previousOffset.y) / kRailMoveSpeed);
 		player_->UpdateTransform();
 	}
 	else {
@@ -598,6 +608,7 @@ void GamePlayScene::StartMission()
 	railCamera_->Reset();
 	railCamera_->SetActive(true);
 	railPlayerOffset_ = { 0.0f, 0.0f };
+	player_->ResetMovementTilt();
 	// 開始直後から、カメラと自機をレールの始点に揃える。
 	railCamera_->Update();
 	player_->SetTranslate(railCamera_->GetRailPosition());
@@ -732,7 +743,7 @@ void GamePlayScene::SpawnEnemyBullet()
 {
 	Enemy* shootingEnemy =
 		enemySpawnController_->GetNearestEnemy(player_->GetTranslate());
-	if (shootingEnemy == nullptr) {
+	if (shootingEnemy == nullptr || shootingEnemy->IsEntering()) {
 		return;
 	}
 

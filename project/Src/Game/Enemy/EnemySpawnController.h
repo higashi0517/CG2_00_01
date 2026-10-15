@@ -19,12 +19,15 @@ public:
 	{
 		int frame = 0;
 		Vector3 position = { 0.0f, 0.0f, 0.0f };
+		Vector3 entranceStart{};
+		int entranceDuration = 0;
 	};
 
 	void Initialize(
 		Object3DManager* object3DManager,
 		const std::string& modelFileName);
 	void AddSpawnEvent(int frame, const Vector3& position);
+	void AddSpawnEvent(int frame, const Vector3& position, const Vector3& entranceStart, int entranceDuration);
 	void Update(const Vector3& playerPosition);
 	void Draw(const SkinCluster& skinCluster);
 	void Reset();
@@ -46,7 +49,7 @@ public:
 	void SetDespawnDistance(float distance) { despawnDistance_ = distance; }
 
 private:
-	void Spawn(const Vector3& position);
+	void Spawn(const SpawnEvent& event);
 
 	Object3DManager* object3DManager_ = nullptr;
 	std::string modelFileName_;

@@ -14,6 +14,8 @@ class Player
 public:
 	void Initialize(Object3DManager* object3DManager, const std::string& modelFileName);
 	void Update(Input* input);
+	void UpdateMovementTilt(float horizontal, float vertical);
+	void ResetMovementTilt();
 	void UpdateTransform();
 	void Draw(const SkinCluster& skinCluster);
 
@@ -29,5 +31,8 @@ public:
 private:
 	std::unique_ptr<Object3D> object3D_;
 	Collider collider_;
+	Vector3 baseRotation_{};
+	Vector3 movementTilt_{};
+	void ApplyRotation();
 	void UpdateCollider();
 };

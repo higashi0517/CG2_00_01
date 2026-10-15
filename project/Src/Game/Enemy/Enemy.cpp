@@ -12,6 +12,8 @@ void Enemy::Initialize(Object3DManager* object3DManager, const std::string& mode
 	object3D_ = std::make_unique<Object3D>();
 	object3D_->Initialize(object3DManager);
 	object3D_->SetModel(modelFileName);
+	entranceFrame_ = 0;
+	entranceDuration_ = 0;
 
 	collider_.SetHalfSize({ 0.35f, 1.0f, 0.35f });
 
@@ -25,6 +27,17 @@ void Enemy::Initialize(Object3DManager* object3DManager, const std::string& mode
 
 void Enemy::Update(const Vector3& playerPosition)
 {
+	if (IsEntering()) {
+		++entranceFrame_;
+		const float t = float(entranceFrame_) / float(entranceDuration_);
+		// 戦闘位置に近づくほど減速し、停止時の速度をゼロにする。
+		const float eased = 1.0f - (1.0f - t) * (1.0f - t);
+		SetTranslate({
+			entranceStart_.x + (entranceDestination_.x - entranceStart_.x) * eased,
+			entranceStart_.y + (entranceDestination_.y - entranceStart_.y) * eased,
+			entranceStart_.z + (entranceDestination_.z - entranceStart_.z) * eased
+		});
+	}
 	const Vector3 enemyPosition = object3D_->GetTranslate();
 	const float directionX = playerPosition.x - enemyPosition.x;
 	const float directionZ = playerPosition.z - enemyPosition.z;
@@ -36,6 +49,15 @@ void Enemy::Update(const Vector3& playerPosition)
 	}
 
 	Update();
+}
+
+void Enemy::StartEntrance(const Vector3& start, const Vector3& destination, int durationFrames)
+{
+	entranceStart_ = start;
+	entranceDestination_ = destination;
+	entranceFrame_ = 0;
+	entranceDuration_ = durationFrames > 0 ? durationFrames : 0;
+	SetTranslate(entranceDuration_ > 0 ? start : destination);
 }
 
 void Enemy::Update()

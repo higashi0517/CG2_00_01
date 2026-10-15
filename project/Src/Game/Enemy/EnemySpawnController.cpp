@@ -19,8 +19,14 @@ void EnemySpawnController::AddSpawnEvent(
 	int frame,
 	const Vector3& position)
 {
+	AddSpawnEvent(frame, position, position, 0);
+}
+
+void EnemySpawnController::AddSpawnEvent(
+	int frame, const Vector3& position, const Vector3& entranceStart, int entranceDuration)
+{
 	const int spawnFrame = frame > 0 ? frame : 0;
-	spawnEvents_.push_back({ spawnFrame, position });
+	spawnEvents_.push_back({ spawnFrame, position, entranceStart, entranceDuration });
 	std::sort(
 		spawnEvents_.begin(),
 		spawnEvents_.end(),
@@ -34,7 +40,7 @@ void EnemySpawnController::Update(const Vector3& playerPosition)
 {
 	while (nextSpawnIndex_ < spawnEvents_.size() &&
 		spawnEvents_[nextSpawnIndex_].frame <= elapsedFrames_) {
-		Spawn(spawnEvents_[nextSpawnIndex_].position);
+		Spawn(spawnEvents_[nextSpawnIndex_]);
 		++nextSpawnIndex_;
 	}
 
@@ -194,11 +200,11 @@ bool EnemySpawnController::IsCollision(const Collider& collider) const
 	return false;
 }
 
-void EnemySpawnController::Spawn(const Vector3& position)
+void EnemySpawnController::Spawn(const SpawnEvent& event)
 {
 	auto enemy = std::make_unique<Enemy>();
 	enemy->Initialize(object3DManager_, modelFileName_);
 	enemy->SetScale({ 0.75f, 0.75f, 0.75f });
-	enemy->SetTranslate(position);
+	enemy->StartEntrance(event.entranceStart, event.position, event.entranceDuration);
 	enemies_.push_back(std::move(enemy));
 }

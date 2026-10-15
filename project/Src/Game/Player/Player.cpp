@@ -4,6 +4,7 @@
 #include "Object3DManager.h"
 #include "Skeleton.h"
 #include <cassert>
+#include <algorithm>
 #include <cmath>
 
 void Player::Initialize(Object3DManager* object3DManager, const std::string& modelFileName)
@@ -13,6 +14,8 @@ void Player::Initialize(Object3DManager* object3DManager, const std::string& mod
 	object3D_ = std::make_unique<Object3D>();
 	object3D_->Initialize(object3DManager);
 	object3D_->SetModel(modelFileName);
+	baseRotation_ = object3D_->GetRotate();
+	movementTilt_ = {};
 
 	collider_.SetHalfSize({ 0.35f, 1.0f, 0.35f });
 
@@ -45,7 +48,38 @@ void Player::Update(Input* input)
 	}
 
 	object3D_->SetTranslate(position);
+	UpdateMovementTilt(
+		float(input->PushKey(DIK_D)) - float(input->PushKey(DIK_A)),
+		float(input->PushKey(DIK_W)) - float(input->PushKey(DIK_S)));
 	UpdateTransform();
+}
+
+void Player::UpdateMovementTilt(float horizontal, float vertical)
+{
+	constexpr float kMaxRoll = 0.4f;
+	constexpr float kMaxPitch = 0.2f;
+	constexpr float kTiltFollow = 0.15f;
+	const float targetPitch = -std::clamp(vertical, -1.0f, 1.0f) * kMaxPitch;
+	const float targetRoll = -std::clamp(horizontal, -1.0f, 1.0f) * kMaxRoll;
+	movementTilt_.x += (targetPitch - movementTilt_.x) * kTiltFollow;
+	movementTilt_.z += (targetRoll - movementTilt_.z) * kTiltFollow;
+	ApplyRotation();
+}
+
+void Player::ResetMovementTilt()
+{
+	movementTilt_ = {};
+	ApplyRotation();
+}
+
+void Player::ApplyRotation()
+{
+	object3D_->SetRotate({
+		baseRotation_.x + movementTilt_.x,
+		baseRotation_.y,
+		baseRotation_.z + movementTilt_.z
+	});
+	UpdateCollider();
 }
 
 void Player::UpdateTransform()
@@ -68,8 +102,8 @@ void Player::SetTranslate(const Vector3& translate)
 
 void Player::SetRotate(const Vector3& rotate)
 {
-	object3D_->SetRotate(rotate);
-	UpdateCollider();
+	baseRotation_ = rotate;
+	ApplyRotation();
 }
 
 void Player::SetScale(const Vector3& scale)
@@ -85,7 +119,8 @@ const Vector3& Player::GetTranslate() const
 
 const Vector3& Player::GetRotate() const
 {
-	return object3D_->GetRotate();
+	// 移動演出の傾きを含めず、進行方向・編集用の基本姿勢を返す。
+	return baseRotation_;
 }
 
 const Vector3& Player::GetScale() const
